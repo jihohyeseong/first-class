@@ -1,0 +1,27 @@
+# Compiled class files and build outputs
+/build/
+/target/
+*.class
+/bin/
+
+# Log files
+*.log
+
+# Package Files
+*.jar
+*.war
+*.ear
+
+# Eclipse project settings
+.classpath
+.project
+.settings/
+.wtpmodules/
+.metadata/
+
+# IDE temporary files
+*.tmp
+
+# Other common files to ignore
+.DS_Store
+/bin/
