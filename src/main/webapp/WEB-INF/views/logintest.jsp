@@ -308,7 +308,7 @@
             <div class="login-form">
                 <h2>로그인</h2>
                 <p>가입하신 아이디와 비밀번호를 입력해주세요.</p>
-                <form action="#" method="post">
+                <form action="/loginProc" method="post">
                     <div class="input-group">
                         <input type="text" id="username" name="username" required placeholder="아이디">
                     </div>
@@ -318,7 +318,7 @@
                     <button type="submit" class="login-btn">로그인</button>
                 </form>
                 <div class="links">
-                    <a href="#">회원가입</a> | <a href="#">아이디/비밀번호 찾기</a>
+                    <a href="${pageContext.request.contextPath}/join">회원가입</a> | <a href="#">아이디/비밀번호 찾기</a>
                 </div>
             </div>
         </div>

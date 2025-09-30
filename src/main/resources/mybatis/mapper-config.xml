@@ -7,6 +7,6 @@
 	</settings>
 	
 	<typeAliases>
-		<!-- <typeAlias alias="SimpleItemResponseVO" type="subak.example.subak.domain.SimpleItemResponseVO" /> -->
+		<typeAlias alias="JoinDTO" type="first.example.firstclass.domain.JoinDTO" />
 	</typeAliases>
 </configuration>
