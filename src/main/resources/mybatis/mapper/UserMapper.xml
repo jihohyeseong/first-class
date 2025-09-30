@@ -23,4 +23,10 @@
             #{deltAt}
         )
     </insert>
+    
+    <!-- 로그인 확인  -->
+    <select id="findByUsername" resultType="UserVO">
+    	SELECT username, password, role
+    	From TB_User
+    </select>
 </mapper>

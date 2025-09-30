@@ -12,11 +12,11 @@ import lombok.RequiredArgsConstructor;
 public class JoinService {
 
 	private final UserDAO userDAO;
-	//private final BCryptPasswordEncoder bCryptPasswordEncoder;
+	private final BCryptPasswordEncoder bCryptPasswordEncoder;
 
 	public void joinProcess(JoinDTO joinDTO) {
 		
-		//joinDTO.setPassword(bCryptPasswordEncoder.encode(joinDTO.getPassword()));
+		joinDTO.setPassword(bCryptPasswordEncoder.encode(joinDTO.getPassword()));
 		joinDTO.setRole("ROLE_USER");
 		joinDTO.setDeltAt("N");
 		

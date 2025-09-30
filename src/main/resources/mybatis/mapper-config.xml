@@ -8,5 +8,6 @@
 	
 	<typeAliases>
 		<typeAlias alias="JoinDTO" type="first.example.firstclass.domain.JoinDTO" />
+		<typeAlias alias="UserVO" type="first.example.firstclass.domain.UserVO" />
 	</typeAliases>
 </configuration>

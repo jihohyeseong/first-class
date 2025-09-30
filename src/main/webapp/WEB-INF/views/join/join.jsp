@@ -100,7 +100,7 @@
         </div>
 
         <div class="signup-options-wrapper">
-            <a href="/individualSignup" class="signup-option-card">
+            <a href="${pageContext.request.contextPath}/join/individual/1" class="signup-option-card">
                 <div class="icon-wrapper">
                     <svg xmlns="http://www.w3.org/2000/svg" height="50px" viewBox="0 0 24 24" width="50px" fill="#3f58d4">
                         <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>

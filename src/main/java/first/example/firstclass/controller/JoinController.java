@@ -14,12 +14,21 @@ public class JoinController {
 	
 	private final JoinService joinService;
 
+	// 회원가입 페이지 이동
 	@GetMapping("/join")
 	public String joinPage() {
 		
-		return "join";
+		return "join/join";
 	}
 	
+	// 개인 회원 가입페이지 이동
+	@GetMapping("/join/individual/1")
+	public String individualJoinPage1() {
+		
+		return "join/step1";
+	}
+	
+	// 회원가입 스텝 4
 	@PostMapping("/joinProc")
     public String joinProcess(JoinDTO joinDTO) {
 		
