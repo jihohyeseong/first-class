@@ -11,6 +11,8 @@ import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 import first.example.firstclass.domain.JoinDTO;
 import first.example.firstclass.service.JoinService;
@@ -68,5 +70,13 @@ public class JoinController {
 		
 		return "join/end";
 	}
+	
+	// 아이디 중복 검사
+//	@GetMapping("join/id/check")
+//	@ResponseBody
+//	public String idDuplicateCheck(@RequestParam String username) {
+//		
+//		
+//	}
 	
 }
