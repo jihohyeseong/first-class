@@ -32,6 +32,7 @@ public class SecurityConfig {
         	.formLogin()
         		.loginPage("/login")
                 .loginProcessingUrl("/loginProc")
+                .defaultSuccessUrl("/main", true)
                 .permitAll();
         
         http.csrf().disable();

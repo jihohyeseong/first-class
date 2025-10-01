@@ -21,20 +21,34 @@ public class JoinController {
 		return "join/join";
 	}
 	
-	// 개인 회원 가입페이지 이동
+	// 개인 회원 가입 step1
 	@GetMapping("/join/individual/1")
 	public String individualJoinPage1() {
 		
 		return "join/step1";
 	}
 	
-	// 회원가입 스텝 4
+	// 개인 회원 가입 step2
+	@GetMapping("/join/individual/2")
+	public String individualJoinPage2(){
+		
+		return "join/step2";
+	}
+	
+	// 개인 회원 가입 step3
+	@GetMapping("/join/individual/3")
+	public String individualJoinPage3(){
+		
+		return "join/step3";
+	}
+	
+	// 회원가입 스텝 3 db저장후 완료
 	@PostMapping("/joinProc")
     public String joinProcess(JoinDTO joinDTO) {
 		
 		joinService.joinProcess(joinDTO);
 		
-		return "redirect:/join/end";
+		return "join/end";
 	}
 	
 }

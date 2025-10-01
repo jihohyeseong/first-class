@@ -9,7 +9,7 @@
 <body>
 	<h1>login page</h1>
     <hr>
-    <form action="/loginProc" method="post" name="loginForm">
+    <form action="/firstclass/loginProc" method="post" name="loginForm">
         <input id="username" type="text" name="username" placeholder="id"/>
         <input id="password" type="password" name="password" placeholder="password"/>
         <input type="submit" value="login"/>
