@@ -8,7 +8,9 @@
         INSERT INTO TB_User (
             name,
             registration_number,
-            address,
+            zip_code,
+            address_base,
+            address_detail,
             username,
             password,
             role,
@@ -16,7 +18,9 @@
         ) VALUES (
             #{name},
             #{registrationNumber},
-            #{address},
+            #{zipCode},
+            #{addressBase},
+            #{addressDetail},
             #{username},
             #{password},
             #{role},

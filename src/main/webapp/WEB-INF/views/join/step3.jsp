@@ -121,21 +121,22 @@
                         <p class="message" id="passwordMessage"></p>
                     </div>
 
+                    <%-- ▼▼▼ 주소 입력 부분 수정 ▼▼▼ --%>
                     <div class="form-group">
                         <label for="postcode">주소</label>
                         <div class="input-group" style="margin-bottom: 8px;">
-                            <input type="text" id="postcode" placeholder="우편번호" readonly>
+                            <input type="text" id="postcode" name="zipCode" placeholder="우편번호" readonly>
                             <button type="button" class="btn-sm" onclick="execDaumPostcode()">주소 검색</button>
                         </div>
-                        <input type="text" id="baseAddress" placeholder="주소" readonly style="margin-bottom: 8px;">
-                        <input type="text" id="detailAddress" name="address" placeholder="상세주소">
+                        <input type="text" id="baseAddress" name="addressBase" placeholder="기본주소" readonly style="margin-bottom: 8px;">
+                        <input type="text" id="detailAddress" name="addressDetail" placeholder="상세주소">
                     </div>
 
                     <input type="hidden" id="registrationNumber" name="registrationNumber">
 
                     <div class="action-buttons">
                         <button type="button" class="btn btn-cancel" onclick="location.href='${pageContext.request.contextPath}/login'">취소</button>
-                        <button type="button" id="submitBtn" class="btn btn-primary btn-next" disabled>가입 완료</button>
+                        <button type="button" id="submitBtn" class="btn btn-primary" disabled>가입 완료</button>
                     </div>
                 </form>
             </div>
@@ -146,7 +147,7 @@
         const passwordInput = document.getElementById('password');
         const passwordCheckInput = document.getElementById('passwordCheck');
         const passwordMessage = document.getElementById('passwordMessage');
-        const nextButton = document.querySelector('.btn-next');
+        const submitButton = document.getElementById('submitBtn'); // 'nextButton'에서 이름 변경
         const infoForm = document.querySelector('.info-form');
 
         function checkPasswords() {
@@ -157,15 +158,15 @@
                 if (password === passwordCheck) {
                     passwordMessage.textContent = '비밀번호가 일치합니다.';
                     passwordMessage.className = 'message success';
-                    nextButton.disabled = false;
+                    submitButton.disabled = false;
                 } else {
                     passwordMessage.textContent = '비밀번호가 일치하지 않습니다.';
                     passwordMessage.className = 'message error';
-                    nextButton.disabled = true;
+                    submitButton.disabled = true;
                 }
             } else {
                 passwordMessage.textContent = '';
-                nextButton.disabled = true;
+                submitButton.disabled = true;
             }
         }
 
@@ -176,9 +177,9 @@
             new daum.Postcode({
                 oncomplete: function(data) {
                     let addr = '';
-                    if (data.userSelectedType === 'R') {
+                    if (data.userSelectedType === 'R') { // 도로명 주소 선택
                         addr = data.roadAddress;
-                    } else {
+                    } else { // 지번 주소 선택
                         addr = data.jibunAddress;
                     }
                     document.getElementById('postcode').value = data.zonecode;
@@ -188,21 +189,16 @@
             }).open();
         }
 
-        document.getElementById('submitBtn').addEventListener('click', function() {
+        submitButton.addEventListener('click', function() {
+            // 1. 주민등록번호 조합
             const rrn1 = document.getElementById('rrn1').value;
             const rrn2 = document.getElementById('rrn2').value;
             document.getElementById('registrationNumber').value = rrn1 + rrn2;
 
-            const postcode = document.getElementById('postcode').value;
-            const baseAddress = document.getElementById('baseAddress').value;
-            const detailAddressInput = document.getElementById('detailAddress');
+            // 2. 주소를 합치는 로직 제거
+            // 각 주소 필드에 name 속성이 부여되어 있으므로, 폼 제출 시 자동으로 전송됩니다.
             
-            const fullAddress = '(' + postcode + ') ' + baseAddress + ', ' + detailAddressInput.value;
-            
-            // alert("조합된 전체 주소:\n" + fullAddress);
-
-            detailAddressInput.value = fullAddress;
-            
+            // 3. 폼 제출
             infoForm.submit();
         });
     </script>
