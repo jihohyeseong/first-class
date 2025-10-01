@@ -25,8 +25,9 @@
     </insert>
     
     <!-- 로그인 확인  -->
-    <select id="findByUsername" resultType="UserVO">
+    <select id="findByUsername" parameterType="string" resultType="UserVO">
     	SELECT username, password, role
     	From TB_User
+    	WHERE username = #{username}
     </select>
 </mapper>
