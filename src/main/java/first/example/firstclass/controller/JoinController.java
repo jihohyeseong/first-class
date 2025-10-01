@@ -1,8 +1,18 @@
 package first.example.firstclass.controller;
 
+import java.util.HashMap;
+import java.util.Map;
+
+import javax.validation.Valid;
+
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 import first.example.firstclass.domain.JoinDTO;
 import first.example.firstclass.service.JoinService;
@@ -44,11 +54,29 @@ public class JoinController {
 	
 	// 회원가입 스텝 3 db저장후 완료
 	@PostMapping("/joinProc")
-    public String joinProcess(JoinDTO joinDTO) {
+    public String joinProcess(@Valid JoinDTO joinDTO, BindingResult bindingResult, Model model) {
 		
+		if (bindingResult.hasErrors()) {
+            Map<String, String> errorsMap = new HashMap<>();
+            for (FieldError error : bindingResult.getFieldErrors()) {
+                errorsMap.put(error.getField(), error.getDefaultMessage());
+            }
+            model.addAttribute("errors", errorsMap);
+            model.addAttribute("joinDTO", joinDTO);
+            
+            return "join/step3"; 
+        }
 		joinService.joinProcess(joinDTO);
 		
 		return "join/end";
 	}
+	
+	// 아이디 중복 검사
+//	@GetMapping("join/id/check")
+//	@ResponseBody
+//	public String idDuplicateCheck(@RequestParam String username) {
+//		
+//		
+//	}
 	
 }
