@@ -134,7 +134,7 @@
                     <input type="hidden" id="registrationNumber" name="registrationNumber">
 
                     <div class="action-buttons">
-                        <button type="button" class="btn btn-cancel" onclick="location.href='#'">취소</button>
+                        <button type="button" class="btn btn-cancel" onclick="location.href='${pageContext.request.contextPath}/login'">취소</button>
                         <button type="button" id="submitBtn" class="btn btn-primary btn-next" disabled>가입 완료</button>
                     </div>
                 </form>
