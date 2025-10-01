@@ -1,5 +1,4 @@
-<%@ page language="java" contentType="text/html; charset=UTF-8"
-    pageEncoding="UTF-8"%>
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="sec" uri="http://www.springframework.org/security/tags" %>
 
@@ -187,21 +186,32 @@
                 <p style="color: #888; margin-top: -15px; margin-bottom: 20px;">
                     ※ 사업주로부터 부여받은 총 휴직 기간 중 급여를 지급받으려는 기간을 입력해 주세요.
                 </p>
-                <div class="form-group">
-                    <label class="field-title" for="start-date">① 육아휴직 시작일</label>
-                    <div class="input-field"><input type="date" id="start-date" name="start-date"></div>
-                </div>
-                <div id="months-input-section">
-                    <div class="form-group">
-                        <label class="field-title" for="leave-months">② 휴직 개월 수</label>
-                        <div class="input-field" style="display: flex; align-items: center; gap: 10px;">
-                            <input type="number" id="leave-months" name="leave-months" min="1" max="12" placeholder="최대 12개월" style="width: 150px; flex-grow: 0;">
-                            <button type="button" id="generate-forms-btn" class="btn btn-primary">확인</button>
-                        </div>
-                    </div>
-                </div>
-                <div id="dynamic-forms-container" class="dynamic-form-container"></div>
-            </div>
+			<div class="form-group">
+				<label class="field-title" for="start-date">① 육아휴직 시작일</label>
+				<div class="input-field">
+					<input type="date" id="start-date" name="start-date">
+				</div>
+			</div>
+			<div id="months-input-section">
+				<div class="form-group">
+					<label class="field-title" for="leave-months">② 휴직 개월 수</label>
+					<div class="input-field"
+						style="display: flex; align-items: center; gap: 10px;">
+						<input type="number" id="leave-months" name="leave-months" min="1"
+							max="12" placeholder="최대 12개월"
+							style="width: 150px; flex-grow: 0;">
+						<button type="button" id="generate-forms-btn"
+							class="btn btn-primary">확인</button>
+
+						<label id="no-payment-wrapper"
+							style="display: none; align-items: center; gap: 6px; margin-left: 8px;">
+							<input type="checkbox" id="no-payment" /> 사업장 지급액 없음
+						</label>
+					</div>
+				</div>
+			</div>
+			<div id="dynamic-forms-container" class="dynamic-form-container"></div>
+		</div>
             
             <div class="form-section">
                 <h2>자녀 정보</h2>
@@ -297,6 +307,7 @@
         var monthsInput = document.getElementById('leave-months');
         var generateBtn = document.getElementById('generate-forms-btn');
         var formsContainer = document.getElementById('dynamic-forms-container');
+        var noPaymentChk = document.getElementById('no-payment'); 
 
         startDateInput.addEventListener('change', function() {
             if (startDateInput.value) {
@@ -306,6 +317,28 @@
                 monthsInputSection.style.display = 'none';
             }
         });
+        
+        function getPaymentInputs() {
+        	  return formsContainer.querySelectorAll('input[name^="monthly_payment_"]');
+        	}
+        
+        function applyNoPaymentState() {
+        	  var inputs = getPaymentInputs();
+        	  inputs.forEach(function(inp){
+        	    if (noPaymentChk.checked) {
+        	      // 체크 상태 → 0으로 고정
+        	      inp.value = 0;
+        	      inp.readOnly = true;
+        	      inp.classList.add('readonly-like');
+        	    } else {
+        	      // 해제 상태 → 다시 입력 가능 + 값 비우기
+        	      inp.readOnly = false;
+        	      inp.classList.remove('readonly-like');
+        	      inp.value = '';   // ★ 해제 시 입력값 없게 만들기
+        	    }
+        	  });
+        	}
+        noPaymentChk.addEventListener('change', applyNoPaymentState);
 
         generateBtn.addEventListener('click', function() {
             var startDate = new Date(startDateInput.value);
@@ -350,6 +383,9 @@
                 currentStartDate = new Date(periodEndDate.getTime());
                 currentStartDate.setDate(currentStartDate.getDate() + 1);
             }
+            
+            document.getElementById('no-payment-wrapper').style.display = 'flex';
+            applyNoPaymentState();
         });
     </script>
 </body>

@@ -11,5 +11,17 @@ public class ApplicationController {
 		
 		return "applicationtest";
 	}
+	
+	@GetMapping("/applicationComplete")
+	public String ApplyComp() {
+		
+		return "applicationComplete";
+	}
+	
+	@GetMapping("/applicationDetail")
+	public String ApplyDet() {
+		
+		return "applicationDetail";
+	}
 
 }
