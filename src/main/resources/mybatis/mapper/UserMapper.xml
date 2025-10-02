@@ -34,4 +34,11 @@
     	From TB_User
     	WHERE username = #{username}
     </select>
+    
+    
+    <select id="findUserInfo" parameterType="string" resultType="UserDTO">
+    	SELECT name, registration_number, zip_number, address_base, address_detail
+    	From TB_User
+    	WHERE username = #{username}
+    </select>
 </mapper>

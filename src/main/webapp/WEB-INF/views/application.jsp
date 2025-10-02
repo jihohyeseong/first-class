@@ -126,13 +126,23 @@
 </style>
 </head>
 <body>
-    <header class="header">
+<%--     <header class="header">
         <a href="#" class="logo"><img src="${pageContext.request.contextPath}/resources/images/logo.png" alt="Logo" width="80" height="80"></a>
         <nav>
-            <span class="welcome-msg">김신청님, 환영합니다.</span>
-            <a href="#" class="btn btn-logout">로그아웃</a>
+            <sec:authorize access="isAnonymous()">
+                <a href="${pageContext.request.contextPath}/login" class="btn btn-primary">로그인</a>
+            </sec:authorize>
+            <sec:authorize access="isAuthenticated()">
+                <span class="welcome-msg">
+                    <sec:authentication property="principal.username"/>님, 환영합니다.
+                </span>
+                <form id="logout-form" action="${pageContext.request.contextPath}/logout" method="post" style="display: none;">
+                    <sec:csrfInput/>
+                </form>
+                <a href="#" onclick="document.getElementById('logout-form').submit(); return false;" class="btn btn-logout">로그아웃</a>
+            </sec:authorize>
         </nav>
-    </header>
+    </header> --%>
 
     <main class="main-container">
         <h1>육아휴직 급여 신청</h1>
@@ -142,15 +152,15 @@
                 <h2>신청인 정보</h2>
                 <div class="form-group">
                     <label class="field-title">이름</label>
-                    <div class="input-field"><input type="text" value="김신청" readonly></div>
+                    <div class="input-field"><input type="text" value="${userDTO.name}" readonly></div>
                 </div>
                 <div class="form-group">
                     <label class="field-title">주민등록번호</label>
-                    <div class="input-field"><input type="text" value="900101-1******" readonly></div>
+                    <div class="input-field"><input type="text" value="${userDTO.registrationNumber}"readonly></div>
                 </div>
                 <div class="form-group">
                     <label class="field-title">주소</label>
-                    <div class="input-field"><input type="text" value="서울특별시 종로구 세종대로 175" readonly></div>
+                    <div class="input-field"><input type="text" value="${userDTO.zipNumber} ${userDTO.addressBase} ${userDTO.addressDetail}" readonly></div>
                 </div>
                 <div class="form-group">
                     <label class="field-title">휴대전화번호</label>
@@ -163,7 +173,7 @@
                 <div class="form-group">
                     <label class="field-title">사업장 동의여부</label>
                     <div class="input-field radio-group">
-                        <input type="radio" id="consent-yes" name="consent" value="yes" checked><label for="consent-yes">예</label>
+                        <input type="radio" id="consent-yes" name="consent" value="yes"><label for="consent-yes">예</label>
                         <input type="radio" id="consent-no" name="consent" value="no"><label for="consent-no">아니요</label>
                     </div>
                 </div>
@@ -266,7 +276,7 @@
                     <label class="field-title">접수센터 기준</label>
                     <div class="input-field radio-group">
                         <input type="radio" id="center-addr" name="center" value="addr"><label for="center-addr">민원인 주소</label>
-                        <input type="radio" id="center-work" name="center" value="work" checked><label for="center-work">사업장 주소</label>
+                        <input type="radio" id="center-work" name="center" value="work"><label for="center-work">사업장 주소</label>
                         <button type="button" class="btn btn-secondary" style="margin-left: 10px;">센터 찾기</button>
                     </div>
                 </div>
