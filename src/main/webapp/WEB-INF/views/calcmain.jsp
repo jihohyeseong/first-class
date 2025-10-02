@@ -205,7 +205,7 @@ h3 {
         const formatCurrency = (number) => {
             if (number === null || number === undefined || isNaN(number)) return '0';
             return Math.round(number).toLocaleString('ko-KR');
-        };
+        };  
         
         // 휴직 기간을 개월 수로 계산 
         function getLeaveMonths(start, end) {
