@@ -11,4 +11,10 @@ public class MainController {
 		
 		return "main";
 	}
+	
+	@GetMapping("/calc")
+	public String caculatorMain() {
+		
+		return "calcmain";
+	}
 }

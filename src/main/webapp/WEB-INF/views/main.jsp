@@ -72,7 +72,31 @@
         .header .logo img { vertical-align: middle; }
         .header nav { display: flex; align-items: center; gap: 15px; }
         .header .welcome-msg { font-size: 16px; color: var(--dark-gray-color); }
-
+		
+		.header-nav {
+		    position: absolute;
+		    left: 50%;
+		    transform: translateX(-50%);
+		    display: flex;
+		    list-style: none;
+		    margin: 0;
+		    padding: 0;
+		}
+	
+		.header-nav .nav-link {
+		    display: block;
+		    padding: 0.5rem 1rem;
+		    border-radius: 0.5rem;
+		    font-weight: 500;
+		    color: #495057;
+		    transition: all 0.3s ease-in-out;
+		}
+		.header-nav .nav-link:hover {
+		    color: #3f58d4;
+		    transform: translateY(-3px);
+		    box-shadow: 0 4px 10px rgba(63, 88, 212, 0.3);
+		}
+		
         .main-container {
             flex-grow: 1; /* main 영역이 남은 공간을 모두 차지하도록 설정 */
             display: flex;
@@ -157,6 +181,9 @@
     <header class="header">
         <a href="#" class="logo"><img src="${pageContext.request.contextPath}/resources/images/logo.png" alt="Logo" width="80" height="80"></a>
         <nav>
+        	<ul class="header-nav">
+           		<li><a class="nav-link active" href="${pageContext.request.contextPath}/calc">모의 계산하기</a></li>
+            </ul>
             <sec:authorize access="isAnonymous()">
                 <a href="${pageContext.request.contextPath}/login" class="btn btn-primary">로그인</a>
             </sec:authorize>

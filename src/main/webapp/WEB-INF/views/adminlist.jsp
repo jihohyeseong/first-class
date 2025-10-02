@@ -233,7 +233,7 @@
 
     <div class="content-container">
         <header class="top-header">
-        	<a href="#"><h4> 아이곁에 <span style="font-size: 1rem; font-weight: 300;">관리자</span></h4></a>
+        	<a href="main.jsp"><h4> 아이곁에 <span style="font-size: 1rem; font-weight: 300;">관리자</span></h4></a>
            <ul class="header-nav">
            		<li><a class="nav-link active" href="#">육아 휴직 신청 현황</a></li>
            </ul>
