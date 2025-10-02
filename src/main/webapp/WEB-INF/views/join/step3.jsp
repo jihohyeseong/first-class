@@ -1,12 +1,15 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%-- ▼▼▼ JSTL 사용을 위한 태그 라이브러리 추가 ▼▼▼ --%>
-<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %> 
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <!DOCTYPE html>
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>개인회원 가입 (3/4) - 정보 입력</title>
+
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
@@ -75,9 +78,7 @@
                 <form class="info-form" action="${pageContext.request.contextPath}/joinProc" method="post">
                     <div class="form-group">
                         <label for="name">이름</label>
-                        <%-- value 속성으로 기존 입력값 유지 --%>
                         <input type="text" id="name" name="name" value="${joinDTO.name}" required>
-                        <%-- 해당 필드에 에러가 있으면 메시지 표시 --%>
                         <c:if test="${not empty errors.name}">
                             <p class="message error">${errors.name}</p>
                         </c:if>
@@ -86,7 +87,6 @@
                     <div class="form-group">
                         <label for="rrn1">주민등록번호</label>
                         <div class="rrn-inputs">
-                            <%-- 보안상 주민번호는 값을 유지하지 않음 --%>
                             <input type="text" id="rrn1" maxlength="6" required>
                             <span class="hyphen">-</span>
                             <input type="password" id="rrn2" maxlength="7" required>
@@ -100,17 +100,19 @@
                         <label for="userId">아이디</label>
                         <div class="input-group">
                             <input type="text" id="userId" name="username" value="${joinDTO.username}" required>
-                            <button type="button" class="btn-sm">중복 확인</button>
+                            <button type="button" class="btn-sm" id="idCheckBtn">중복 확인</button>
                         </div>
                         <c:if test="${not empty errors.username}">
                             <p class="message error">${errors.username}</p>
                         </c:if>
+                        <c:if test="${not empty idDuplicate}">
+                            <p class="message error">${idDuplicate}</p>
+                        </c:if>
+                        <p class="message" id="idCheckMessage"></p>
                     </div>
-
                     <div class="form-group">
                         <label for="password">비밀번호</label>
-                         <%-- 보안상 비밀번호는 값을 유지하지 않음 --%>
-                        <input type="password" id="password" name="password" required>
+                        <input type="password" id="password" name="password" value="${joinDTO.password}" required>
                         <c:if test="${not empty errors.password}">
                             <p class="message error">${errors.password}</p>
                         </c:if>
@@ -131,12 +133,12 @@
                         <c:if test="${not empty errors.zipNumber}">
                             <p class="message error">${errors.zipNumber}</p>
                         </c:if>
-                        
+
                         <input type="text" id="baseAddress" name="addressBase" placeholder="기본주소" value="${joinDTO.addressBase}" readonly style="margin-bottom: 8px;">
                         <c:if test="${not empty errors.addressBase}">
                             <p class="message error">${errors.addressBase}</p>
                         </c:if>
-                        
+
                         <input type="text" id="detailAddress" name="addressDetail" placeholder="상세주소" value="${joinDTO.addressDetail}">
                         <c:if test="${not empty errors.addressDetail}">
                             <p class="message error">${errors.addressDetail}</p>
@@ -155,36 +157,72 @@
     </div>
 
     <script>
-        // (자바스크립트 코드는 이전과 동일)
-        const passwordInput = document.getElementById('password');
-        const passwordCheckInput = document.getElementById('passwordCheck');
-        const passwordMessage = document.getElementById('passwordMessage');
-        const submitButton = document.getElementById('submitBtn');
-        const infoForm = document.querySelector('.info-form');
+        // jQuery의 ready 함수: 문서가 완전히 로드된 후 스크립트가 실행되도록 보장합니다.
+        $(document).ready(function() {
+            // --- 기존 비밀번호 확인 로직 ---
+            const $passwordInput = $('#password');
+            const $passwordCheckInput = $('#passwordCheck');
+            const $passwordMessage = $('#passwordMessage');
+            const $submitButton = $('#submitBtn');
 
-        function checkPasswords() {
-            const password = passwordInput.value;
-            const passwordCheck = passwordCheckInput.value;
+            function checkPasswords() {
+                const password = $passwordInput.val();
+                const passwordCheck = $passwordCheckInput.val();
 
-            if (password && passwordCheck) {
-                if (password === passwordCheck) {
-                    passwordMessage.textContent = '비밀번호가 일치합니다.';
-                    passwordMessage.className = 'message success';
-                    submitButton.disabled = false;
+                if (password && passwordCheck) {
+                    if (password === passwordCheck) {
+                        $passwordMessage.text('비밀번호가 일치합니다.').removeClass('error').addClass('success');
+                        $submitButton.prop('disabled', false);
+                    } else {
+                        $passwordMessage.text('비밀번호가 일치하지 않습니다.').removeClass('success').addClass('error');
+                        $submitButton.prop('disabled', true);
+                    }
                 } else {
-                    passwordMessage.textContent = '비밀번호가 일치하지 않습니다.';
-                    passwordMessage.className = 'message error';
-                    submitButton.disabled = true;
+                    $passwordMessage.text('');
+                    $submitButton.prop('disabled', true);
                 }
-            } else {
-                passwordMessage.textContent = '';
-                submitButton.disabled = true;
             }
-        }
 
-        passwordInput.addEventListener('keyup', checkPasswords);
-        passwordCheckInput.addEventListener('keyup', checkPasswords);
+            $passwordInput.on('keyup', checkPasswords);
+            $passwordCheckInput.on('keyup', checkPasswords);
 
+            // --- 기존 submit 버튼 로직 ---
+            $submitButton.on('click', function() {
+                const rrn1 = $('#rrn1').val();
+                const rrn2 = $('#rrn2').val();
+                $('#registrationNumber').val(rrn1 + rrn2);
+                $('.info-form').submit();
+            });
+
+            // --- 아이디 중복 확인 (jQuery.ajax) ---
+            $('#idCheckBtn').on('click', function() {
+                const $idCheckMessage = $('#idCheckMessage');
+                const username = $('#userId').val().trim(); // 공백 제거
+
+                if (!username) {
+                    $idCheckMessage.text('아이디를 입력해주세요.').removeClass('success').addClass('error');
+                    return;
+                }
+
+                $.ajax({
+                    url: '${pageContext.request.contextPath}/join/id/check',
+                    type: 'GET',
+                    data: {
+                        username: username
+                    },
+                    // 요청 성공 (HTTP 상태 코드 2xx)
+                    success: function(responseMessage) {
+                        $idCheckMessage.text(responseMessage).removeClass('error').addClass('success');
+                    },
+                    // 요청 실패 (HTTP 상태 코드 4xx, 5xx)
+                    error: function(jqXHR) {
+                        $idCheckMessage.text(jqXHR.responseText).removeClass('success').addClass('error');
+                    }
+                });
+            });
+        });
+
+        // --- 기존 다음 주소 API 로직 (수정 없음) ---
         function execDaumPostcode() {
             new daum.Postcode({
                 oncomplete: function(data) {
@@ -200,14 +238,6 @@
                 }
             }).open();
         }
-
-        submitButton.addEventListener('click', function() {
-            const rrn1 = document.getElementById('rrn1').value;
-            const rrn2 = document.getElementById('rrn2').value;
-            document.getElementById('registrationNumber').value = rrn1 + rrn2;
-            
-            infoForm.submit();
-        });
     </script>
 </body>
 </html>

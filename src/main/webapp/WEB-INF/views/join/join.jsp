@@ -152,7 +152,7 @@
         </div>
 
         <div class="back-link">
-            <a href="/login">이미 계정이 있으신가요? 로그인</a>
+            <a href="${pageContext.request.contextPath}/login">이미 계정이 있으신가요? 로그인</a>
         </div>
     </div>
 

@@ -222,7 +222,7 @@
             </div>
 
             <div class="action-buttons">
-			    <button type="button" class="btn btn-cancel" onclick="${pageContext.request.contextPath}/login">취소</button>
+			    <button type="button" class="btn btn-cancel" onclick="location.href='${pageContext.request.contextPath}/login'">취소</button>
 			    <button type="button" class="btn btn-primary btn-next" onclick="location.href='${pageContext.request.contextPath}/join/individual/2'" disabled>다음</button>
 			</div>
         </div>

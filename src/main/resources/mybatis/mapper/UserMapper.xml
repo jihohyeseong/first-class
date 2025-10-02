@@ -31,14 +31,21 @@
     <!-- 로그인 확인  -->
     <select id="findByUsername" parameterType="string" resultType="UserVO">
     	SELECT username, password, role
-    	From TB_User
+    	FROM TB_User
     	WHERE username = #{username}
     </select>
     
-    
+    <!-- 신청서 유저정보  -->
     <select id="findUserInfo" parameterType="string" resultType="UserDTO">
     	SELECT name, registration_number, zip_number, address_base, address_detail
-    	From TB_User
+    	FROM TB_User
     	WHERE username = #{username}
     </select>
+    
+    <!-- id 중복 확인  -->
+    <select id="existsByUsername" parameterType="string" resultType="boolean">
+	    SELECT CASE WHEN COUNT(*) > 0 THEN 1 ELSE 0 END
+	    FROM TB_User
+	    WHERE username = #{username}
+	</select>
 </mapper>
