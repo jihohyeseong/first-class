@@ -22,6 +22,11 @@ public class JoinService {
 		
 		userDAO.save(joinDTO);
 	}
+
+//	public boolean existsByUsername(String username) {
+//		
+//		return userDAO.existsByUsername(username);
+//	}
 	
 	
 }

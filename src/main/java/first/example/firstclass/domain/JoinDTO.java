@@ -23,7 +23,7 @@ public class JoinDTO {
 	
 	@NotEmpty(message = "우편번호를 입력해주세요.")
 	@Pattern(regexp = "^[0-9]{5}$", message = "올바른 우편번호 형식이 아닙니다.")
-	private String zipCode;
+	private String zipNumber;
 	
 	@NotEmpty(message = "기본주소를 입력해주세요.")
 	private String addressBase;

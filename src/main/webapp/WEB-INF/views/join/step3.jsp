@@ -125,11 +125,11 @@
                     <div class="form-group">
                         <label for="postcode">주소</label>
                         <div class="input-group" style="margin-bottom: 8px;">
-                            <input type="text" id="postcode" name="zipCode" placeholder="우편번호" value="${joinDTO.zipCode}" readonly>
+                            <input type="text" id="postcode" name="zipNumber" placeholder="우편번호" value="${joinDTO.zipNumber}" readonly>
                             <button type="button" class="btn-sm" onclick="execDaumPostcode()">주소 검색</button>
                         </div>
-                        <c:if test="${not empty errors.zipCode}">
-                            <p class="message error">${errors.zipCode}</p>
+                        <c:if test="${not empty errors.zipNumber}">
+                            <p class="message error">${errors.zipNumber}</p>
                         </c:if>
                         
                         <input type="text" id="baseAddress" name="addressBase" placeholder="기본주소" value="${joinDTO.addressBase}" readonly style="margin-bottom: 8px;">

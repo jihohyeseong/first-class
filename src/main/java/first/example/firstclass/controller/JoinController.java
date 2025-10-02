@@ -5,6 +5,8 @@ import java.util.Map;
 
 import javax.validation.Valid;
 
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -72,11 +74,15 @@ public class JoinController {
 	}
 	
 	// 아이디 중복 검사
-//	@GetMapping("join/id/check")
+//	@GetMapping("/join/id/check")
 //	@ResponseBody
-//	public String idDuplicateCheck(@RequestParam String username) {
+//	public ResponseEntity<String> idDuplicateCheck(@RequestParam String username) {
 //		
-//		
+//	    boolean exists = joinService.existsByUsername(username);
+//	    if (exists)
+//	        return ResponseEntity.status(HttpStatus.CONFLICT).body("이미 사용중인 아이디입니다.");
+//	    else
+//	        return ResponseEntity.status(HttpStatus.OK).body("사용 가능한 아이디입니다.");
 //	}
 	
 }
