@@ -4,9 +4,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import javax.validation.Valid;
-import javax.validation.constraints.NotEmpty;
-import javax.validation.constraints.Pattern;
-import javax.validation.constraints.Size;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,10 +14,10 @@ import org.springframework.validation.FieldError;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import first.example.firstclass.domain.JoinDTO;
+import first.example.firstclass.domain.UsernameCheckDTO;
 import first.example.firstclass.service.JoinService;
 import lombok.RequiredArgsConstructor;
 
@@ -86,16 +83,17 @@ public class JoinController {
 	// 아이디 중복 검사
 	@GetMapping(value = "/join/id/check", produces = "text/plain;charset=UTF-8")
 	@ResponseBody
-	public ResponseEntity<String> idDuplicateCheck(@NotEmpty(message = "아이디를 입력해주세요.")
-												   @Size(min = 5, max = 20, message = "아이디는 최소 5자 이상 최대 20자 이하여야 합니다.")
-												   @Pattern(regexp = "^[a-zA-Z0-9]+$", message = "아이디는 영문자와 숫자만 사용할 수 있습니다.")
-												   @RequestParam String username) {
-		
-	    boolean exists = joinService.existsByUsername(username);
+	public ResponseEntity<String> idDuplicateCheck(@Valid UsernameCheckDTO usernameCheckDTO, BindingResult bindingResult) {
+		if (bindingResult.hasErrors()) {
+	        String msg = bindingResult.getFieldError().getDefaultMessage();
+	        return ResponseEntity.badRequest().body(msg);
+	    }
+	    boolean exists = joinService.existsByUsername(usernameCheckDTO.getUsername());
 	    if (exists)
 	        return ResponseEntity.status(HttpStatus.CONFLICT).body("이미 사용중인 아이디입니다.");
 	    else
 	        return ResponseEntity.status(HttpStatus.OK).body("사용 가능한 아이디입니다.");
 	}
+	
 	
 }
