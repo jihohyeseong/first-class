@@ -37,7 +37,7 @@
     
     <!-- 신청서 유저정보  -->
     <select id="findUserInfo" parameterType="string" resultType="UserDTO">
-    	SELECT name, registration_number, zip_number, address_base, address_detail
+    	SELECT id, name, registration_number, zip_number, address_base, address_detail, username
     	FROM TB_User
     	WHERE username = #{username}
     </select>

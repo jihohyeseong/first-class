@@ -1,7 +1,7 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="sec" uri="http://www.springframework.org/security/tags" %>
-
+<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -102,13 +102,23 @@ h2.section-title{
 </style>
 </head>
 <body>
-    <header class="header">
-        <a href="#" class="logo"><img src="${pageContext.request.contextPath}/resources/images/logo.png" alt="Logo" width="80" height="80"></a>
-        <nav>
-            <span class="welcome-msg">김신청님, 환영합니다.</span>
-            <a href="#" class="btn btn-logout">로그아웃</a>
-        </nav>
-    </header>
+     <header class="header">
+        <a href="${pageContext.request.contextPath}/main" class="logo"><img src="${pageContext.request.contextPath}/resources/images/logo.png" alt="Logo" width="80" height="80"></a>
+        <nav>
+            <sec:authorize access="isAnonymous()">
+                <a href="${pageContext.request.contextPath}/login" class="btn btn-primary">로그인</a>
+            </sec:authorize>
+            <sec:authorize access="isAuthenticated()">
+                <span class="welcome-msg">
+                    <sec:authentication property="principal.username"/>님, 환영합니다.
+                </span>
+                <form id="logout-form" action="${pageContext.request.contextPath}/logout" method="post" style="display: none;">
+                    <sec:csrfInput/>
+                </form>
+                <a href="#" onclick="document.getElementById('logout-form').submit(); return false;" class="btn btn-logout">로그아웃</a>
+            </sec:authorize>
+        </nav>
+    </header>
 
     <main class="main-container">
         
@@ -121,52 +131,52 @@ h2.section-title{
             신청이 정상적으로 완료되었습니다.
         </div>
 
-<div class="info-table-container">
-            <h2 class="section-title">접수정보</h2>
-            <table class="info-table">
-                <tbody>
-                    <tr>
-                        <th class="data-title">접수번호</th>
-                        <td>[데이터 마스킹 처리된 접수번호]</td>
-                        <th class="data-title">민원내용</th>
-                        <td>육아휴직 급여 신청</td>
-                    </tr>
-                    <tr>
-                        <th class="data-title">신청일</th>
-                        <td>[데이터 마스킹 처리된 신청일]</td>
-                        <th class="data-title">신청인</th>
-                        <td>[데이터 마스킹 처리된 신청인 이름]</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
+	<div class="info-table-container">
+		<h2 class="section-title">접수정보</h2>
+		<table class="info-table">
+			<tbody>
+				<tr>
+					<th class="data-title">접수번호</th>
+					<td>${app.applicationNumber}</td>
+					<th class="data-title">민원내용</th>
+					<td>육아휴직 급여 신청</td>
+				</tr>
+				<tr>
+					<th class="data-title">신청일</th>
+					<td><fmt:formatDate value="${app.submittedDt}" pattern="yyyy-MM-dd"/></td>
+					<th class="data-title">신청인</th>
+					<td><sec:authentication property="principal.username" /></td>
+				</tr>
+			</tbody>
+		</table>
+	</div>
 
-        <div class="info-table-container">
-            <h2 class="section-title">센터정보</h2>
-            <table class="info-table table-2col">
-                <tbody>
-                    <tr>
-                        <th class="data-title">센터명</th>
-                        <td colspan="3"> [고용 센터 이름]
-                            <button type="button" class="detail-btn" id="view-details-btn">자세히 보기</button>
-                        </td>
-                    </tr>
-                    <tr>
-                        <th class="data-title">주소</th>
-                        <td colspan="3">[데이터 마스킹 처리된 주소]</td> </tr>
-                    <tr>
-                        <th class="data-title">대표전화</th>
-                        <td>[데이터 마스킹 처리된 전화번호]</td>
-                        <th class="data-title">팩스번호</th>
-                        <td>[데이터 마스킹 처리된 팩스번호]</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-        
+	<div class="info-table-container">
+		<h2 class="section-title">센터정보</h2>
+		<table class="info-table table-2col">
+			<tbody>
+				<tr>
+					<th class="data-title">센터명</th>
+					<td colspan="3">서울 고용 복지 플러스 센터
+						<button type="button" class="detail-btn" id="view-details-btn">자세히
+							보기</button>
+					</td>
+				</tr>
+				<tr>
+					<th class="data-title">주소</th>
+					<td colspan="3">서울 중구 삼일대로363 1층(장교동)</td>
+				</tr>
+				<tr>
+					<th class="data-title">대표전화</th>
+					<td>02-2004-7301</td>
+				</tr>
+			</tbody>
+		</table>
+	</div>
+	        
                 <div class="button-container" style="margin-top: 50px;">
                         <a href="/firstclass/main" class="btn btn-primary" style="padding: 12px 30px; font-size: 1.1em;">확인 및 메인으로 이동</a>
-            <a href="#" class="btn btn-secondary" style="padding: 12px 30px; font-size: 1.1em; margin-left: 15px;">신청 내용 상세 보기</a>
+            <a href="${pageContext.request.contextPath}/apply/detail?appNo=${app.applicationNumber}" class="btn btn-secondary" style="padding: 12px 30px; font-size: 1.1em; margin-left: 15px;">신청 내용 상세 보기</a>
         </div>
     </main>
 

@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="first.example.firstclass.dao.ApplicationDAO">
+
+  <insert id="insertApplication"
+          parameterType="first.example.firstclass.domain.ApplicationDTO"
+          useGeneratedKeys="true"
+          keyProperty="applicationNumber"
+          keyColumn="APPLICATION_NUMBER">
+    INSERT INTO TB_PARENTAL_LEAVE_APPLICATION (
+      user_id, start_date, end_date,
+      bank_code, account_number,
+      regular_wage, weekly_hours,
+      status_code,
+      child_name, child_resi_regi_number, child_birth_date,
+      business_regi_number, business_name,
+      business_zip_number, business_addr_base, business_addr_detail,
+      payment, business_agree, gov_info_agree,
+      submitted_dt
+    ) VALUES (
+      #{userId},
+      #{startDate,      jdbcType=DATE},
+  	  #{endDate,        jdbcType=DATE},
+      #{bankCode},
+      #{accountNumber},
+      #{regularWage},
+      #{weeklyHours},
+      #{statusCode},
+      #{childName},
+      #{childResiRegiNumber},
+      #{childBirthDate, jdbcType=DATE},
+      #{businessRegiNumber},
+      #{businessName},
+      #{businessZipNumber},
+      #{businessAddrBase},
+      #{businessAddrDetail},
+      #{payment},
+      #{businessAgree},
+      #{govInfoAgree},
+      SYSDATE
+    )
+  </insert>
+  
+<!--   신청서 하나만조회 -->
+<select id="selectApplicationById"
+        parameterType="long"
+        resultType="first.example.firstclass.domain.ApplicationDTO">
+  SELECT
+    A.application_number,
+    A.user_id, A.start_date, A.end_date,
+    A.bank_code, A.account_number,
+    A.regular_wage, A.weekly_hours,
+    A.status_code,
+    C.name AS statusName,
+    A.child_name, A.child_resi_regi_number, A.child_birth_date,
+    A.business_regi_number, A.business_name,
+    A.business_zip_number, A.business_addr_base, A.business_addr_detail,
+    A.payment, A.business_agree, A.gov_info_agree,
+    A.submitted_dt
+  FROM TB_PARENTAL_LEAVE_APPLICATION A
+  JOIN TB_CODE C ON A.status_code = C.code
+  WHERE A.application_number = #{appNo}
+</select>
+  
+  <!-- 임시저장말고 제출시 코드바꾸고 제출날짜저장용 -->
+<update id="updateSubmittedNow">
+  UPDATE TB_PARENTAL_LEAVE_APPLICATION
+  SET status_code = 'ST_20',
+      submitted_dt = SYSDATE
+  WHERE application_number = #{appNo}
+    AND submitted_dt IS NULL
+</update>
+
+<!-- 유저아이디로 전체 게시글 조회(메인페이지용) -->
+<select id="selectListByUserId"
+        parameterType="long"
+        resultType="first.example.firstclass.domain.ApplicationListDTO">
+  SELECT
+    A.application_number AS applicationNumber,
+    CASE
+      WHEN A.status_code = 'ST_10' THEN '미신청'
+      ELSE TO_CHAR(A.submitted_dt, 'YYYY-MM-DD')
+    END AS submittedDate,
+    C.name AS statusName
+  FROM TB_PARENTAL_LEAVE_APPLICATION A
+  JOIN TB_CODE C
+    ON A.status_code = C.code
+  WHERE A.user_id = #{userId}
+  ORDER BY A.application_number DESC
+</select>
+
+
+</mapper>
