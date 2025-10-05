@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="first.example.firstclass.dao.TermAmountDAO">
+  <insert id="insertBatch" parameterType="java.util.List">
+    BEGIN
+      <foreach collection="list" item="t">
+        INSERT INTO TB_TERM_AMOUNT (
+          application_number, payment_date, company_payment, gov_payment,
+          start_month_date, end_month_date
+        ) VALUES (
+          #{t.applicationNumber},
+          #{t.paymentDate,    jdbcType=DATE},
+          #{t.companyPayment},
+          #{t.govPayment},
+          #{t.startMonthDate, jdbcType=DATE},
+          #{t.endMonthDate,   jdbcType=DATE}
+        );
+      </foreach>
+    END;
+  </insert>
+  
+    <select id="selectByApplicationNumber"
+          parameterType="long"
+          resultType="first.example.firstclass.domain.TermAmountDTO">
+    SELECT
+      application_number,
+      payment_date,
+      company_payment,
+      gov_payment,
+      start_month_date,
+      end_month_date
+    FROM TB_TERM_AMOUNT
+    WHERE application_number = #{appNo}
+    ORDER BY start_month_date
+  </select>
+</mapper>
+
+

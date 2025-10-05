@@ -1,7 +1,7 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="sec" uri="http://www.springframework.org/security/tags" %>
-
+<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -113,15 +113,23 @@ h2{
 </style>
 </head>
 <body>
-<header class="header">
-  <a href="${pageContext.request.contextPath}/" class="logo">
-    <img src="${pageContext.request.contextPath}/resources/images/logo.png" alt="Logo" width="80" height="80">
-  </a>
-  <nav>
-    <span class="welcome-msg">김신청님, 환영합니다.</span>
-    <a href="${pageContext.request.contextPath}/logout" class="btn btn-logout">로그아웃</a>
-  </nav>
-</header>
+ <header class="header">
+        <a href="${pageContext.request.contextPath}/main" class="logo"><img src="${pageContext.request.contextPath}/resources/images/logo.png" alt="Logo" width="80" height="80"></a>
+        <nav>
+            <sec:authorize access="isAnonymous()">
+                <a href="${pageContext.request.contextPath}/login" class="btn btn-primary">로그인</a>
+            </sec:authorize>
+            <sec:authorize access="isAuthenticated()">
+                <span class="welcome-msg">
+                    <sec:authentication property="principal.username"/>님, 환영합니다.
+                </span>
+                <form id="logout-form" action="${pageContext.request.contextPath}/logout" method="post" style="display: none;">
+                    <sec:csrfInput/>
+                </form>
+                <a href="#" onclick="document.getElementById('logout-form').submit(); return false;" class="btn btn-logout">로그아웃</a>
+            </sec:authorize>
+        </nav>
+    </header>
 
 <main class="main-container">
   <h1>육아휴직 급여 신청서 상세 보기</h1>
@@ -129,23 +137,28 @@ h2{
   <!-- 접수정보 -->
   <div class="info-table-container">
     <h2 class="section-title">접수정보</h2>
-    <table class="info-table table-4col">
-      <tbody>
-        <tr>
-          <th class="data-title">접수번호</th>
-          <td>[데이터 마스킹 처리된 접수번호]</td>
-          <th class="data-title">민원내용</th>
-          <td>육아휴직 급여 신청</td>
-        </tr>
-        <tr>
-          <th class="data-title">신청일</th>
-          <td>[데이터 마스킹 처리된 신청일]</td>
-          <th class="data-title">신청인</th>
-          <td>[데이터 마스킹 처리된 신청인 이름]</td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
+		<table class="info-table table-4col">
+			<tbody>
+				<tr>
+					<th class="data-title">접수번호</th>
+					<td><c:out value="${app.applicationNumber}" /></td>
+					<th class="data-title">민원내용</th>
+					<td>육아휴직 급여 신청</td>
+				</tr>
+				<tr>
+					<th class="data-title">신청일</th>
+					<td><c:choose>
+							<c:when test="${not empty app.submittedDt}">
+								<fmt:formatDate value="${app.submittedDt}" pattern="yyyy-MM-dd" />
+							</c:when>
+							<c:otherwise>미신청</c:otherwise>
+						</c:choose></td>
+					<th class="data-title">신청인</th>
+					<td><sec:authentication property="principal.username" /></td>
+				</tr>
+			</tbody>
+		</table>
+	</div>
 
   <!-- 신청인 정보 -->
   <div class="info-table-container">
@@ -154,19 +167,17 @@ h2{
       <tbody>
         <tr>
           <th>이름</th>
-          <td>김신청</td>
+          <td><c:out value="${userDTO.name}"/></td>
           <th>주민등록번호</th>
-          <td>900101-1******</td>
+          <td><c:out value="${userDTO.registrationNumber}"/></td>
         </tr>
         <tr>
           <th>휴대전화번호</th>
           <td>010-1234-5678</td>
-          <th>이메일</th>
-          <td>user@example.com</td>
         </tr>
         <tr>
           <th>주소</th>
-          <td colspan="3">서울특별시 종로구 세종대로 175 (상세 주소)</td>
+          <td colspan="3"><c:out value="${userDTO.zipNumber} ${userDTO.addressBase} ${userDTO.addressDetail}"/></td>
         </tr>
       </tbody>
     </table>
@@ -191,75 +202,86 @@ h2{
         </tr>
         <tr>
           <th>사업장 주소</th>
-          <td colspan="3">경기도 성남시 분당구 판교역로 123 (상세 주소)</td>
+          <td colspan="3">(${app.businessZipNumber}) ${app.businessAddrBase} ${app.businessAddrDetail}</td></td>
         </tr>
       </tbody>
     </table>
   </div>
 
   <!-- 급여 신청 기간 -->
-  <div class="info-table-container">
-    <h2 class="section-title">급여 신청 기간 및 월별 내역</h2>
-    <table class="info-table table-4col">
-      <tbody>
-        <tr>
-          <th>육아휴직 시작일</th>
-          <td>2025.01.01</td>
-          <th>총 휴직 기간</th>
-          <td>6개월 (2025.01.01 ~ 2025.06.30)</td>
-        </tr>
-        <tr>
-          <th>월별 분할 신청 여부</th>
-          <td colspan="3">아니오 (일괄 신청)</td>
-        </tr>
-      </tbody>
-    </table>
+	<div class="info-table-container">
+		<h2 class="section-title">급여 신청 기간 및 월별 내역</h2>
+		<table class="info-table table-4col">
+			<tbody>
+				<tr>
+					<th>육아휴직 시작일</th>
+					<td>2025.01.01</td>
+					<th>총 휴직 기간</th>
+					<td>6개월 (2025.01.01 ~ 2025.06.30)</td>
+				</tr>
+				<tr>
+					<th>월별 분할 신청 여부</th>
+					<td colspan="3">아니오 (일괄 신청)</td>
+				</tr>
+			</tbody>
+		</table>
 
-    <h3 class="section-title" style="font-size:16px;margin-top:25px;">월별 사업장 지급액 상세</h3>
-    <table class="info-table table-4col">
-      <tbody>
-        <tr>
-          <th>1개월차 (2025.01)</th>
-          <td>100,000원</td>
-          <th>2개월차 (2025.02)</th>
-          <td>100,000원</td>
-        </tr>
-        <tr>
-          <th>3개월차 (2025.03)</th>
-          <td>0원</td>
-          <th>4개월차 (2025.04)</th>
-          <td>0원</td>
-        </tr>
-        <tr>
-          <th>5개월차 (2025.05)</th>
-          <td>0원</td>
-          <th>6개월차 (2025.06)</th>
-          <td>0원</td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
+		<h3 class="section-title" style="font-size: 16px; margin-top: 25px;">월별
+			지급 내역</h3>
+		<table class="info-table table-4col">
+			<thead>
+				<tr>
+					<th>회차</th>
+					<th>기간</th>
+					<th>사업장 지급액</th>
+					<th>정부 지급액</th>
+					<th>지급예정일</th>
+				</tr>
+			</thead>
+			<tbody>
+				<c:forEach var="t" items="${terms}" varStatus="st">
+					<tr>
+						<td><c:out value="${st.index + 1}" />개월차</td>
+						<td><c:out value="${t.startMonthDate}" /> ~ <c:out
+								value="${t.endMonthDate}" /></td>
+						<td><fmt:formatNumber value="${t.companyPayment}"
+								type="number" /></td>
+						<td><fmt:formatNumber value="${t.govPayment}" type="number" /></td>
+						<td><c:out value="${t.paymentDate}" /></td>
+					</tr>
+				</c:forEach>
 
-  <!-- 자녀 정보 -->
-  <div class="info-table-container">
-    <h2 class="section-title">자녀 정보 (육아 대상)</h2>
-    <table class="info-table table-4col">
-      <tbody>
-        <tr>
-          <th>자녀 이름</th>
-          <td>김아기</td>
-          <th>출산(예정)일</th>
-          <td>2025.01.01</td>
-        </tr>
-        <tr>
-          <th>주민등록번호</th>
-          <td colspan="3">250101-3******</td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
+				<c:if test="${empty terms}">
+					<tr>
+						<td colspan="5" style="text-align: center; color: #888;">단위기간
+							내역이 없습니다.</td>
+					</tr>
+				</c:if>
+			</tbody>
+		</table>
 
-  <!-- 계좌 정보 -->
+	</div>
+
+	<!-- 자녀 정보 -->
+	<div class="info-table-container">
+		<h2 class="section-title">자녀 정보 (육아 대상)</h2>
+		<table class="info-table table-4col">
+			<tbody>
+				<tr>
+					<th>자녀 이름</th>
+					<td>김아기</td>
+					<th>출산(예정)일</th>
+					<td>2025.01.01</td>
+				</tr>
+				<tr>
+					<th>주민등록번호</th>
+					<td colspan="3">250101-3******</td>
+				</tr>
+			</tbody>
+		</table>
+	</div>
+
+	<!-- 계좌 정보 -->
   <div class="info-table-container">
     <h2 class="section-title">급여 입금 계좌정보</h2>
     <table class="info-table table-4col">
@@ -316,12 +338,27 @@ h2{
   </div>
 
   <!-- 하단 버튼 -->
-  <div class="button-container">
-    <a href="${pageContext.request.contextPath}/application/edit/1234567890" class="btn bottom-btn btn-primary">신청 내용 수정</a>
-    <a href="${pageContext.request.contextPath}/firstclass/main" class="btn bottom-btn btn-secondary" style="margin-left:15px;">목록으로 돌아가기</a>
-    <a href="${pageContext.request.contextPath}/" class="btn bottom-btn btn-primary" style="margin-left:15px;">제출하기</a>
-  </div>
-</main>
+<div class="button-container">
+  <a href="${pageContext.request.contextPath}/apply/edit?appNo=${app.applicationNumber}"
+     class="btn bottom-btn btn-primary">신청 내용 수정</a>
+
+  <a href="${pageContext.request.contextPath}/main"
+     class="btn bottom-btn btn-secondary" style="margin-left:15px;">목록으로 돌아가기</a>
+
+  <c:choose>
+    <c:when test="${isSubmitted}">
+      <button class="btn bottom-btn btn-secondary" style="margin-left:15px;" disabled>제출 완료</button>
+    </c:when>
+    <c:otherwise>
+      <form action="${pageContext.request.contextPath}/apply/submit" method="post" style="display:inline;">
+        <sec:csrfInput/>
+        <input type="hidden" name="appNo" value="${app.applicationNumber}"/>
+        <button type="submit" class="btn bottom-btn btn-primary" style="margin-left:15px;">제출하기</button>
+      </form>
+    </c:otherwise>
+  </c:choose>
+</div>
+
 
 <footer class="footer">
   <p>&copy; 2025 육아휴직 서비스. All Rights Reserved.</p>

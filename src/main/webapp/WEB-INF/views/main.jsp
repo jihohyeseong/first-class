@@ -199,54 +199,59 @@
         </nav>
     </header>
 
-    <main class="main-container">
-        <c:choose>
-            <c:when test="${empty applicationList}">
-                <div class="content-header">
-                     <h2><sec:authentication property="principal.username"/>님의 신청 내역</h2>
-                </div>
-                <div class="empty-state-box">
-                    <div class="icon">📝</div>
-                    <h3>아직 신청 내역이 없으시네요.</h3>
-                    <p>소중한 자녀를 위한 첫걸음, 지금 바로 시작해보세요.</p>
-                    <a href="${pageContext.request.contextPath}/apply" class="btn btn-primary">육아휴직 신청하기</a>
-                </div>
-            </c:when>
+    <main class="main-container"> <c:choose>
+		<c:when test="${empty applicationList}">
+			<div class="content-header">
+				<h2>
+					<sec:authentication property="principal.username" />
+					님의 신청 내역
+				</h2>
+			</div>
+			<div class="empty-state-box">
+				<div class="icon">📝</div>
+				<h3>아직 신청 내역이 없으시네요.</h3>
+				<p>소중한 자녀를 위한 첫걸음, 지금 바로 시작해보세요.</p>
+				<a href="${pageContext.request.contextPath}/apply"
+					class="btn btn-primary">육아휴직 신청하기</a>
+			</div>
+		</c:when>
 
-            <c:otherwise>
-                 <div class="content-header">
-                    <h2><sec:authentication property="principal.username"/>님의 신청 내역</h2>
-                    <a href="${pageContext.request.contextPath}/apply" class="btn btn-primary">새로 신청하기</a>
-                </div>
-                <table class="application-table">
-                    <thead>
-                        <tr>
-                            <th>신청번호</th>
-                            <th>상태</th>
-                            <th>신청일</th>
-                            <th>관리</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <c:forEach var="app" items="${applicationList}">
-                            <tr>
-                                <td>${app.id}</td>
-                                <td>
-                                    <c:choose>
-                                        <c:when test="${app.status == '접수완료'}"><span class="status submitted">접수 완료</span></c:when>
-                                        <c:when test="${app.status == '심사중'}"><span class="status processing">심사 중</span></c:when>
-                                        <c:when test="${app.status == '승인'}"><span class="status approved">승인</span></c:when>
-                                        <c:otherwise><span class="status">${app.status}</span></c:otherwise>
-                                    </c:choose>
-                                </td>
-                                <td>${app.date}</td>
-                                <td><a href="#" class="btn btn-secondary">상세보기</a></td>
-                            </tr>
-                        </c:forEach>
-                    </tbody>
-                </table>
-            </c:otherwise>
-        </c:choose>
+		<c:otherwise>
+			<div class="content-header">
+				<h2>
+					<sec:authentication property="principal.username" />
+					님의 신청 내역
+				</h2>
+				<a href="${pageContext.request.contextPath}/apply"
+					class="btn btn-primary">새로 신청하기</a>
+			</div>
+			<table class="application-table">
+				<thead>
+					<tr>
+						<th>신청번호</th>
+						<th>민원유형</th>
+						<th>신청일</th>
+						<th>상태</th>
+						<th></th>
+					</tr>
+				</thead>
+				<tbody>
+					<c:forEach var="app" items="${applicationList}">
+						<tr>
+							<td>${app.applicationNumber}</td>
+							<td>육아휴직 급여 신청</td>
+							<td>${app.submittedDate}</td>
+							<td>${app.statusName}</td>
+							<td><a
+								href="${pageContext.request.contextPath}/apply/detail?appNo=${app.applicationNumber}"
+								class="btn btn-secondary">상세보기</a></td>
+						</tr>
+					</c:forEach>
+				</tbody>
+
+			</table>
+		</c:otherwise>
+	</c:choose>
     </main>
 
     <footer class="footer">
