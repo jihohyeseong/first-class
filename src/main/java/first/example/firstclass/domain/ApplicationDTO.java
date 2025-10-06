@@ -12,6 +12,7 @@ public class ApplicationDTO {
     private Long userId;
     
     private String bankCode;
+    private String bankName;
     private String accountNumber;
 
     private Long regularWage;

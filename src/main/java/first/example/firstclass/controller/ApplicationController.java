@@ -54,16 +54,29 @@ public class ApplicationController {
     }
 
     @GetMapping("/apply/detail")
-    public String detail(@RequestParam("appNo") long appNo, Model model) {
-        ApplicationDTO app = applicationService.findById(appNo);
-        if (app == null) return "redirect:/main";
+    public String detail(@RequestParam long appNo, Model model) {
+        UserDTO loginUser = currentUserOrNull();
+        if (loginUser == null) return "redirect:/login";
 
+        ApplicationDTO app = applicationService.findById(appNo);
         List<TermAmountDTO> terms = applicationService.findTerms(appNo);
+
+        if (loginUser.getRegistrationNumber() != null) {
+            loginUser.setRegistrationNumber(maskRrn(loginUser.getRegistrationNumber()));
+        }
+
         model.addAttribute("app", app);
         model.addAttribute("terms", terms);
         model.addAttribute("isSubmitted", "ST_20".equals(app.getStatusCode()));
+        model.addAttribute("userDTO", loginUser);
+
         return "applicationDetail";
     }
+
+    private String maskRrn(String rrn) {
+        return (rrn != null && rrn.length() >= 8) ? rrn.substring(0,7) + "******" : rrn;
+    }
+
 
     @GetMapping({"/", "/main"})
     public String main(Model model) {
