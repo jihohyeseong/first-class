@@ -47,18 +47,22 @@
         resultType="first.example.firstclass.domain.ApplicationDTO">
   SELECT
     A.application_number,
-    A.user_id, A.start_date, A.end_date,
-    A.bank_code, A.account_number,
+    A.user_id,
+    A.start_date, A.end_date,
+    A.bank_code,
+    A.account_number,
     A.regular_wage, A.weekly_hours,
     A.status_code,
-    C.name AS statusName,
+    C.name AS statusName,   -- 상태 라벨
+    B.name AS bankName,     -- 은행 라벨
     A.child_name, A.child_resi_regi_number, A.child_birth_date,
     A.business_regi_number, A.business_name,
     A.business_zip_number, A.business_addr_base, A.business_addr_detail,
     A.payment, A.business_agree, A.gov_info_agree,
     A.submitted_dt
   FROM TB_PARENTAL_LEAVE_APPLICATION A
-  JOIN TB_CODE C ON A.status_code = C.code
+  LEFT JOIN TB_CODE C ON C.code = A.status_code  -- 🔸 그룹 조건 제거
+  LEFT JOIN TB_CODE B ON B.code = A.bank_code    -- 🔸 그룹 조건 제거
   WHERE A.application_number = #{appNo}
 </select>
   

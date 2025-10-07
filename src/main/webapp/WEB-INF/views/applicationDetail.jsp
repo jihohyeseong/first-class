@@ -2,6 +2,8 @@
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="sec" uri="http://www.springframework.org/security/tags" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
+<%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
+
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -184,31 +186,37 @@ h2{
   </div>
 
   <!-- 사업장 정보 -->
-  <div class="info-table-container">
-    <h2 class="section-title">사업장 정보 (회사)</h2>
-    <table class="info-table table-4col">
-      <tbody>
-        <tr>
-          <th>사업장 동의여부</th>
-          <td>예 (별도 동의서 첨부)</td>
-          <th>사업장 이름</th>
-          <td>(주)육아복지서비스</td>
-        </tr>
-        <tr>
-          <th>사업장 등록번호</th>
-          <td>1234567890</td>
-          <th>인사담당자 연락처</th>
-          <td>02-9876-5432</td>
-        </tr>
-        <tr>
-          <th>사업장 주소</th>
-          <td colspan="3">(${app.businessZipNumber}) ${app.businessAddrBase} ${app.businessAddrDetail}</td></td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
+	<div class="info-table-container">
+		<h2 class="section-title">사업장 정보 (회사)</h2>
+		<table class="info-table table-4col">
+			<tbody>
+				<tr>
+					<th>사업장 동의여부</th>
+					<td><c:choose>
+							<c:when test="${app.businessAgree == 'Y'}">예</c:when>
+							<c:when test="${app.businessAgree == 'N'}">아니요</c:when>
+							<c:otherwise>-</c:otherwise>
+						</c:choose></td>
+					<th>사업장 이름</th>
+					<td>${app.businessName}</td>
+				</tr>
+				<tr>
+					<th>사업장 등록번호</th>
+					<td>${app.businessRegiNumber}</td>
+					
+					<th>인사담당자 연락처</th>
+					<td>02-9876-5432</td>
+				</tr>
+				<tr>
+					<th>사업장 주소</th>
+					<td colspan="3">(${app.businessZipNumber})
+						${app.businessAddrBase} ${app.businessAddrDetail}</td>
+				</tr>
+			</tbody>
+		</table>
+	</div>
 
-  <!-- 급여 신청 기간 -->
+	<!-- 급여 신청 기간 -->
 	<div class="info-table-container">
 		<h2 class="section-title">급여 신청 기간 및 월별 내역</h2>
 		<table class="info-table table-4col">
@@ -267,77 +275,123 @@ h2{
 		<h2 class="section-title">자녀 정보 (육아 대상)</h2>
 		<table class="info-table table-4col">
 			<tbody>
-				<tr>
-					<th>자녀 이름</th>
-					<td>김아기</td>
-					<th>출산(예정)일</th>
-					<td>2025.01.01</td>
-				</tr>
-				<tr>
-					<th>주민등록번호</th>
-					<td colspan="3">250101-3******</td>
-				</tr>
+				<c:choose>
+					<c:when
+						test="${empty app.childName and empty app.childResiRegiNumber}">
+						<tr>
+							<th>출산예정일</th>
+							<td colspan="3"><fmt:formatDate
+									value="${app.childBirthDate}" pattern="yyyy.MM.dd" /></td>
+						</tr>
+					</c:when>
+					<c:otherwise>
+						<tr>
+							<th>자녀 이름</th>
+							<td><c:out value="${app.childName}" /></td>
+							<th>출산(예정)일</th>
+							<td><fmt:formatDate value="${app.childBirthDate}"
+									pattern="yyyy.MM.dd" /></td>
+						</tr>
+						<tr>
+							<th>주민등록번호</th>
+							<td colspan="3"><c:choose>
+									<c:when test="${not empty app.childResiRegiNumber}">
+										<c:out value="${fn:substring(app.childResiRegiNumber, 0, 7)}" />******
+                </c:when>
+									<c:otherwise>-</c:otherwise>
+								</c:choose></td>
+						</tr>
+					</c:otherwise>
+				</c:choose>
 			</tbody>
 		</table>
 	</div>
 
 	<!-- 계좌 정보 -->
-  <div class="info-table-container">
-    <h2 class="section-title">급여 입금 계좌정보</h2>
-    <table class="info-table table-4col">
-      <tbody>
-        <tr>
-          <th>은행</th>
-          <td>KB 국민</td>
-          <th>계좌번호</th>
-          <td>12345678901234</td>
-        </tr>
-        <tr>
-          <th>예금주 이름</th>
-          <td colspan="3">김신청</td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
+	<div class="info-table-container">
+  <h2 class="section-title">급여 입금 계좌정보</h2>
+  <table class="info-table table-4col">
+    <tbody>
+      <tr>
+        <th>은행</th>
+          <td><c:out value="${app.bankName}"/></td>
+        <th>계좌번호</th>
+        <td>
+          <c:choose>
+            <c:when test="${not empty app.accountNumber}">
+              <c:set var="acc" value="${app.accountNumber}"/>
+              <c:set var="len" value="${fn:length(acc)}"/>
+              ****<c:out value="${fn:substring(acc, len - 4, len)}"/>
+            </c:when>
+            <c:otherwise>-</c:otherwise>
+          </c:choose>
+        </td>
+      </tr>
+      
+      <tr>
+        <th>예금주 이름</th>
+        <td colspan="3">
+          <c:out value="${userDTO.name}"/>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
 
-  <!-- 센터 정보 -->
-  <div class="info-table-container">
-    <h2 class="section-title">접수 처리 센터 정보</h2>
-    <table class="info-table table-4col">
-      <tbody>
-        <tr>
-          <th>관할센터</th>
-          <td>
-            서울 혜화 고용센터
-            <a href="${pageContext.request.contextPath}/center/detail/혜화" class="detail-btn">자세히 보기</a>
-          </td>
-          <th>대표전화</th>
-          <td>02-2077-6000</td>
-        </tr>
-        <tr>
-          <th>주소</th>
-          <td colspan="3">(03086) 서울특별시 종로구 창경궁로 112-7 (인의동)</td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
+	<!-- 센터 정보 -->
+	<div class="info-table-container">
+		<h2 class="section-title">접수 처리 센터 정보</h2>
+		<table class="info-table table-4col">
+			<tbody>
+				<tr>
+					<th>관할센터</th>
+					<td>서울 고용 복지 플러스 센터 <a
+						href="https://www.work.go.kr/seoul/main.do"
+						class="detail-btn">자세히 보기</a>
+					</td>
+					<th>대표전화</th>
+					<td>02-2004-7301</td>
+				</tr>
+				<tr>
+					<th>주소</th>
+					<td colspan="3">서울 중구 삼일대로363 1층 (장교동)</td>
+				</tr>
+			</tbody>
+		</table>
+	</div>
 
-  <!-- 최종 동의 -->
-  <div class="info-table-container">
-    <h2 class="section-title">최종 동의 및 확인</h2>
-    <table class="info-table table-4col">
-      <tbody>
-        <tr>
-          <th>부정수급 안내 확인</th>
-          <td colspan="3">
-            <span class="success-text">확인 및 동의 완료</span> (2025.10.02)
-          </td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
+	<!-- 행정정보 공동이용 동의 -->
+	<div class="info-table-container">
+		<h2 class="section-title">행정정보 공동이용 동의</h2>
+		<table class="info-table table-4col">
+			<tbody>
+				<tr>
+					<th>동의 여부</th>
+					<td colspan="3"><c:choose>
+							<c:when test="${app.govInfoAgree == 'Y'}">예</c:when>
+							<c:when test="${app.govInfoAgree == 'N'}">아니요</c:when>
+							<c:otherwise>-</c:otherwise>
+						</c:choose></td>
+				</tr>
+			</tbody>
+		</table>
+	</div>
 
-  <!-- 하단 버튼 -->
+	<!-- 최종 동의 -->
+	<div class="info-table-container">
+		<h2 class="section-title">최종 동의 및 확인</h2>
+		<table class="info-table table-4col">
+			<tbody>
+				<tr>
+					<th>부정수급 안내 확인</th>
+					<td colspan="3"><span class="success-text">확인 및 동의 완료</span>
+						(2025.10.02)</td>
+				</tr>
+			</tbody>
+		</table>
+	</div>
+
+	<!-- 하단 버튼 -->
 <div class="button-container">
   <a href="${pageContext.request.contextPath}/apply/edit?appNo=${app.applicationNumber}"
      class="btn bottom-btn btn-primary">신청 내용 수정</a>

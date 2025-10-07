@@ -400,35 +400,43 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-  // ===== 기간 생성 =====
+  // ===== DOM 참조 =====
   var startDateInput = document.getElementById('start-date');
   var endDateInput = document.getElementById('end-date');
   var periodInputSection = document.getElementById('period-input-section');
   var generateBtn = document.getElementById('generate-forms-btn');
   var formsContainer = document.getElementById('dynamic-forms-container');
-  var noPaymentChk = document.getElementById('no-payment'); 
+  var noPaymentChk = document.getElementById('no-payment');
   var noPaymentWrapper = document.getElementById('no-payment-wrapper');
 
-  startDateInput.addEventListener('change', function() {
-    if (startDateInput.value) {
-      periodInputSection.style.display = 'block';
-      endDateInput.min = startDateInput.value;
-      formsContainer.innerHTML = '';
-      if (noPaymentWrapper) noPaymentWrapper.style.display = 'none';
-    } else {
-      periodInputSection.style.display = 'none';
-    }
-  });
-
-  endDateInput.addEventListener('change', function () {
-    formsContainer.innerHTML = '';
-    if (noPaymentWrapper) noPaymentWrapper.style.display = 'none';
-  });
+  // ===== 유틸/헬퍼 =====
+  function formatDate(date) {
+    var y = date.getFullYear();
+    var m = String(date.getMonth() + 1).padStart(2, '0');
+    var d = String(date.getDate()).padStart(2, '0');
+    return y + '.' + m + '.' + d;
+  }
+  // 월 더하기 (없는 일자는 그 달의 말일로 클램프) — Java LocalDate.plusMonths와 동일 동작
+  function plusMonthsClamp(date, months) {
+    var y = date.getFullYear(), m = date.getMonth(), d = date.getDate();
+    var targetM = m + months;
+    var targetY = y + Math.floor(targetM / 12);
+    var normM   = ((targetM % 12) + 12) % 12;
+    var last    = new Date(targetY, normM + 1, 0).getDate(); // 다음달 0일 = 말일
+    var day     = Math.min(d, last);
+    return new Date(targetY, normM, day);
+  }
+  // 단위기간 종료일 = 다음달 같은 날 - 1일
+  function endOfUnit(start) {
+    var nextSame = plusMonthsClamp(start, 1);
+    var e = new Date(nextSame.getTime());
+    e.setDate(e.getDate() - 1);
+    return e;
+  }
 
   function getPaymentInputs() {
     return formsContainer.querySelectorAll('input[name^="monthly_payment_"]');
   }
-
   function applyNoPaymentState() {
     var inputs = getPaymentInputs();
     inputs.forEach(function(inp){
@@ -439,19 +447,29 @@ document.addEventListener('DOMContentLoaded', function () {
       } else {
         inp.readOnly = false;
         inp.classList.remove('readonly-like');
-        inp.value = '';
+        if (inp.value === '0') inp.value = '';
       }
     });
   }
+
+  // ===== 날짜 입력 보이기/초기화 =====
+  startDateInput.addEventListener('change', function() {
+    if (startDateInput.value) {
+      periodInputSection.style.display = 'block';
+      endDateInput.min = startDateInput.value;
+      formsContainer.innerHTML = '';
+      if (noPaymentWrapper) noPaymentWrapper.style.display = 'none';
+    } else {
+      periodInputSection.style.display = 'none';
+    }
+  });
+  endDateInput.addEventListener('change', function () {
+    formsContainer.innerHTML = '';
+    if (noPaymentWrapper) noPaymentWrapper.style.display = 'none';
+  });
   if (noPaymentChk) noPaymentChk.addEventListener('change', applyNoPaymentState);
 
-  var formatDate = function(date) {
-    var y = date.getFullYear();
-    var m = String(date.getMonth() + 1).padStart(2, '0');
-    var d = String(date.getDate()).padStart(2, '0');
-    return y + '.' + m + '.' + d;
-  };
-
+  // ===== 기간 생성: DB splitPeriodsAndCalc와 동일 경계 =====
   generateBtn.addEventListener('click', function() {
     if (!startDateInput.value || !endDateInput.value) {
       alert('육아휴직 시작일과 종료일을 모두 선택해주세요.');
@@ -459,49 +477,56 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     var startDate = new Date(startDateInput.value + 'T00:00:00');
-    var endDate = new Date(endDateInput.value + 'T00:00:00');
+    var endDate   = new Date(endDateInput.value   + 'T00:00:00');
 
     if (startDate > endDate) {
       alert('종료일은 시작일보다 빠를 수 없습니다.');
       return;
     }
 
-    // 시작월~종료월 개수(부분월 포함) 12개월 제한
+    // (선택) 최대 12개월 제한 — 시작월~종료월 포함 개수 기준
     var monthCount = 0;
     var mc = new Date(startDate.getFullYear(), startDate.getMonth(), 1);
     var endMonth = new Date(endDate.getFullYear(), endDate.getMonth(), 1);
-    while (mc <= endMonth) {
-      monthCount++;
-      mc.setMonth(mc.getMonth() + 1);
-    }
+    while (mc <= endMonth) { monthCount++; mc.setMonth(mc.getMonth() + 1); }
     if (monthCount > 12) {
       alert('최대 12개월까지만 신청 가능합니다. 종료일을 조정해주세요.');
       return;
     }
 
-    formsContainer.innerHTML = ''; 
+    // UI 초기화
+    formsContainer.innerHTML = '';
+    if (noPaymentWrapper) noPaymentWrapper.style.display = 'none';
+
+    // 단위기간 생성
     var currentStartDate = new Date(startDate.getTime());
     var i = 1;
 
     while (currentStartDate <= endDate) {
-      var periodEndDate = new Date(currentStartDate.getFullYear(), currentStartDate.getMonth() + 1, 0);
-      var displayStart = new Date(currentStartDate.getTime());
-      var displayEnd = periodEndDate > endDate ? new Date(endDate.getTime()) : periodEndDate;
+      // DB 동일: periodEnd = min(endOfUnit(currentStartDate), endDate)
+      var candidateEnd = endOfUnit(currentStartDate);
+      var displayEnd   = (candidateEnd > endDate) ? new Date(endDate.getTime()) : candidateEnd;
 
-      var dateRangeText = formatDate(displayStart) + ' ~ ' + formatDate(displayEnd);
-      var formRow = document.createElement('div');
-      formRow.className = 'dynamic-form-row';
-      formRow.innerHTML =
-        '<div class="date-range-display">' + dateRangeText + '</div>' +
+      // 표시 텍스트(지급일은 참고용, 필요 없으면 주석)
+      var rangeText = formatDate(currentStartDate) + ' ~ ' + formatDate(displayEnd);
+
+      // 행 추가
+      var row = document.createElement('div');
+      row.className = 'dynamic-form-row';
+      row.innerHTML =
+        '<div class="date-range-display">' +
+          '<div>' + rangeText + '</div>' +
         '<div class="payment-input-field">' +
           '<input type="number" name="monthly_payment_' + i + '" placeholder="해당 기간의 사업장 지급액(원) 입력">' +
         '</div>';
+      formsContainer.appendChild(row);
 
-      formsContainer.appendChild(formRow);
-
+      // 다음 구간 시작 = 이번 구간 끝 + 1일
       currentStartDate = new Date(displayEnd.getTime());
       currentStartDate.setDate(currentStartDate.getDate() + 1);
       i++;
+
+       if (i > 13) { alert('최대 12개월(12구간)까지만 신청 가능합니다.'); formsContainer.innerHTML = ''; return; }
     }
 
     if (noPaymentWrapper) {
@@ -524,9 +549,9 @@ document.addEventListener('DOMContentLoaded', function () {
   if (exp) {
     const today = new Date(); today.setHours(0,0,0,0);
     const min = new Date(today); min.setDate(min.getDate()+1);
-    const m = String(min.getMonth()+1).padStart(2,'0');
-    const d = String(min.getDate()).padStart(2,'0');
-    exp.min = `${min.getFullYear()}-${m}-${d}`;
+    const mm = String(min.getMonth()+1).padStart(2,'0');
+    const dd = String(min.getDate()).padStart(2,'0');
+    exp.min = `${min.getFullYear()}-${mm}-${dd}`;
   }
 
   function setHiddenFrom(el) { if (hidden && el) hidden.value = el.value || ''; }
@@ -583,7 +608,7 @@ document.addEventListener('DOMContentLoaded', function () {
   radios.forEach(r => r.addEventListener('change', updateView));
   updateView();
 
-  // 제출 직전 안전 동기화
+  // 제출 직전 동기화
   const form = document.querySelector('form[action$="/apply"]');
   if (form) {
     form.addEventListener('submit', function() {
