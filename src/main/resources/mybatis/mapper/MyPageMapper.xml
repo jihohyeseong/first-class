@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="first.example.firstclass.dao.MyPageDAO">
+    <!-- 로그인 유저 정보 조회  -->
+    <select id="findByUserName" parameterType="string" resultType="UserDTO">
+    	SELECT id, name, registration_number, zip_number, 
+    			address_base, address_detail, username
+    	FROM TB_User
+    	WHERE username = #{username}
+    </select>
+   
+    <!-- 주소 수정  -->
+    <update id="updateAddress" parameterType="UserDTO">
+    	UPDATE TB_User SET zip_number = #{zipNumber}, address_base = #{addressBase},
+    			address_detail = #{addressDetail}
+    	WHERE id = #{id}
+    </update>
+  
+</mapper>

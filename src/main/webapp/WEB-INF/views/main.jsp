@@ -183,6 +183,7 @@
         <nav>
         	<ul class="header-nav">
            		<li><a class="nav-link active" href="${pageContext.request.contextPath}/calc">모의 계산하기</a></li>
+				<li><a class="nav-link active" href="${pageContext.request.contextPath}/mypage">마이페이지</a></li>
             </ul>
             <sec:authorize access="isAnonymous()">
                 <a href="${pageContext.request.contextPath}/login" class="btn btn-primary">로그인</a>
