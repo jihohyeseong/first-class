@@ -125,6 +125,20 @@
                     </div>
 
                     <div class="form-group">
+                        <label for="phone1">휴대폰 번호</label>
+                        <div class="rrn-inputs">
+                            <input type="text" id="phone1" maxlength="3" required>
+                            <span class="hyphen">-</span>
+                            <input type="text" id="phone2" maxlength="4" required>
+                            <span class="hyphen">-</span>
+                            <input type="text" id="phone3" maxlength="4" required>
+                        </div>
+                        <c:if test="${not empty errors.phoneNumber}">
+                            <p class="message error">${errors.phoneNumber}</p>
+                        </c:if>
+                    </div>
+
+                    <div class="form-group">
                         <label for="postcode">주소</label>
                         <div class="input-group" style="margin-bottom: 8px;">
                             <input type="text" id="postcode" name="zipNumber" placeholder="우편번호" value="${joinDTO.zipNumber}" readonly>
@@ -146,8 +160,7 @@
                     </div>
 
                     <input type="hidden" id="registrationNumber" name="registrationNumber">
-
-                    <div class="action-buttons">
+                    <input type="hidden" id="phoneNumber" name="phoneNumber"> <div class="action-buttons">
                         <button type="button" class="btn btn-cancel" onclick="location.href='${pageContext.request.contextPath}/login'">취소</button>
                         <button type="button" id="submitBtn" class="btn btn-primary" disabled>가입 완료</button>
                     </div>
@@ -186,11 +199,23 @@
             $passwordInput.on('keyup', checkPasswords);
             $passwordCheckInput.on('keyup', checkPasswords);
 
-            // --- 기존 submit 버튼 로직 ---
+            // --- submit 버튼 로직 (휴대폰 번호 조합 로직 추가) ---
             $submitButton.on('click', function() {
+                // 주민등록번호 조합
                 const rrn1 = $('#rrn1').val();
                 const rrn2 = $('#rrn2').val();
                 $('#registrationNumber').val(rrn1 + rrn2);
+                
+                // NEW: 휴대폰 번호 조합
+                const phone1 = $('#phone1').val();
+                const phone2 = $('#phone2').val();
+                const phone3 = $('#phone3').val();
+                // 모든 필드가 채워졌을 경우에만 조합하여 hidden input에 값을 설정합니다.
+                if (phone1 && phone2 && phone3) {
+                    $('#phoneNumber').val(phone1 + '-' + phone2 + '-' + phone3);
+                }
+
+                // 폼 전송
                 $('.info-form').submit();
             });
 

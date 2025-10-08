@@ -40,6 +40,9 @@ public class JoinDTO {
 	@Pattern(regexp = "^(?=.*[!@#$%^&*()-+=])(?=\\S+$).{8,}$", message = "비밀번호는 최소 8자 이상이어야 하며, 특수문자 하나 이상을 포함해야 합니다.")
 	private String password;
 	
+	@NotEmpty(message = "정확한 휴대전화번호를 입력하세요.")
+	private String phoneNumber;
+	
 	private String role;
 	
 	private String deltAt;

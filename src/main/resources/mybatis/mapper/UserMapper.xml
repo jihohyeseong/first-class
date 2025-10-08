@@ -13,6 +13,7 @@
             address_detail,
             username,
             password,
+            phone_number,
             role,
             DELT_AT
         ) VALUES (
@@ -23,6 +24,7 @@
             #{addressDetail},
             #{username},
             #{password},
+            #{phoneNumber},
             #{role},
             #{deltAt}
         )
