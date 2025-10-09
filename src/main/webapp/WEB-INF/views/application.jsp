@@ -1,6 +1,7 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="sec" uri="http://www.springframework.org/security/tags" %>
+<%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
 
 <!DOCTYPE html>
 <html lang="ko">
@@ -61,7 +62,7 @@
    .form-group label.field-title { width: 160px; font-weight: 500; color: #555; flex-shrink: 0; }
    .form-group .input-field { flex-grow: 1; }
    
-   input[type="text"], input[type="date"], input[type="number"], select {
+   input[type="text"], input[type="date"], input[type="number"],input[type="password"], select {
       width: 100%; padding: 10px; border: 1px solid var(--border-color);
       border-radius: 6px; transition: all 0.2s ease-in-out;
    }
@@ -121,7 +122,15 @@
    }
    .dynamic-form-row:nth-child(odd) { background-color: var(--primary-light-color); }
    .date-range-display { font-weight: 500; flex-basis: 300px; flex-shrink: 0; text-align: center; }
-   .payment-input-field { flex-grow: 1; }
+   .payment-input-field{
+	  flex-grow: 1;
+	  display: flex;
+ 	 justify-content: flex-end;
+	}
+	
+	button[name="action"][value="submit"]:disabled {
+  	opacity: .6; cursor: not-allowed;
+	}
 </style>
 </head>
 <body>
@@ -158,15 +167,19 @@
     </div>
     <div class="form-group">
       <label class="field-title">주민등록번호</label>
-      <div class="input-field"><input type="text" value="${userDTO.registrationNumber}" readonly></div>
+      <div class="input-field">
+      	<c:set var="rrnRaw" value="${userDTO.registrationNumber}" />
+		<c:set var="rrnDigits" value="${fn:replace(rrnRaw, '-', '')}" />
+		<input type="text" value="${fn:substring(rrnDigits,0,6)}-${fn:substring(rrnDigits,6,7)}******" readonly>
+       </div>
     </div>
     <div class="form-group">
       <label class="field-title">주소</label>
-      <div class="input-field"><input type="text" value="${userDTO.zipNumber} ${userDTO.addressBase} ${userDTO.addressDetail}" readonly></div>
+      <div class="input-field"><input type="text" value="[${userDTO.zipNumber}] ${userDTO.addressBase} ${userDTO.addressDetail}" readonly></div>
     </div>
     <div class="form-group">
       <label class="field-title">휴대전화번호</label>
-      <div class="input-field"><input type="text" value="010-1234-5678" readonly></div>
+      <div class="input-field"><input type="text" value="${userDTO.phoneNumber}" readonly></div>
     </div>
   </div>
 
@@ -178,7 +191,7 @@
     <div class="form-group">
       <label class="field-title">사업장 동의여부</label>
       <div class="input-field radio-group">
-        <input type="radio" id="consent-yes" name="businessAgree" value="Y">
+        <input type="radio" id="consent-yes" name="businessAgree" value="Y" required>
         <label for="consent-yes">예</label>
         <input type="radio" id="consent-no" name="businessAgree" value="N">
         <label for="consent-no">아니요</label>
@@ -188,13 +201,13 @@
     <div class="form-group">
       <label class="field-title">사업장 이름</label>
       <div class="input-field">
-        <input type="text" name="businessName" placeholder="사업장 이름을 입력하세요">
+        <input type="text" name="businessName" placeholder="사업장 이름을 입력하세요" required>
       </div>
     </div>
     <div class="form-group">
       <label class="field-title">사업장 등록번호</label>
       <div class="input-field">
-        <input type="text" name="businessRegiNumber" placeholder="'-' 없이 숫자만 입력하세요">
+        <input type="text" name="businessRegiNumber" placeholder="'-' 없이 숫자만 입력하세요" required>
       </div>
     </div>
     <div class="form-group">
@@ -220,7 +233,7 @@
 			<div class="form-group">
 				<label class="field-title" for="start-date">① 육아휴직 시작일</label>
 				<div class="input-field">
-					<input type="date" id="start-date" name="startDate">
+					<input type="date" id="start-date" name="startDate" required>
 				</div>
 			</div>
 
@@ -230,7 +243,7 @@
 					<div class="input-field"
 						style="display: flex; align-items: center; gap: 10px;">
 						<input type="date" id="end-date" name="endDate"
-							style="width: auto; flex-grow: 1;">
+							style="width: auto; flex-grow: 1;" required>
 						<button type="button" id="generate-forms-btn"
 							class="btn btn-primary">기간 생성</button>
 
@@ -252,13 +265,13 @@
 		<div class="form-group">
 			<label class="field-title">통상임금(월)</label>
 			<div class="input-field">
-				<input type="number" name="regularWage" placeholder="숫자만 입력하세요">
+				<input type="number" name="regularWage" placeholder="숫자만 입력하세요" required>
 			</div>
 		</div>
 		<div class="form-group">
 			<label class="field-title">주당 소정근로시간</label>
 			<div class="input-field">
-				<input type="number" name="weeklyHours" placeholder="숫자만 입력하세요">
+				<input type="number" name="weeklyHours" placeholder="숫자만 입력하세요" required>
 			</div>
 		</div>
 
@@ -269,8 +282,8 @@
 			<!-- 서버로 제출될 "단 하나"의 필드 -->
 			<input type="hidden" name="childBirthDate" id="childBirthDateHidden">
 
-			<div class="input-field radio-group">
-				<input type="radio" name="birthType" value="born" id="bt-born"><label
+			<div class="input-field radio-group" style="margin-bottom:16px;">
+				<input type="radio" name="birthType" value="born" id="bt-born" required><label
 					for="bt-born">출생일</label> <input type="radio" name="birthType"
 					value="expected" id="bt-expected"><label for="bt-expected">출산예정일</label>
 			</div>
@@ -284,17 +297,23 @@
 					</div>
 				</div>
 				<div class="form-group">
-					<label class="field-title" for="child-rrn">자녀 주민등록번호</label>
+					<label class="field-title" for="birth-date">출생일</label>
 					<div class="input-field">
-						<input type="text" id="child-rrn" name="childResiRegiNumber"
-							placeholder="예: 250101-3******">
+						<input type="date" id="birth-date">
 					</div>
 				</div>
 				<div class="form-group">
-					<label class="field-title" for="birth-date">출생일</label>
-					<div class="input-field">
-						<!-- name 제거! 제출 안 됨 -->
-						<input type="date" id="birth-date">
+					<label class="field-title" for="child-rrn-a">자녀 주민등록번호</label>
+					<div class="form-group">
+						<div class="input-field"
+							style="display: flex; align-items: center; gap: 10px;">
+							<input type="text" id="child-rrn-a" maxlength="6"
+								placeholder="생년월일 6자리"> <span class="hyphen">-</span> <input
+								type="password" id="child-rrn-b" maxlength="7"
+								placeholder="뒤 7자리">
+						</div>
+						<input type="hidden" name="childResiRegiNumber"
+							id="child-rrn-hidden">
 					</div>
 				</div>
 			</div>
@@ -317,13 +336,32 @@
 				<label class="field-title">은행</label>
 				<div class="input-field">
 					<!-- bankCode로 서버에 전송 -->
-					<select name="bankCode">
-						<option value="">은행 선택</option>
-						<option value="011">NH 농협</option>
-						<option value="004">KB 국민</option>
+					<select name="bankCode" required>
+						<option value="" selected disabled>은행 선택</option>
+						<option value="002">산업은행</option>
+						<option value="003">기업은행</option>
+						<option value="004">KB국민은행</option>
+						<option value="007">수협은행</option>
+						<option value="011">NH농협은행</option>
+						<option value="020">우리은행</option>
+						<option value="023">SC제일은행</option>
+						<option value="027">한국씨티은행</option>
+						<option value="031">대구은행</option>
+						<option value="032">부산은행</option>
+						<option value="034">광주은행</option>
+						<option value="035">제주은행</option>
+						<option value="037">전북은행</option>
+						<option value="039">경남은행</option>
+						<option value="045">새마을금고</option>
+						<option value="054">HSBC은행</option>
+						<option value="081">하나은행</option>
+						<option value="088">신한은행</option>
+						<option value="089">케이뱅크</option>
 						<option value="090">카카오뱅크</option>
-						<option value="088">신한</option>
-						<option value="020">우리</option>
+						<option value="092">토스뱅크</option>
+						<option value="238">미래에셋증권</option>
+						<option value="240">삼성증권</option>
+						<option value="264">키움증권</option>
 					</select>
 				</div>
 			</div>
@@ -331,7 +369,7 @@
 				<label class="field-title">계좌번호</label>
 				<div class="input-field">
 					<input type="text" name="accountNumber"
-						placeholder="'-' 없이 숫자만 입력하세요">
+						placeholder="'-' 없이 숫자만 입력하세요" required>
 				</div>
 			</div>
 			<!-- 접수센터선택은 아직 아무것도 안됨 선택하는척 하는곳 -->
@@ -364,7 +402,7 @@
 			<div class="form-group">
 				<label class="field-title">행정정보 공동이용 동의</label>
 				<div class="input-field radio-group">
-					<input type="radio" id="gov-yes" name="govInfoAgree" value="Y"><label
+					<input type="radio" id="gov-yes" name="govInfoAgree" value="Y" required><label
 						for="gov-yes">동의</label> <input type="radio" id="gov-no"
 						name="govInfoAgree" value="N"><label for="gov-no">비동의</label>
 				</div>
@@ -416,13 +454,13 @@ document.addEventListener('DOMContentLoaded', function () {
     var d = String(date.getDate()).padStart(2, '0');
     return y + '.' + m + '.' + d;
   }
-  // 월 더하기 (없는 일자는 그 달의 말일로 클램프) — Java LocalDate.plusMonths와 동일 동작
+  // 월 더하기 (없는 일자는 그 달의 말일로 클램프)
   function plusMonthsClamp(date, months) {
     var y = date.getFullYear(), m = date.getMonth(), d = date.getDate();
     var targetM = m + months;
     var targetY = y + Math.floor(targetM / 12);
     var normM   = ((targetM % 12) + 12) % 12;
-    var last    = new Date(targetY, normM + 1, 0).getDate(); // 다음달 0일 = 말일
+    var last    = new Date(targetY, normM + 1, 0).getDate();
     var day     = Math.min(d, last);
     return new Date(targetY, normM, day);
   }
@@ -469,7 +507,7 @@ document.addEventListener('DOMContentLoaded', function () {
   });
   if (noPaymentChk) noPaymentChk.addEventListener('change', applyNoPaymentState);
 
-  // ===== 기간 생성: DB splitPeriodsAndCalc와 동일 경계 =====
+  // ===== 기간 생성 =====
   generateBtn.addEventListener('click', function() {
     if (!startDateInput.value || !endDateInput.value) {
       alert('육아휴직 시작일과 종료일을 모두 선택해주세요.');
@@ -484,7 +522,7 @@ document.addEventListener('DOMContentLoaded', function () {
       return;
     }
 
-    // (선택) 최대 12개월 제한 — 시작월~종료월 포함 개수 기준
+    // 최대 12개월 제한
     var monthCount = 0;
     var mc = new Date(startDate.getFullYear(), startDate.getMonth(), 1);
     var endMonth = new Date(endDate.getFullYear(), endDate.getMonth(), 1);
@@ -503,20 +541,19 @@ document.addEventListener('DOMContentLoaded', function () {
     var i = 1;
 
     while (currentStartDate <= endDate) {
-      // DB 동일: periodEnd = min(endOfUnit(currentStartDate), endDate)
       var candidateEnd = endOfUnit(currentStartDate);
       var displayEnd   = (candidateEnd > endDate) ? new Date(endDate.getTime()) : candidateEnd;
 
-      // 표시 텍스트(지급일은 참고용, 필요 없으면 주석)
       var rangeText = formatDate(currentStartDate) + ' ~ ' + formatDate(displayEnd);
 
-      // 행 추가
+      // 행 추가 (입력칸 오른쪽 정렬: margin-left:auto)
       var row = document.createElement('div');
       row.className = 'dynamic-form-row';
       row.innerHTML =
         '<div class="date-range-display">' +
           '<div>' + rangeText + '</div>' +
-        '<div class="payment-input-field">' +
+        '</div>' +
+        '<div class="payment-input-field" style="margin-left:auto;">' +
           '<input type="number" name="monthly_payment_' + i + '" placeholder="해당 기간의 사업장 지급액(원) 입력">' +
         '</div>';
       formsContainer.appendChild(row);
@@ -526,7 +563,7 @@ document.addEventListener('DOMContentLoaded', function () {
       currentStartDate.setDate(currentStartDate.getDate() + 1);
       i++;
 
-       if (i > 13) { alert('최대 12개월(12구간)까지만 신청 가능합니다.'); formsContainer.innerHTML = ''; return; }
+      if (i > 13) { alert('최대 12개월(12구간)까지만 신청 가능합니다.'); formsContainer.innerHTML = ''; return; }
     }
 
     if (noPaymentWrapper) {
@@ -545,6 +582,10 @@ document.addEventListener('DOMContentLoaded', function () {
   const rBorn    = document.getElementById('bt-born');
   const rExp     = document.getElementById('bt-expected');
 
+  const rrnA = document.getElementById('child-rrn-a');
+  const rrnB = document.getElementById('child-rrn-b');
+  const rrnHidden = document.getElementById('child-rrn-hidden');
+
   // 예정일: 오늘 이후만 선택 가능
   if (exp) {
     const today = new Date(); today.setHours(0,0,0,0);
@@ -555,19 +596,39 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   function setHiddenFrom(el) { if (hidden && el) hidden.value = el.value || ''; }
+
+  // 출생일 → 주민번호 앞 6자리 자동 채움 (YYMMDD)
+  function fillRrnFromBirth() {
+    if (!birth || !rrnA) return;
+    if (!rBorn || !rBorn.checked) return;        // 출생일 모드일 때만
+    if (!birth.value) { rrnA.value = ''; return; }
+
+    // birth.value: 'YYYY-MM-DD'
+    var parts = birth.value.split('-');          // [YYYY, MM, DD]
+    if (parts.length !== 3) return;
+    var yymmdd = parts[0].slice(-2) + parts[1] + parts[2]; // YYMMDD
+    rrnA.value = yymmdd.slice(0,6);
+
+    // 앞 6자리 꽉 차면 뒷자리로 포커스
+    if (rrnA.value.length === 6 && rrnB) rrnB.focus();
+
+    // 출생일 hidden 미러링(기존 로직 유지)
+    setHiddenFrom(birth);
+  }
+
   function setBornRequired(on) {
     const name = document.getElementById('child-name');
-    const rrn  = document.getElementById('child-rrn');
     if (name)  name.required  = on;
-    if (rrn)   rrn.required   = on;
+    if (rrnA)  rrnA.required  = on;
+    if (rrnB)  rrnB.required  = on;
     if (birth) birth.required = on;
   }
   function setExpectedRequired(on) { if (exp) exp.required = on; }
   function clearBorn() {
     const name = document.getElementById('child-name');
-    const rrn  = document.getElementById('child-rrn');
     if (name)  name.value = '';
-    if (rrn)   rrn.value  = '';
+    if (rrnA)  rrnA.value = '';
+    if (rrnB)  rrnB.value = '';
     if (birth) birth.value = '';
   }
   function clearExpected() { if (exp) exp.value = ''; }
@@ -589,6 +650,7 @@ document.addEventListener('DOMContentLoaded', function () {
       setExpectedRequired(false);
       clearExpected();
       setHiddenFrom(birth);
+      fillRrnFromBirth(); // ← 전환 시 출생일값을 앞6으로 즉시 반영
     } else {
       bornWrap.style.display = 'none';
       expWrap.style.display  = '';
@@ -599,25 +661,62 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   }
 
-  if (birth) birth.addEventListener('change', function(){
-    if (rBorn && rBorn.checked) setHiddenFrom(birth);
-  });
-  if (exp) exp.addEventListener('change', function(){
-    if (rExp && rExp.checked) setHiddenFrom(exp);
-  });
+  if (birth) {
+    // 출생일 바뀔 때마다 앞6 자동 채움
+    birth.addEventListener('change', fillRrnFromBirth);
+  }
+  if (exp) {
+    exp.addEventListener('change', function(){
+      if (rExp && rExp.checked) setHiddenFrom(exp);
+    });
+  }
+
   radios.forEach(r => r.addEventListener('change', updateView));
   updateView();
 
   // 제출 직전 동기화
   const form = document.querySelector('form[action$="/apply"]');
   if (form) {
-    form.addEventListener('submit', function() {
+    form.addEventListener('submit', function () {
       const checked = document.querySelector('input[name="birthType"]:checked');
-      if (checked && checked.value === 'born')  setHiddenFrom(birth);
-      if (checked && checked.value === 'expected') setHiddenFrom(exp);
+
+      if (checked && checked.value === 'born') {
+        setHiddenFrom(birth);
+        // 주민번호: 앞6 + 뒤7 → hidden에 하이픈 없이 13자리
+        if (rrnHidden) rrnHidden.value = (rrnA?.value || '') + (rrnB?.value || '');
+      }
+      if (checked && checked.value === 'expected') {
+        setHiddenFrom(exp);
+        if (rrnHidden) rrnHidden.value = '';
+      }
     });
   }
-}); // DOMContentLoaded 끝
+});
+
+//===== 제출 버튼 활성화 조건: 필수칸 모두 입력 && 안내 체크박스 체크 =====
+const form = document.querySelector('form[action$="/apply"]');
+const submitBtn = document.querySelector('button[name="action"][value="submit"]');
+const agreeChk = document.getElementById('agree-notice');
+
+// 초기 상태: 비활성화
+if (submitBtn) submitBtn.disabled = true;
+
+function toggleSubmitEnabled() {
+  if (!form || !submitBtn || !agreeChk) return;
+  const valid = form.checkValidity();
+  submitBtn.disabled = !(agreeChk.checked && valid);
+}
+
+// 폼 내용이 바뀌거나 체크박스 상태가 바뀔 때마다 검사
+if (form) {
+  form.addEventListener('input',  toggleSubmitEnabled);
+  form.addEventListener('change', toggleSubmitEnabled);
+}
+if (agreeChk) {
+  agreeChk.addEventListener('change', toggleSubmitEnabled);
+}
+
+toggleSubmitEnabled();
 
 // ===== 다음 주소 API =====
 function execDaumPostcode(prefix) {
@@ -634,6 +733,7 @@ function execDaumPostcode(prefix) {
   }).open();
 }
 </script>
+
 
 </body>
 </html>

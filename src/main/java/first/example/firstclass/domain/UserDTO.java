@@ -13,6 +13,7 @@ public class UserDTO {
 	private String addressBase;
 	private String addressDetail;
 	private String userName;
+	private String phoneNumber;
 	
 
 }

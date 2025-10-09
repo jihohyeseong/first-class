@@ -175,7 +175,7 @@ h2{
         </tr>
         <tr>
           <th>휴대전화번호</th>
-          <td>010-1234-5678</td>
+          <td><c:out value="${userDTO.phoneNumber}"/></td>
         </tr>
         <tr>
           <th>주소</th>
