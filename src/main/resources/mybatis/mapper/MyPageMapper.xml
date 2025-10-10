@@ -6,7 +6,7 @@
     <!-- 로그인 유저 정보 조회  -->
     <select id="findByUserName" parameterType="string" resultType="UserDTO">
     	SELECT id, name, registration_number, zip_number, 
-    			address_base, address_detail, username
+    			address_base, address_detail, username, phone_number
     	FROM TB_User
     	WHERE username = #{username}
     </select>

@@ -210,7 +210,12 @@
             <label>이름</label>
             <input type="text" name="name" value="${user.name}" readonly />
          </div>
-
+         
+		<div class="form-group">
+            <label>전화번호</label>
+            <input type="text" name="phoneNumber" value="${user.phoneNumber}" readonly />
+         </div>
+         
          <div class="form-group">
             <label>주민등록번호</label>
             <c:set var="rrnRaw" value="${user.registrationNumber}" />
@@ -220,7 +225,7 @@
 
          <div class="form-group">
             <label>아이디</label>
-            <input type="text" name="userName" value="${user.userName}" readonly />
+            <input type="text" name="username" value="${user.username}" readonly />
          </div>
 
          <hr style="margin: 25px 0;">

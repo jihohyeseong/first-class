@@ -17,6 +17,7 @@ public class MyPageService {
 	//유저 정보 조회
 	public UserDTO getUserInfoByUserName(String username) {
 		UserDTO user = mypageDAO.findByUserName(username);
+		// 주민번호 복호화
 		try {
 			user.setRegistrationNumber(aes256Util.decrypt(user.getRegistrationNumber()));
 		} catch (Exception e) {
