@@ -18,9 +18,11 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import first.example.firstclass.domain.ApplicationDTO;
+import first.example.firstclass.domain.CodeDTO;
 import first.example.firstclass.domain.CustomUserDetails;
 import first.example.firstclass.domain.TermAmountDTO;
 import first.example.firstclass.domain.UserDTO;
@@ -54,11 +56,25 @@ public class ApplicationController {
     }
 
     @GetMapping("/apply/detail")
-    public String detail(@RequestParam long appNo, Model model) {
+    public String detail(@RequestParam long appNo, Model model, RedirectAttributes redirectAttributes) {
         UserDTO loginUser = currentUserOrNull();
         if (loginUser == null) return "redirect:/login";
 
         ApplicationDTO app = applicationService.findById(appNo);
+        boolean isAdmin = hasRole("ROLE_ADMIN");
+        
+        if (app == null) {
+        	redirectAttributes.addFlashAttribute("error", "존재하지 않는 신청입니다.");
+            return "redirect:/main";
+        }
+
+        if (!app.getUserId().equals(loginUser.getId()) && !isAdmin) {
+            // ID가 일치하지 않으면 권한이 없으므로, 에러 메시지와 함께 리디렉션
+        	redirectAttributes.addFlashAttribute("error", "해당 신청 정보를 조회할 권한이 없습니다.");
+            return "redirect:/main"; // 또는 신청 목록 페이지로 리디렉션
+        }
+        UserDTO user = userService.findById(app.getUserId());
+        
         List<TermAmountDTO> terms = applicationService.findTerms(appNo);
 
         if (loginUser.getRegistrationNumber() != null) {
@@ -68,7 +84,8 @@ public class ApplicationController {
         model.addAttribute("app", app);
         model.addAttribute("terms", terms);
         model.addAttribute("isSubmitted", "ST_20".equals(app.getStatusCode()));
-        model.addAttribute("userDTO", loginUser);
+        model.addAttribute("userDTO", user);
+        model.addAttribute("isAdmin", isAdmin);
 
         return "applicationDetail";
     }
@@ -175,7 +192,6 @@ public class ApplicationController {
         }
     }
 
-    /* ===================== 유틸/헬퍼 ===================== */
 
     private UserDTO currentUserOrNull() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
@@ -184,6 +200,18 @@ public class ApplicationController {
         }
         CustomUserDetails ud = (CustomUserDetails) auth.getPrincipal();
         return userService.findByUsername(ud.getUsername());
+    }
+    
+    private boolean hasRole(String roleName) {
+    	
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return false;
+        }
+
+        return authentication.getAuthorities().stream()
+                .anyMatch(grantedAuthority -> grantedAuthority.getAuthority().equals(roleName));
     }
 
     private static final Pattern DIGITS = Pattern.compile("\\d+");
@@ -215,4 +243,12 @@ public class ApplicationController {
         String s = v.trim().toLowerCase();
         return ("y".equalsIgnoreCase(v) || "on".equals(s) || "true".equals(s) || "1".equals(s)) ? "Y" : "N";
     }
+    
+    @GetMapping("/codes/banks")
+    @ResponseBody
+    public List<CodeDTO> banks() {
+        return applicationService.getBanks();
+    }
+    
+    
 }

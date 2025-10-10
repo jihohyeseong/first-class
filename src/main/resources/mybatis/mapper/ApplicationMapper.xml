@@ -93,5 +93,15 @@
   ORDER BY A.application_number DESC
 </select>
 
+<select id="selectBankCode"
+          resultType="first.example.firstclass.domain.CodeDTO">
+    SELECT
+      code AS code,
+      name AS name
+    FROM TB_Code
+    WHERE LENGTH(code) = 3
+      AND REGEXP_LIKE(code, '^[0-9]{3}$')
+    ORDER BY name
+  </select>
 
 </mapper>

@@ -135,6 +135,7 @@
 </head>
 <body>
 <script src="//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
  <header class="header">
         <a href="${pageContext.request.contextPath}/main" class="logo"><img src="${pageContext.request.contextPath}/resources/images/logo.png" alt="Logo" width="80" height="80"></a>
         <nav>
@@ -265,13 +266,16 @@
 		<div class="form-group">
 			<label class="field-title">통상임금(월)</label>
 			<div class="input-field">
-				<input type="number" name="regularWage" placeholder="숫자만 입력하세요" required>
+				<input type="text" id="regularWage" name="regularWage"
+					placeholder="숫자만 입력하세요" autocomplete="off"
+					required>
 			</div>
 		</div>
 		<div class="form-group">
 			<label class="field-title">주당 소정근로시간</label>
 			<div class="input-field">
-				<input type="number" name="weeklyHours" placeholder="숫자만 입력하세요" required>
+				<input type="number" name="weeklyHours" placeholder="숫자만 입력하세요"
+					required>
 			</div>
 		</div>
 
@@ -336,32 +340,9 @@
 				<label class="field-title">은행</label>
 				<div class="input-field">
 					<!-- bankCode로 서버에 전송 -->
-					<select name="bankCode" required>
+					<select name="bankCode" id="bankCode" required
+						data-selected="${applicationDTO.bankCode}">
 						<option value="" selected disabled>은행 선택</option>
-						<option value="002">산업은행</option>
-						<option value="003">기업은행</option>
-						<option value="004">KB국민은행</option>
-						<option value="007">수협은행</option>
-						<option value="011">NH농협은행</option>
-						<option value="020">우리은행</option>
-						<option value="023">SC제일은행</option>
-						<option value="027">한국씨티은행</option>
-						<option value="031">대구은행</option>
-						<option value="032">부산은행</option>
-						<option value="034">광주은행</option>
-						<option value="035">제주은행</option>
-						<option value="037">전북은행</option>
-						<option value="039">경남은행</option>
-						<option value="045">새마을금고</option>
-						<option value="054">HSBC은행</option>
-						<option value="081">하나은행</option>
-						<option value="088">신한은행</option>
-						<option value="089">케이뱅크</option>
-						<option value="090">카카오뱅크</option>
-						<option value="092">토스뱅크</option>
-						<option value="238">미래에셋증권</option>
-						<option value="240">삼성증권</option>
-						<option value="264">키움증권</option>
 					</select>
 				</div>
 			</div>
@@ -398,33 +379,48 @@
 					</p>
 				</div>
 			</div>
-			<!-- 행정정보 공동이용 동의 → govInfoAgree: Y/N -->
-			<div class="form-group">
-				<label class="field-title">행정정보 공동이용 동의</label>
-				<div class="input-field radio-group">
-					<input type="radio" id="gov-yes" name="govInfoAgree" value="Y" required><label
-						for="gov-yes">동의</label> <input type="radio" id="gov-no"
-						name="govInfoAgree" value="N"><label for="gov-no">비동의</label>
-				</div>
+			<!-- 행정정보 공동이용 동의 -->
+			<div class="form-section">
+			  <h2>행정정보 공동이용 동의서</h2>
+			
+			  <div class="info-box">
+			    본인은 이 건 업무처리와 관련하여 담당 공무원이 「전자정부법」 제36조제1항에 따른 행정정보의 공동이용을 통하여 ‘담당
+			    공무원 확인사항’을 확인하는 것에 동의합니다.<br>
+			    * 동의하지 않는 경우에는 신청(고)인이 직접 관련 서류를 제출하여야 합니다.
+			  </div>
+			  <div style="display:flex; flex-direction:column; align-items:flex-end; text-align:right; margin-top:16px;">
+			    <label class="field-title" style="width:auto; margin-bottom:12px;">
+			      신청인&nbsp;:&nbsp;${userDTO.name}
+			    </label>
+			    <div class="radio-group" style="justify-content:flex-end; gap:24px;">
+			      <input type="radio" id="gov-yes" name="govInfoAgree" value="Y" required>
+			      <label for="gov-yes">동의합니다.</label>
+			      <input type="radio" id="gov-no" name="govInfoAgree" value="N">
+			      <label for="gov-no">동의하지 않습니다.</label>
+			    </div>
+			  </div>
 			</div>
 		</div>
 
 		<!-- ===== 안내/동의 ===== -->
-  <div class="form-section">
-    <div class="notice-box">
-      <span class="notice-icon">⚠️</span>
-      <div>
-        <h3>부정수급 안내</h3>
-        <p>위 급여신청서에 기재한 내용에 거짓이 있을 경우에는 급여의 지급이 중단되고 지급받은 급여액에 상당하는 금액을 반환해야 합니다. 또한, 추가적인 반환금액이 발생할 수 있으며 경우에 따라서는 형사 처벌도 받을 수 있습니다.</p>
-      </div>
-    </div>
-    <div class="checkbox-group" style="justify-content:center; margin-top:20px;">
-      <input type="checkbox" id="agree-notice" name="agreeNotice">
-      <label for="agree-notice">위 안내사항을 모두 확인했으며, 신청서 내용에 거짓이 없음을 확인합니다.</label>
-    </div>
-  </div>
+		<div class="form-section">
+			<div class="notice-box">
+				<span class="notice-icon">⚠️</span>
+				<div>
+					<h3>부정수급 안내</h3>
+					<p>위 급여신청서에 기재한 내용에 거짓이 있을 경우에는 급여의 지급이 중단되고 지급받은 급여액에 상당하는 금액을
+						반환해야 합니다. 또한, 추가적인 반환금액이 발생할 수 있으며 경우에 따라서는 형사 처벌도 받을 수 있습니다.</p>
+				</div>
+			</div>
+			<div class="checkbox-group"
+				style="justify-content: center; margin-top: 20px;">
+				<input type="checkbox" id="agree-notice" name="agreeNotice">
+				<label for="agree-notice">위 안내사항을 모두 확인했으며, 신청서 내용에 거짓이 없음을
+					확인합니다.</label>
+			</div>
+		</div>
 
-  <!-- ===== 제출/임시저장 버튼 (action 값으로 구분) ===== -->
+		<!-- ===== 제출/임시저장 버튼 (action 값으로 구분) ===== -->
   <div class="submit-button-container" style="display:flex; gap:10px; justify-content:center;">
     <button type="submit" name="action" value="register" class="btn submit-button" style="background:#6c757d; border-color:#6c757d;">임시저장</button>
     <button type="submit" name="action" value="submit"   class="btn submit-button">신청서 제출하기</button>
@@ -455,22 +451,31 @@ document.addEventListener('DOMContentLoaded', function () {
     return y + '.' + m + '.' + d;
   }
   // 월 더하기 (없는 일자는 그 달의 말일로 클램프)
-  function plusMonthsClamp(date, months) {
-    var y = date.getFullYear(), m = date.getMonth(), d = date.getDate();
-    var targetM = m + months;
-    var targetY = y + Math.floor(targetM / 12);
-    var normM   = ((targetM % 12) + 12) % 12;
-    var last    = new Date(targetY, normM + 1, 0).getDate();
-    var day     = Math.min(d, last);
-    return new Date(targetY, normM, day);
-  }
-  // 단위기간 종료일 = 다음달 같은 날 - 1일
-  function endOfUnit(start) {
-    var nextSame = plusMonthsClamp(start, 1);
-    var e = new Date(nextSame.getTime());
-    e.setDate(e.getDate() - 1);
-    return e;
-  }
+	function plusMonthsClamp(date, months) {
+	  var y = date.getFullYear(), m = date.getMonth(), d = date.getDate();
+	  var targetM = m + months;
+	  var targetY = y + Math.floor(targetM / 12);
+	  var normM   = ((targetM % 12) + 12) % 12;
+	  var last    = new Date(targetY, normM + 1, 0).getDate();
+	  var day     = Math.min(d, last);
+	  return new Date(targetY, normM, day);
+	}
+	
+
+	// - 다음 달에 같은 일자가 존재하면: (다음달 같은 날) - 1일
+	// - 다음 달에 같은 일자가 없어 클램프되면: 그 달의 말일 그대로 ( -1 하지 않음 )
+	function endOfUnit(start) {
+	  var originalDay = start.getDate();
+	  var nextSame    = plusMonthsClamp(start, 1);
+	  var lastOfNext  = new Date(nextSame.getFullYear(), nextSame.getMonth() + 1, 0).getDate();
+	  var clamped     = originalDay > lastOfNext;
+	
+	  var e = new Date(nextSame.getTime());
+	  if (!clamped) {
+	    e.setDate(e.getDate() - 1);
+	  }
+	  return e;
+	}
 
   function getPaymentInputs() {
     return formsContainer.querySelectorAll('input[name^="monthly_payment_"]');
@@ -550,12 +555,11 @@ document.addEventListener('DOMContentLoaded', function () {
       var row = document.createElement('div');
       row.className = 'dynamic-form-row';
       row.innerHTML =
-        '<div class="date-range-display">' +
-          '<div>' + rangeText + '</div>' +
-        '</div>' +
-        '<div class="payment-input-field" style="margin-left:auto;">' +
-          '<input type="number" name="monthly_payment_' + i + '" placeholder="해당 기간의 사업장 지급액(원) 입력">' +
-        '</div>';
+    	  '<div class="date-range-display"><div>' + rangeText + '</div></div>' +
+    	  '<div class="payment-input-field" style="margin-left:auto;">' +
+    	    '<input type="text" name="monthly_payment_' + i + '" ' +
+    	    'placeholder="해당 기간의 사업장 지급액(원) 입력" autocomplete="off">' +
+    	  '</div>';
       formsContainer.appendChild(row);
 
       // 다음 구간 시작 = 이번 구간 끝 + 1일
@@ -732,6 +736,119 @@ function execDaumPostcode(prefix) {
     }
   }).open();
 }
+
+$(function () {
+	  const $sel = $('#bankCode');
+	  const selected = $sel.data('selected');
+
+	  $.getJSON('${pageContext.request.contextPath}/codes/banks', function (list) {
+	    $sel.find('option:not([value=""])').remove();
+	    list.forEach(it => $sel.append(new Option(it.name, it.code)));
+	    if (selected) $sel.val(String(selected));
+	  });
+	});
+	
+//===== 숫자 전용 + 실시간 콤마 표시 공통 유틸 =====
+function onlyDigits(str) { return (str || '').replace(/[^\d]/g, ''); }
+function withCommas(numStr) {
+  if (!numStr) return '';
+  numStr = numStr.replace(/^0+(?=\d)/, ''); // 앞의 0 정리(단 "0"은 허용)
+  return numStr.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+}
+
+// 커서 유지하며 콤마 포맷
+function formatWithCaret(el) {
+  const start = el.selectionStart;
+  const old   = el.value;
+  const digitsBefore = onlyDigits(old.slice(0, start)).length;
+
+  const raw   = onlyDigits(old);
+  const pretty = withCommas(raw);
+  el.value = pretty;
+
+  // 재배치
+  let curDigits = 0, newPos = 0;
+  for (let i = 0; i < el.value.length; i++) {
+    if (/\d/.test(el.value[i])) curDigits++;
+    if (curDigits >= digitsBefore) { newPos = i + 1; break; }
+  }
+  el.setSelectionRange(newPos, newPos);
+}
+
+// ===== 숫자만 허용(키/붙여넣기/드롭) + 실시간 콤마 =====
+function allowDigitsOnlyAndCommasDisplay(el) {
+  // 키 입력: 숫자/편집키만 허용
+  el.addEventListener('keydown', function(e) {
+    const k = e.key;
+    const ctrl = e.ctrlKey || e.metaKey;
+    const editKeys = ['Backspace','Delete','ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Home','End','Tab'];
+    if (ctrl && ['a','c','v','x','z','y'].includes(k.toLowerCase())) return; // 단축키 허용
+    if (editKeys.includes(k)) return;
+    if (/^\d$/.test(k)) return; // 숫자만
+    // 그 외는 차단
+    e.preventDefault();
+  });
+
+  // 붙여넣기/드롭: 숫자만 남김
+  el.addEventListener('paste', function(e) {
+    e.preventDefault();
+    const text = (e.clipboardData || window.clipboardData).getData('text') || '';
+    const digits = onlyDigits(text);
+    if (!digits) return;
+    const start = el.selectionStart, end = el.selectionEnd;
+    const v = el.value;
+    el.value = v.slice(0, start) + digits + v.slice(end);
+    formatWithCaret(el);
+  });
+  el.addEventListener('drop', function(e) {
+    e.preventDefault();
+  });
+
+  // 입력 시 포맷(IME 조합 중엔 패스)
+  el.addEventListener('input', function(e) {
+    if (e.isComposing) return;
+    // 혹시 남은 비숫자 제거
+    if (/[^\d,]/.test(this.value)) this.value = withCommas(onlyDigits(this.value));
+    formatWithCaret(this);
+  });
+
+  // blur 시 최종 포맷
+  el.addEventListener('blur', function() {
+    this.value = withCommas(onlyDigits(this.value));
+  });
+
+  // 초기값 포맷
+  if (el.value) el.value = withCommas(onlyDigits(el.value));
+}
+
+// ===== 대상 필드 연결 =====
+
+// 1) 통상임금
+const wageEl = document.getElementById('regularWage');
+if (wageEl) allowDigitsOnlyAndCommasDisplay(wageEl);
+
+// 2) 동적으로 생성되는 monthly_payment_* (이벤트 위임)
+document.addEventListener('focusin', function(e) {
+  const t = e.target;
+  if (t && t.tagName === 'INPUT' && /^monthly_payment_\d+$/.test(t.name)) {
+    // 중복 바인딩 방지
+    if (!t._digitsOnlyBound) {
+      allowDigitsOnlyAndCommasDisplay(t);
+      t._digitsOnlyBound = true;
+    }
+  }
+});
+
+// ===== 제출 직전: 콤마 제거해서 숫자만 서버로 전송 =====
+(function attachStripOnSubmit(){
+  const form = document.querySelector('form[action$="/apply"]');
+  if (!form) return;
+  form.addEventListener('submit', function () {
+    if (wageEl) wageEl.value = onlyDigits(wageEl.value);
+    const payInputs = form.querySelectorAll('input[name^="monthly_payment_"]');
+    payInputs.forEach(inp => { inp.value = onlyDigits(inp.value); });
+  });
+})();
 </script>
 
 

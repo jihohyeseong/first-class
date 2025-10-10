@@ -4,6 +4,7 @@ import first.example.firstclass.dao.ApplicationDAO;
 import first.example.firstclass.dao.TermAmountDAO;
 import first.example.firstclass.domain.ApplicationDTO;
 import first.example.firstclass.domain.ApplicationListDTO;
+import first.example.firstclass.domain.CodeDTO;
 import first.example.firstclass.domain.TermAmountDTO;
 import first.example.firstclass.util.AES256Util;
 
@@ -49,9 +50,6 @@ public class ApplicationService {
 
         LocalDate start = toLocal(dto.getStartDate());
         LocalDate end   = toLocal(dto.getEndDate());
-/*        if (start == null || end == null) {
-            throw new IllegalArgumentException("신청 시작일 또는 종료일이 비어 있습니다.");
-        }*/
 
         long regularWage = nz(dto.getRegularWage());
 
@@ -79,69 +77,81 @@ public class ApplicationService {
             applicationDAO.updateSubmittedNow(appNo);
         }
 
-        return appNo;
-    }
+		return appNo;
+	}
 
-    /* ============================================================
-       단위기간 및 정부/회사 지급액 계산
-    ============================================================ */
-    private List<TermAmountDTO> splitPeriodsAndCalc(LocalDate startDate,
-                                                    LocalDate endDate,
-                                                    long regularWage,
-                                                    List<Long> monthlyCompanyPay,
-                                                    boolean noCompanyPay) {
-        if (endDate.isBefore(startDate)) {
-            throw new IllegalArgumentException("종료일이 시작일보다 빠릅니다.");
-        }
+	/*
+	 * ============================================================ 단위기간 및 정부/회사 지급액
+	 * 계산 ============================================================
+	 */
+	private List<TermAmountDTO> splitPeriodsAndCalc(LocalDate startDate, LocalDate endDate, long regularWage,
+			List<Long> monthlyCompanyPay, boolean noCompanyPay) {
+		if (endDate.isBefore(startDate)) {
+			throw new IllegalArgumentException("종료일이 시작일보다 빠릅니다.");
+		}
 
-        List<TermAmountDTO> result = new ArrayList<>();
-        LocalDate periodStart = startDate;
-        int monthIdx = 1;
+		List<TermAmountDTO> result = new ArrayList<>();
+		LocalDate periodStart = startDate;
+		int monthIdx = 1;
 
-        while (!periodStart.isAfter(endDate)) {
-            LocalDate periodEnd = periodStart.plusMonths(1).minusDays(1);
-            if (periodEnd.isAfter(endDate)) periodEnd = endDate;
+		while (!periodStart.isAfter(endDate)) {
+			// 다음달 '같은 일자'(없으면 말일로 클램프된 날짜)
+			LocalDate nextSame = periodStart.plusMonths(1);
 
-            boolean isLast = periodEnd.equals(endDate);
+			// 클램프 여부: 원래 일자 != nextSame의 일자
+			boolean clamped = (nextSame.getDayOfMonth() != periodStart.getDayOfMonth());
 
-            long companyPayment = (!noCompanyPay && monthlyCompanyPay != null && monthlyCompanyPay.size() >= monthIdx)
-                    ? nz(monthlyCompanyPay.get(monthIdx - 1))
-                    : 0L;
+			// 규칙:
+			// - 클램프 O → 그 달의 말일 그대로
+			// - 클램프 X → (다음달 같은 날) - 1일
+			LocalDate periodEnd = clamped ? nextSame : nextSame.minusDays(1);
 
-            long base = computeGovBase(regularWage, monthIdx);
-            long govPayment = calcGovPayment(base, companyPayment, periodStart, periodEnd, isLast);
+			if (periodEnd.isAfter(endDate)) {
+				periodEnd = endDate;
+			}
 
-            LocalDate paymentDate = periodEnd.withDayOfMonth(1).plusMonths(1);
+			boolean isLast = periodEnd.equals(endDate);
 
-            TermAmountDTO term = new TermAmountDTO();
-            term.setStartMonthDate(Date.valueOf(periodStart));
-            term.setEndMonthDate(Date.valueOf(periodEnd));
-            term.setPaymentDate(Date.valueOf(paymentDate));
-            term.setCompanyPayment(companyPayment);
-            term.setGovPayment(govPayment);
-            result.add(term);
+			long companyPayment = (!noCompanyPay && monthlyCompanyPay != null && monthlyCompanyPay.size() >= monthIdx)
+					? nz(monthlyCompanyPay.get(monthIdx - 1))
+					: 0L;
 
-            periodStart = periodEnd.plusDays(1);
-            monthIdx++;
-        }
-        return result;
-    }
+			long base = computeGovBase(regularWage, monthIdx);
+			long govPayment = calcGovPayment(base, companyPayment, periodStart, periodEnd, isLast);
 
-    /* 정부 지급액 계산 */
-    private long calcGovPayment(long base, long companyPayment, LocalDate start, LocalDate end, boolean isLast) {
-        if (!isLast) return Math.max(0L, base - companyPayment);
+			LocalDate paymentDate = periodEnd.withDayOfMonth(1).plusMonths(1);
 
-        YearMonth endYm = YearMonth.from(end);
-        long daysInTerm = ChronoUnit.DAYS.between(start, end) + 1;
-        long daysInEndMonth = endYm.lengthOfMonth();
-        double ratio = Math.max(0.0, Math.min(1.0, (double) daysInTerm / daysInEndMonth));
-        long prorated = Math.round(base * ratio);
-        return Math.max(0L, prorated - companyPayment);
-    }
+			TermAmountDTO term = new TermAmountDTO();
+			term.setStartMonthDate(Date.valueOf(periodStart));
+			term.setEndMonthDate(Date.valueOf(periodEnd));
+			term.setPaymentDate(Date.valueOf(paymentDate));
+			term.setCompanyPayment(companyPayment);
+			term.setGovPayment(govPayment);
+			result.add(term);
 
-    /* 정부 기본 지급액 */
-    private long computeGovBase(long regularWage, int monthIdx) {
-        if (monthIdx <= 3) return Math.min(regularWage, 2_500_000L);
+			periodStart = periodEnd.plusDays(1);
+			monthIdx++;
+		}
+		return result;
+	}
+
+	/* 정부 지급액 계산 */
+	private long calcGovPayment(long base, long companyPayment, LocalDate start, LocalDate end, boolean isLast) {
+		if (!isLast)
+			return Math.max(0L, base - companyPayment);
+
+		YearMonth endYm = YearMonth.from(end);
+		long daysInTerm = ChronoUnit.DAYS.between(start, end) + 1;
+		long daysInEndMonth = endYm.lengthOfMonth();
+		double ratio = Math.max(0.0, Math.min(1.0, (double) daysInTerm / daysInEndMonth));
+		long prorated = Math.round(base * ratio);
+		return Math.max(0L, prorated - companyPayment);
+	}
+
+	/* 정부 기본 지급액 */
+	private long computeGovBase(long regularWage, int monthIdx) {
+		if (monthIdx <= 3)
+			return Math.min(regularWage, 2_500_000L);
         if (monthIdx <= 6) return Math.min(regularWage, 2_000_000L);
         long eighty = Math.round(regularWage * 0.8);
         return Math.min(eighty, 1_600_000L);
@@ -182,6 +192,10 @@ public class ApplicationService {
 
     private static LocalDate toLocal(Date d) {
         return (d == null) ? null : d.toLocalDate();
+    }
+    
+    public List<CodeDTO> getBanks() {
+        return applicationDAO.selectBankCode();
     }
 
 }

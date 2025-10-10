@@ -16,5 +16,7 @@ public interface UserDAO {
 	UserDTO findUserInfo(String username);
 
 	boolean existsByUsername(String username);
+	
+	UserDTO findById(Long id);
 
 }

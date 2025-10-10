@@ -10,5 +10,6 @@
 		<typeAlias alias="JoinDTO" type="first.example.firstclass.domain.JoinDTO" />
 		<typeAlias alias="UserVO" type="first.example.firstclass.domain.UserVO" />
 		<typeAlias alias="UserDTO" type="first.example.firstclass.domain.UserDTO" />
+		<typeAlias alias="CodeDTO" type="first.example.firstclass.domain.CodeDTO" />
 	</typeAliases>
 </configuration>

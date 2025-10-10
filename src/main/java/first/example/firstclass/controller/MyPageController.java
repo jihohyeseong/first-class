@@ -47,7 +47,7 @@ public class MyPageController {
             return "redirect:/login";
         }
         
-        userDTO.setUserName(principal.getName());
+        userDTO.setUsername(principal.getName());
         boolean success = myPageService.updateUserAddress(userDTO);
         
         if(success) {

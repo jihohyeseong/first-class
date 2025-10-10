@@ -14,33 +14,33 @@
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
 <style>
 :root{
-  --primary-color:#3f58d4;
-  --primary-light-color:#f0f2ff;
-  --white-color:#ffffff;
-  --light-gray-color:#f8f9fa;
-  --gray-color:#868e96;
-  --dark-gray-color:#343a40;
-  --border-color:#dee2e6;
-  --success-color:#28a745;
-  --warning-bg-color:#fff3cd;
-  --warning-border-color:#ffeeba;
-  --warning-text-color:#856404;
-  --shadow-sm:0 1px 3px rgba(0,0,0,0.05);
-  --shadow-md:0 4px 8px rgba(0,0,0,0.07);
+	--primary-color:#3f58d4;
+	--primary-light-color:#f0f2ff;
+	--white-color:#ffffff;
+	--light-gray-color:#f8f9fa;
+	--gray-color:#868e96;
+	--dark-gray-color:#343a40;
+	--border-color:#dee2e6;
+	--success-color:#28a745;
+	--warning-bg-color:#fff3cd;
+	--warning-border-color:#ffeeba;
+	--warning-text-color:#856404;
+	--shadow-sm:0 1px 3px rgba(0,0,0,0.05);
+	--shadow-md:0 4px 8px rgba(0,0,0,0.07);
 }
 
 /* 기본 스타일 */
 *{margin:0;padding:0;box-sizing:border-box}
 html{height:100%}
 body{
-  display:flex;flex-direction:column;min-height:100vh;
-  font-family:'Noto Sans KR',sans-serif;background-color:var(--light-gray-color);
-  color:var(--dark-gray-color);
+	display:flex;flex-direction:column;min-height:100vh;
+	font-family:'Noto Sans KR',sans-serif;background-color:var(--light-gray-color);
+	color:var(--dark-gray-color);
 }
 a{text-decoration:none;color:inherit}
 
 .header,.footer{
-  background-color:var(--white-color);padding:15px 40px;border-bottom:1px solid var(--border-color);box-shadow:var(--shadow-sm);
+	background-color:var(--white-color);padding:15px 40px;border-bottom:1px solid var(--border-color);box-shadow:var(--shadow-sm);
 }
 .footer{border-top:1px solid var(--border-color);border-bottom:none;text-align:center;padding:20px 0;margin-top:auto}
 .header{display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:10}
@@ -48,36 +48,36 @@ a{text-decoration:none;color:inherit}
 .header .welcome-msg{font-size:16px}
 
 .main-container{
-  flex-grow:1;width:100%;max-width:850px;margin:40px auto;padding:40px;
-  background-color:var(--white-color);border-radius:12px;box-shadow:var(--shadow-md);
+	flex-grow:1;width:100%;max-width:850px;margin:40px auto;padding:40px;
+	background-color:var(--white-color);border-radius:12px;box-shadow:var(--shadow-md);
 }
 
 h1{text-align:center;margin-bottom:10px;font-size:28px}
 h2{
-  color:var(--primary-color);border-bottom:2px solid var(--primary-light-color);
-  padding-bottom:10px;margin-bottom:25px;font-size:20px;
+	color:var(--primary-color);border-bottom:2px solid var(--primary-light-color);
+	padding-bottom:10px;margin-bottom:25px;font-size:20px;
 }
 
 /* 섹션 타이틀 */
 .section-title{
-  font-size:20px;font-weight:700;color:var(--dark-gray-color);
-  margin-bottom:15px;border-left:4px solid var(--primary-color);padding-left:10px;
+	font-size:20px;font-weight:700;color:var(--dark-gray-color);
+	margin-bottom:15px;border-left:4px solid var(--primary-color);padding-left:10px;
 }
 
 /* 테이블 */
 .info-table-container{margin-bottom:30px}
 .info-table{
-  width:100%;border-collapse:collapse;
-  border-top:2px solid var(--border-color);
-  border-left:none;border-right:none;
+	width:100%;border-collapse:collapse;
+	border-top:2px solid var(--border-color);
+	border-left:none;border-right:none;
 }
 .info-table th,.info-table td{
-  padding:12px 15px;border:1px solid var(--border-color);
-  text-align:left;font-size:15px;
+	padding:12px 15px;border:1px solid var(--border-color);
+	text-align:left;font-size:15px;
 }
 .info-table th{
-  background-color:var(--light-gray-color);
-  font-weight:500;width:150px;color:var(--dark-gray-color);
+	background-color:var(--light-gray-color);
+	font-weight:500;width:150px;color:var(--dark-gray-color);
 }
 .info-table td{background-color:var(--white-color);color:#333}
 .info-table.table-4col th{width:120px;background-color:var(--light-gray-color)}
@@ -87,9 +87,9 @@ h2{
 
 /* 버튼 */
 .btn{
-  display:inline-block;padding:10px 20px;font-size:15px;font-weight:500;
-  border-radius:8px;border:1px solid var(--border-color);cursor:pointer;
-  transition:all .2s ease-in-out;text-align:center;
+	display:inline-block;padding:10px 20px;font-size:15px;font-weight:500;
+	border-radius:8px;border:1px solid var(--border-color);cursor:pointer;
+	transition:all .2s ease-in-out;text-align:center;
 }
 .btn-primary{background-color:var(--primary-color);color:#fff;border-color:var(--primary-color)}
 .btn-primary:hover{background-color:#364ab1;box-shadow:var(--shadow-md);transform:translateY(-2px)}
@@ -106,39 +106,38 @@ h2{
 
 .data-title{font-weight:500}
 .detail-btn{
-  border:1px solid var(--primary-color);color:var(--primary-color);
-  background-color:var(--white-color);padding:3px 8px;font-size:14px;
-  margin-left:10px;border-radius:4px;cursor:pointer;transition:background-color .1s;
+	border:1px solid var(--primary-color);color:var(--primary-color);
+	background-color:var(--white-color);padding:3px 8px;font-size:14px;
+	margin-left:10px;border-radius:4px;cursor:pointer;transition:background-color .1s;
 }
 .detail-btn:hover{background-color:var(--primary-light-color)}
 .success-text{color:var(--success-color);font-weight:500}
 </style>
 </head>
 <body>
- <header class="header">
-        <a href="${pageContext.request.contextPath}/main" class="logo"><img src="${pageContext.request.contextPath}/resources/images/logo.png" alt="Logo" width="80" height="80"></a>
-        <nav>
-            <sec:authorize access="isAnonymous()">
-                <a href="${pageContext.request.contextPath}/login" class="btn btn-primary">로그인</a>
-            </sec:authorize>
-            <sec:authorize access="isAuthenticated()">
-                <span class="welcome-msg">
-                    <sec:authentication property="principal.username"/>님, 환영합니다.
-                </span>
-                <form id="logout-form" action="${pageContext.request.contextPath}/logout" method="post" style="display: none;">
-                    <sec:csrfInput/>
-                </form>
-                <a href="#" onclick="document.getElementById('logout-form').submit(); return false;" class="btn btn-logout">로그아웃</a>
-            </sec:authorize>
-        </nav>
-    </header>
+	<header class="header">
+		<a href="${pageContext.request.contextPath}${isAdmin ? '/adminlist' : '/main'}" class="logo"><img src="${pageContext.request.contextPath}/resources/images/logo.png" alt="Logo" width="80" height="80"></a>
+		<nav>
+			<sec:authorize access="isAnonymous()">
+				<a href="${pageContext.request.contextPath}/login" class="btn btn-primary">로그인</a>
+			</sec:authorize>
+			<sec:authorize access="isAuthenticated()">
+				<span class="welcome-msg">
+					<sec:authentication property="principal.username"/>님, 환영합니다.
+				</span>
+				<form id="logout-form" action="${pageContext.request.contextPath}/logout" method="post" style="display: none;">
+					<sec:csrfInput/>
+				</form>
+				<a href="#" onclick="document.getElementById('logout-form').submit(); return false;" class="btn btn-logout">로그아웃</a>
+			</sec:authorize>
+		</nav>
+	</header>
 
 <main class="main-container">
-  <h1>육아휴직 급여 신청서 상세 보기</h1>
+	<h1>육아휴직 급여 신청서 상세 보기</h1>
 
-  <!-- 접수정보 -->
-  <div class="info-table-container">
-    <h2 class="section-title">접수정보</h2>
+	<div class="info-table-container">
+		<h2 class="section-title">접수정보</h2>
 		<table class="info-table table-4col">
 			<tbody>
 				<tr>
@@ -156,42 +155,42 @@ h2{
 							<c:otherwise>미신청</c:otherwise>
 						</c:choose></td>
 					<th class="data-title">신청인</th>
-					<td><sec:authentication property="principal.username" /></td>
+					<td><c:out value="${userDTO.username}"/></td>
 				</tr>
 			</tbody>
 		</table>
 	</div>
 
-  <!-- 신청인 정보 -->
-  <div class="info-table-container">
-    <h2 class="section-title">신청인 정보 (육아휴직자)</h2>
-    <table class="info-table table-4col">
-      <tbody>
-        <tr>
-          <th>이름</th>
-          <td><c:out value="${userDTO.name}"/></td>
-          <th>주민등록번호</th>
-          <td><c:out value="${userDTO.registrationNumber}"/></td>
-        </tr>
-        <tr>
-          <th>휴대전화번호</th>
-          <td><c:out value="${userDTO.phoneNumber}"/></td>
-        </tr>
-        <tr>
-          <th>주소</th>
-          <td colspan="3"><c:out value="${userDTO.zipNumber} ${userDTO.addressBase} ${userDTO.addressDetail}"/></td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
+	<div class="info-table-container">
+		<h2 class="section-title">신청인 정보 (육아휴직자)</h2>
+		<table class="info-table table-4col">
+			<tbody>
+				<tr>
+					<th>이름</th>
+					<td colspan="3"><c:out value="${userDTO.name}"/></td>
+				</tr>
+				<tr>
+					<th>주민등록번호</th>
+					<td colspan="3"><c:out value="${userDTO.registrationNumber}"/></td>
+				</tr>
+				<tr>
+					<th>휴대전화번호</th>
+					<td colspan="3"><c:out value="${userDTO.phoneNumber}"/></td>
+				</tr>
+				<tr>
+					<th>주소</th>
+					<td colspan="3"><c:out value="${userDTO.zipNumber} ${userDTO.addressBase} ${userDTO.addressDetail}"/></td>
+				</tr>
+			</tbody>
+		</table>
+	</div>
 
-  <!-- 사업장 정보 -->
 	<div class="info-table-container">
 		<h2 class="section-title">사업장 정보 (회사)</h2>
 		<table class="info-table table-4col">
 			<tbody>
 				<tr>
-					<th>사업장 동의여부</th>
+					<th>사업장 <br>동의여부</th>
 					<td><c:choose>
 							<c:when test="${app.businessAgree == 'Y'}">예</c:when>
 							<c:when test="${app.businessAgree == 'N'}">아니요</c:when>
@@ -201,10 +200,10 @@ h2{
 					<td>${app.businessName}</td>
 				</tr>
 				<tr>
-					<th>사업장 등록번호</th>
+					<th>사업장 <br>등록번호</th>
 					<td>${app.businessRegiNumber}</td>
 					
-					<th>인사담당자 연락처</th>
+					<th>인사담당자 <br>연락처</th>
 					<td>02-9876-5432</td>
 				</tr>
 				<tr>
@@ -216,19 +215,18 @@ h2{
 		</table>
 	</div>
 
-	<!-- 급여 신청 기간 -->
 	<div class="info-table-container">
 		<h2 class="section-title">급여 신청 기간 및 월별 내역</h2>
 		<table class="info-table table-4col">
 			<tbody>
 				<tr>
-					<th>육아휴직 시작일</th>
+					<th>육아휴직 <br>시작일</th>
 					<td>2025.01.01</td>
 					<th>총 휴직 기간</th>
 					<td>6개월 (2025.01.01 ~ 2025.06.30)</td>
 				</tr>
 				<tr>
-					<th>월별 분할 신청 여부</th>
+					<th>월별 분할 <br>신청 여부</th>
 					<td colspan="3">아니오 (일괄 신청)</td>
 				</tr>
 			</tbody>
@@ -270,7 +268,6 @@ h2{
 
 	</div>
 
-	<!-- 자녀 정보 -->
 	<div class="info-table-container">
 		<h2 class="section-title">자녀 정보 (육아 대상)</h2>
 		<table class="info-table table-4col">
@@ -297,7 +294,7 @@ h2{
 							<td colspan="3"><c:choose>
 									<c:when test="${not empty app.childResiRegiNumber}">
 										<c:out value="${fn:substring(app.childResiRegiNumber, 0, 7)}" />******
-                </c:when>
+									</c:when>
 									<c:otherwise>-</c:otherwise>
 								</c:choose></td>
 						</tr>
@@ -307,38 +304,36 @@ h2{
 		</table>
 	</div>
 
-	<!-- 계좌 정보 -->
 	<div class="info-table-container">
-  <h2 class="section-title">급여 입금 계좌정보</h2>
-  <table class="info-table table-4col">
-    <tbody>
-      <tr>
-        <th>은행</th>
-          <td><c:out value="${app.bankName}"/></td>
-        <th>계좌번호</th>
-        <td>
-          <c:choose>
-            <c:when test="${not empty app.accountNumber}">
-              <c:set var="acc" value="${app.accountNumber}"/>
-              <c:set var="len" value="${fn:length(acc)}"/>
-              ****<c:out value="${fn:substring(acc, len - 4, len)}"/>
-            </c:when>
-            <c:otherwise>-</c:otherwise>
-          </c:choose>
-        </td>
-      </tr>
-      
-      <tr>
-        <th>예금주 이름</th>
-        <td colspan="3">
-          <c:out value="${userDTO.name}"/>
-        </td>
-      </tr>
-    </tbody>
-  </table>
-</div>
+		<h2 class="section-title">급여 입금 계좌정보</h2>
+		<table class="info-table table-4col">
+			<tbody>
+				<tr>
+					<th>은행</th>
+					<td><c:out value="${app.bankName}"/></td>
+					<th>계좌번호</th>
+					<td>
+						<c:choose>
+							<c:when test="${not empty app.accountNumber}">
+								<c:set var="acc" value="${app.accountNumber}"/>
+								<c:set var="len" value="${fn:length(acc)}"/>
+								****<c:out value="${fn:substring(acc, len - 4, len)}"/>
+							</c:when>
+							<c:otherwise>-</c:otherwise>
+						</c:choose>
+					</td>
+				</tr>
+				
+				<tr>
+					<th>예금주 이름</th>
+					<td colspan="3">
+						<c:out value="${userDTO.name}"/>
+					</td>
+				</tr>
+			</tbody>
+		</table>
+	</div>
 
-	<!-- 센터 정보 -->
 	<div class="info-table-container">
 		<h2 class="section-title">접수 처리 센터 정보</h2>
 		<table class="info-table table-4col">
@@ -360,7 +355,6 @@ h2{
 		</table>
 	</div>
 
-	<!-- 행정정보 공동이용 동의 -->
 	<div class="info-table-container">
 		<h2 class="section-title">행정정보 공동이용 동의</h2>
 		<table class="info-table table-4col">
@@ -377,13 +371,12 @@ h2{
 		</table>
 	</div>
 
-	<!-- 최종 동의 -->
 	<div class="info-table-container">
 		<h2 class="section-title">최종 동의 및 확인</h2>
 		<table class="info-table table-4col">
 			<tbody>
 				<tr>
-					<th>부정수급 안내 확인</th>
+					<th>부정수급 <br>안내 확인</th>
 					<td colspan="3"><span class="success-text">확인 및 동의 완료</span>
 						(2025.10.02)</td>
 				</tr>
@@ -391,31 +384,50 @@ h2{
 		</table>
 	</div>
 
-	<!-- 하단 버튼 -->
-<div class="button-container">
-  <a href="${pageContext.request.contextPath}/apply/edit?appNo=${app.applicationNumber}"
-     class="btn bottom-btn btn-primary">신청 내용 수정</a>
-
-  <a href="${pageContext.request.contextPath}/main"
-     class="btn bottom-btn btn-secondary" style="margin-left:15px;">목록으로 돌아가기</a>
-
-  <c:choose>
-    <c:when test="${isSubmitted}">
-      <button class="btn bottom-btn btn-secondary" style="margin-left:15px;" disabled>제출 완료</button>
-    </c:when>
-    <c:otherwise>
-      <form action="${pageContext.request.contextPath}/apply/submit" method="post" style="display:inline;">
-        <sec:csrfInput/>
-        <input type="hidden" name="appNo" value="${app.applicationNumber}"/>
-        <button type="submit" class="btn bottom-btn btn-primary" style="margin-left:15px;">제출하기</button>
-      </form>
-    </c:otherwise>
-  </c:choose>
-</div>
-
+	<div class="button-container">
+	    <c:choose>
+	        <%-- 1. isAdmin이 true일 경우: 지급/부지급 버튼 표시 --%>
+	        <c:when test="${isAdmin}">
+	            <form action="${pageContext.request.contextPath}/apply/approve" method="post" style="display:inline;">
+	                <sec:csrfInput/>
+	                <input type="hidden" name="appNo" value="${app.applicationNumber}"/>
+	                <button type="submit" class="btn bottom-btn btn-primary">지급</button>
+	            </form>
+	            <form action="${pageContext.request.contextPath}/apply/reject" method="post" style="display:inline;">
+	                <sec:csrfInput/>
+	                <input type="hidden" name="appNo" value="${app.applicationNumber}"/>
+	                <button type="submit" class="btn bottom-btn btn-secondary" style="margin-left:15px;">부지급</button>
+	            </form>
+	        </c:when>
+	
+	        <%-- 2. isAdmin이 false이거나 값이 없을 경우 (기본값): 기존 버튼 표시 --%>
+	        <c:otherwise>
+	            <a href="${pageContext.request.contextPath}/apply/edit?appNo=${app.applicationNumber}"
+	               class="btn bottom-btn btn-primary">신청 내용 수정</a>
+	
+	            <a href="${pageContext.request.contextPath}/main"
+	               class="btn bottom-btn btn-secondary" style="margin-left:15px;">목록으로 돌아가기</a>
+	
+	            <c:choose>
+	                <c:when test="${isSubmitted}">
+	                    <button class="btn bottom-btn btn-secondary" style="margin-left:15px;" disabled>제출 완료</button>
+	                </c:when>
+	                <c:otherwise>
+	                    <form action="${pageContext.request.contextPath}/apply/submit" method="post" style="display:inline;">
+	                        <sec:csrfInput/>
+	                        <input type="hidden" name="appNo" value="${app.applicationNumber}"/>
+	                        <button type="submit" class="btn bottom-btn btn-primary" style="margin-left:15px;">제출하기</button>
+	                    </form>
+	                </c:otherwise>
+	            </c:choose>
+	        </c:otherwise>
+	    </c:choose>
+	</div>
+</main>
 
 <footer class="footer">
-  <p>&copy; 2025 육아휴직 서비스. All Rights Reserved.</p>
+	<p>&copy; 2025 육아휴직 서비스. All Rights Reserved.</p>
 </footer>
+
 </body>
 </html>

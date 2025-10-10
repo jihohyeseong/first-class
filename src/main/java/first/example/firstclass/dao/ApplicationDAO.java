@@ -7,6 +7,7 @@ import org.apache.ibatis.annotations.Param;
 
 import first.example.firstclass.domain.ApplicationDTO;
 import first.example.firstclass.domain.ApplicationListDTO;
+import first.example.firstclass.domain.CodeDTO;
 
 @Mapper
 public interface ApplicationDAO {
@@ -15,4 +16,7 @@ public interface ApplicationDAO {
     ApplicationDTO selectApplicationById(long appNo);
     
     List<ApplicationListDTO> selectListByUserId(@Param("userId") long userId);
+    
+    List<CodeDTO> selectBankCode();
+
 }

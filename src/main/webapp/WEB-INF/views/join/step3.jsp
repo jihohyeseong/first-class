@@ -218,6 +218,22 @@
                 // 폼 전송
                 $('.info-form').submit();
             });
+            
+            $('.rrn-inputs input').on('keyup', function() {
+                // 현재 input의 값 길이가 maxlength와 같으면
+                if (this.value.length === this.maxLength) {
+                    // 현재 input 바로 다음에 오는 input을 찾아 포커스를 이동시킵니다.
+                    $(this).nextAll('input').first().focus();
+                }
+            });
+            
+            $('#rrn1').on('keyup', function() {
+                // 입력된 값의 길이가 maxlength(6)와 같으면
+                if (this.value.length === this.maxLength) {
+                    // id가 'rrn2'인 input으로 포커스를 이동시킵니다.
+                    $('#rrn2').focus();
+                }
+            });
 
             // --- 아이디 중복 확인 (jQuery.ajax) ---
             $('#idCheckBtn').on('click', function() {

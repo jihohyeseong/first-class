@@ -50,4 +50,11 @@
 	    FROM TB_User
 	    WHERE username = #{username}
 	</select>
+	
+	<!-- 신청서 유저정보  -->
+	<select id="findById" parameterType="long" resultType="UserDTO">
+    	SELECT id, name, registration_number, zip_number, address_base, address_detail, username, phone_number
+    	FROM TB_User
+    	WHERE id = #{id}
+    </select>
 </mapper>
