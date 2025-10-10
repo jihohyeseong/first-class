@@ -84,6 +84,7 @@ public class ApplicationController {
         model.addAttribute("terms", terms);
         model.addAttribute("isSubmitted", "ST_20".equals(app.getStatusCode()));
         model.addAttribute("userDTO", loginUser);
+        model.addAttribute("isAdmin", isAdmin);
 
         return "applicationDetail";
     }
