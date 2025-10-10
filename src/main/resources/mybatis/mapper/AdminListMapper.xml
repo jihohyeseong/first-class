@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="first.example.firstclass.dao.AdminListDAO">
+
+    <sql id="searchCondition">
+        <where>
+            <if test="keyword != null and keyword != ''">
+                (u.name LIKE '%' || #{keyword} || '%' OR u.username LIKE '%' || #{keyword} || '%')
+            </if>
+            <if test="status != null and status != ''">
+                AND p.status_code = #{status}
+            </if>
+            AND p.delt_at = 'N'
+            AND p.status_code != 'ST_10'
+            AND p.status_code != 'ST_50'
+        </where>
+    </sql>
+
+    <select id="selectApplicationList" resultType="first.example.firstclass.domain.AdminListDTO">
+        SELECT
+            p.application_number AS applicationNumber,
+            p.user_id AS userId,
+            u.name AS name,
+            p.status_code AS statusCode,
+            TO_CHAR(p.submitted_dt, 'YYYY-MM-DD') AS submittedDate,
+            CASE
+                WHEN p.status_code IN ('ST_20', 'ST_30') THEN '대기'
+                WHEN p.status_code = 'ST_40' THEN '처리완료'
+                ELSE '기타'
+            END AS statusName
+        FROM
+            TB_PARENTAL_LEAVE_APPLICATION p
+        JOIN
+            TB_User u ON p.user_id = u.id
+        <include refid="searchCondition"/>
+        ORDER BY
+            p.application_number DESC
+        OFFSET #{pageDTO.startList} ROWS FETCH NEXT #{pageDTO.listSize} ROWS ONLY
+    </select>
+
+    <select id="selectTotalCount" resultType="int">
+        SELECT 
+            COUNT(*)
+        FROM 
+            TB_PARENTAL_LEAVE_APPLICATION p
+        JOIN
+            TB_User u ON p.user_id = u.id
+        <include refid="searchCondition"/>
+    </select>
+
+    <select id="selectStatusCount" resultType="int">
+        SELECT COUNT(*)
+        FROM TB_PARENTAL_LEAVE_APPLICATION
+        WHERE status_code = #{statusCode}
+          AND delt_at = 'N'
+    </select>
+	
+	<select id="selectStatusCountIn" resultType="int">
+        SELECT COUNT(*)
+        FROM TB_PARENTAL_LEAVE_APPLICATION
+        WHERE status_code IN
+        <foreach item="item" index="index" collection="codes" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        AND delt_at = 'N'
+    </select>
+</mapper>

@@ -1,6 +1,8 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8"
     pageEncoding="UTF-8"%>
 <%@ taglib prefix="sec" uri="http://www.springframework.org/security/tags" %>
+<%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <!DOCTYPE html>
 <html>
 <head>
@@ -211,7 +213,9 @@
 
          <div class="form-group">
             <label>주민등록번호</label>
-            <input type="text" name="registrationNumber" value="${user.registrationNumber}" readonly />
+            <c:set var="rrnRaw" value="${user.registrationNumber}" />
+            <c:set var="rrnDigits" value="${fn:replace(rrnRaw, '-', '')}" />
+			<input type="text" value="${fn:substring(rrnDigits,0,6)}-${fn:substring(rrnDigits,6,7)}******" readonly>
          </div>
 
          <div class="form-group">

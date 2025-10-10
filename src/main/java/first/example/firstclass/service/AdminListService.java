@@ -1,0 +1,53 @@
+package first.example.firstclass.service;
+
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.stereotype.Service;
+
+import first.example.firstclass.dao.AdminListDAO;
+import first.example.firstclass.domain.AdminListDTO;
+import first.example.firstclass.domain.PageDTO;
+import lombok.RequiredArgsConstructor;
+
+@Service
+@RequiredArgsConstructor
+public class AdminListService {
+
+    private final AdminListDAO adminListDAO;
+
+    public Map<String, Object> getPagedApplicationsAndCounts(String keyword, String status,
+    		PageDTO pageDTO) {
+        Map<String, Object> result = new HashMap<>();
+        
+        // 검색 조건에 맞는 게시물 조회
+        int totalCnt = adminListDAO.selectTotalCount(keyword, status);
+        pageDTO.setTotalCnt(totalCnt); // PageDTO에 총 개수 설정 -> 페이징 계산 완료
+        
+        // 페이징된 목록 조회 
+        List<AdminListDTO> applicationList = adminListDAO.selectApplicationList(keyword, status, pageDTO);
+
+        // 상태별 건수 조회
+        Map<String, Integer> counts = new HashMap<>();
+        
+        // 전체 신청 건수
+        counts.put("total", adminListDAO.selectTotalCount(null, null));
+
+        // 대기 건수 ='제출'(ST_20) + '심사중'(ST_30)
+        List<String> pendingStatusCodes = Arrays.asList("ST_20", "ST_30");
+        counts.put("pending", adminListDAO.selectStatusCountIn(pendingStatusCodes));
+        
+        // 승인/반려는 '처리완료'(ST_40) 상태로 해두고 향후 수정
+        counts.put("approved", adminListDAO.selectStatusCount("ST_40"));
+        counts.put("rejected", 0); // 반려 로직은 아직 없으므로 0으로 설정
+        
+        //결과 반환
+        result.put("list", applicationList);
+        result.put("pageDTO", pageDTO);
+        result.put("counts", counts);
+
+        return result;
+    }
+}
