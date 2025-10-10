@@ -18,9 +18,11 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import first.example.firstclass.domain.ApplicationDTO;
+import first.example.firstclass.domain.CodeDTO;
 import first.example.firstclass.domain.CustomUserDetails;
 import first.example.firstclass.domain.TermAmountDTO;
 import first.example.firstclass.domain.UserDTO;
@@ -215,4 +217,12 @@ public class ApplicationController {
         String s = v.trim().toLowerCase();
         return ("y".equalsIgnoreCase(v) || "on".equals(s) || "true".equals(s) || "1".equals(s)) ? "Y" : "N";
     }
+    
+    @GetMapping("/codes/banks")
+    @ResponseBody
+    public List<CodeDTO> banks() {
+        return applicationService.getBanks();
+    }
+    
+    
 }

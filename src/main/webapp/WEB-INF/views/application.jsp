@@ -135,6 +135,7 @@
 </head>
 <body>
 <script src="//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
  <header class="header">
         <a href="${pageContext.request.contextPath}/main" class="logo"><img src="${pageContext.request.contextPath}/resources/images/logo.png" alt="Logo" width="80" height="80"></a>
         <nav>
@@ -336,32 +337,9 @@
 				<label class="field-title">은행</label>
 				<div class="input-field">
 					<!-- bankCode로 서버에 전송 -->
-					<select name="bankCode" required>
+					<select name="bankCode" id="bankCode" required
+						data-selected="${applicationDTO.bankCode}">
 						<option value="" selected disabled>은행 선택</option>
-						<option value="002">산업은행</option>
-						<option value="003">기업은행</option>
-						<option value="004">KB국민은행</option>
-						<option value="007">수협은행</option>
-						<option value="011">NH농협은행</option>
-						<option value="020">우리은행</option>
-						<option value="023">SC제일은행</option>
-						<option value="027">한국씨티은행</option>
-						<option value="031">대구은행</option>
-						<option value="032">부산은행</option>
-						<option value="034">광주은행</option>
-						<option value="035">제주은행</option>
-						<option value="037">전북은행</option>
-						<option value="039">경남은행</option>
-						<option value="045">새마을금고</option>
-						<option value="054">HSBC은행</option>
-						<option value="081">하나은행</option>
-						<option value="088">신한은행</option>
-						<option value="089">케이뱅크</option>
-						<option value="090">카카오뱅크</option>
-						<option value="092">토스뱅크</option>
-						<option value="238">미래에셋증권</option>
-						<option value="240">삼성증권</option>
-						<option value="264">키움증권</option>
 					</select>
 				</div>
 			</div>
@@ -398,33 +376,48 @@
 					</p>
 				</div>
 			</div>
-			<!-- 행정정보 공동이용 동의 → govInfoAgree: Y/N -->
-			<div class="form-group">
-				<label class="field-title">행정정보 공동이용 동의</label>
-				<div class="input-field radio-group">
-					<input type="radio" id="gov-yes" name="govInfoAgree" value="Y" required><label
-						for="gov-yes">동의</label> <input type="radio" id="gov-no"
-						name="govInfoAgree" value="N"><label for="gov-no">비동의</label>
-				</div>
+			<!-- 행정정보 공동이용 동의 -->
+			<div class="form-section">
+			  <h2>행정정보 공동이용 동의서</h2>
+			
+			  <div class="info-box">
+			    본인은 이 건 업무처리와 관련하여 담당 공무원이 「전자정부법」 제36조제1항에 따른 행정정보의 공동이용을 통하여 ‘담당
+			    공무원 확인사항’을 확인하는 것에 동의합니다.<br>
+			    * 동의하지 않는 경우에는 신청(고)인이 직접 관련 서류를 제출하여야 합니다.
+			  </div>
+			  <div style="display:flex; flex-direction:column; align-items:flex-end; text-align:right; margin-top:16px;">
+			    <label class="field-title" style="width:auto; margin-bottom:12px;">
+			      신청인&nbsp;:&nbsp;${userDTO.name}
+			    </label>
+			    <div class="radio-group" style="justify-content:flex-end; gap:24px;">
+			      <input type="radio" id="gov-yes" name="govInfoAgree" value="Y" required>
+			      <label for="gov-yes">동의합니다.</label>
+			      <input type="radio" id="gov-no" name="govInfoAgree" value="N">
+			      <label for="gov-no">동의하지 않습니다.</label>
+			    </div>
+			  </div>
 			</div>
 		</div>
 
 		<!-- ===== 안내/동의 ===== -->
-  <div class="form-section">
-    <div class="notice-box">
-      <span class="notice-icon">⚠️</span>
-      <div>
-        <h3>부정수급 안내</h3>
-        <p>위 급여신청서에 기재한 내용에 거짓이 있을 경우에는 급여의 지급이 중단되고 지급받은 급여액에 상당하는 금액을 반환해야 합니다. 또한, 추가적인 반환금액이 발생할 수 있으며 경우에 따라서는 형사 처벌도 받을 수 있습니다.</p>
-      </div>
-    </div>
-    <div class="checkbox-group" style="justify-content:center; margin-top:20px;">
-      <input type="checkbox" id="agree-notice" name="agreeNotice">
-      <label for="agree-notice">위 안내사항을 모두 확인했으며, 신청서 내용에 거짓이 없음을 확인합니다.</label>
-    </div>
-  </div>
+		<div class="form-section">
+			<div class="notice-box">
+				<span class="notice-icon">⚠️</span>
+				<div>
+					<h3>부정수급 안내</h3>
+					<p>위 급여신청서에 기재한 내용에 거짓이 있을 경우에는 급여의 지급이 중단되고 지급받은 급여액에 상당하는 금액을
+						반환해야 합니다. 또한, 추가적인 반환금액이 발생할 수 있으며 경우에 따라서는 형사 처벌도 받을 수 있습니다.</p>
+				</div>
+			</div>
+			<div class="checkbox-group"
+				style="justify-content: center; margin-top: 20px;">
+				<input type="checkbox" id="agree-notice" name="agreeNotice">
+				<label for="agree-notice">위 안내사항을 모두 확인했으며, 신청서 내용에 거짓이 없음을
+					확인합니다.</label>
+			</div>
+		</div>
 
-  <!-- ===== 제출/임시저장 버튼 (action 값으로 구분) ===== -->
+		<!-- ===== 제출/임시저장 버튼 (action 값으로 구분) ===== -->
   <div class="submit-button-container" style="display:flex; gap:10px; justify-content:center;">
     <button type="submit" name="action" value="register" class="btn submit-button" style="background:#6c757d; border-color:#6c757d;">임시저장</button>
     <button type="submit" name="action" value="submit"   class="btn submit-button">신청서 제출하기</button>
@@ -732,6 +725,17 @@ function execDaumPostcode(prefix) {
     }
   }).open();
 }
+
+$(function () {
+	  const $sel = $('#bankCode');
+	  const selected = $sel.data('selected');
+
+	  $.getJSON('${pageContext.request.contextPath}/codes/banks', function (list) {
+	    $sel.find('option:not([value=""])').remove();
+	    list.forEach(it => $sel.append(new Option(it.name, it.code)));
+	    if (selected) $sel.val(String(selected));
+	  });
+	});
 </script>
 
 

@@ -4,6 +4,7 @@ import first.example.firstclass.dao.ApplicationDAO;
 import first.example.firstclass.dao.TermAmountDAO;
 import first.example.firstclass.domain.ApplicationDTO;
 import first.example.firstclass.domain.ApplicationListDTO;
+import first.example.firstclass.domain.CodeDTO;
 import first.example.firstclass.domain.TermAmountDTO;
 import first.example.firstclass.util.AES256Util;
 
@@ -182,6 +183,10 @@ public class ApplicationService {
 
     private static LocalDate toLocal(Date d) {
         return (d == null) ? null : d.toLocalDate();
+    }
+    
+    public List<CodeDTO> getBanks() {
+        return applicationDAO.selectBankCode();
     }
 
 }
