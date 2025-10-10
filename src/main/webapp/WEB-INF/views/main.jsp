@@ -258,6 +258,12 @@
     <footer class="footer">
         <p>&copy; 2025 육아휴직 서비스. All Rights Reserved.</p>
     </footer>
-
+	<c:if test="${not empty error}">
+    <script type="text/javascript">
+        window.onload = function() {
+            alert('${error}');
+        };
+    </script>
+</c:if>
 </body>
 </html>
