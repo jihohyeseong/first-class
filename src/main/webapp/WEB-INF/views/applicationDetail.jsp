@@ -417,5 +417,6 @@ h2{
 <footer class="footer">
   <p>&copy; 2025 육아휴직 서비스. All Rights Reserved.</p>
 </footer>
+
 </body>
 </html>
