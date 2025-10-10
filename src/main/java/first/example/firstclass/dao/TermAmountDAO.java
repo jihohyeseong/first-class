@@ -11,4 +11,6 @@ public interface TermAmountDAO {
     int insertBatch(List<TermAmountDTO> rows);
     
     List<TermAmountDTO> selectByApplicationNumber(@Param("appNo") long appNo);
+    int deleteTermsByAppNo(@Param("appNo") long appNo);
+
 }

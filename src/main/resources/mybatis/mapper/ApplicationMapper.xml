@@ -3,43 +3,46 @@
 <mapper namespace="first.example.firstclass.dao.ApplicationDAO">
 
   <insert id="insertApplication"
-          parameterType="first.example.firstclass.domain.ApplicationDTO"
-          useGeneratedKeys="true"
-          keyProperty="applicationNumber"
-          keyColumn="APPLICATION_NUMBER">
-    INSERT INTO TB_PARENTAL_LEAVE_APPLICATION (
-      user_id, start_date, end_date,
-      bank_code, account_number,
-      regular_wage, weekly_hours,
-      status_code,
-      child_name, child_resi_regi_number, child_birth_date,
-      business_regi_number, business_name,
-      business_zip_number, business_addr_base, business_addr_detail,
-      payment, business_agree, gov_info_agree,
-      submitted_dt
-    ) VALUES (
-      #{userId},
-      #{startDate,      jdbcType=DATE},
-  	  #{endDate,        jdbcType=DATE},
-      #{bankCode},
-      #{accountNumber},
-      #{regularWage},
-      #{weeklyHours},
-      #{statusCode},
-      #{childName},
-      #{childResiRegiNumber},
-      #{childBirthDate, jdbcType=DATE},
-      #{businessRegiNumber},
-      #{businessName},
-      #{businessZipNumber},
-      #{businessAddrBase},
-      #{businessAddrDetail},
-      #{payment},
-      #{businessAgree},
-      #{govInfoAgree},
-      SYSDATE
-    )
-  </insert>
+        parameterType="first.example.firstclass.domain.ApplicationDTO"
+        useGeneratedKeys="true"
+        keyProperty="applicationNumber"
+        keyColumn="APPLICATION_NUMBER">
+  INSERT INTO TB_PARENTAL_LEAVE_APPLICATION (
+    user_id, start_date, end_date,
+    bank_code, account_number,
+    regular_wage, weekly_hours,
+    status_code,
+    child_name, child_resi_regi_number, child_birth_date,
+    business_regi_number, business_name,
+    business_zip_number, business_addr_base, business_addr_detail,
+    payment, business_agree, gov_info_agree,
+    submitted_dt, delt_at
+  ) VALUES (
+    #{userId,             jdbcType=NUMERIC},
+    #{startDate,          jdbcType=DATE},
+    #{endDate,            jdbcType=DATE},
+    #{bankCode,           jdbcType=VARCHAR},
+    #{accountNumber,      jdbcType=VARCHAR},
+    #{regularWage,        jdbcType=NUMERIC},
+    #{weeklyHours,        jdbcType=NUMERIC},
+    #{statusCode,         jdbcType=VARCHAR},
+    #{childName,              jdbcType=VARCHAR},
+    #{childResiRegiNumber,    jdbcType=VARCHAR},
+    #{childBirthDate,         jdbcType=DATE},
+    #{businessRegiNumber,     jdbcType=VARCHAR},
+    #{businessName,           jdbcType=VARCHAR},
+    #{businessZipNumber,      jdbcType=VARCHAR},
+    #{businessAddrBase,       jdbcType=VARCHAR},
+    #{businessAddrDetail,     jdbcType=VARCHAR},
+    #{payment,            jdbcType=NUMERIC},
+    #{businessAgree,      jdbcType=CHAR},
+    #{govInfoAgree,       jdbcType=CHAR},
+    CASE WHEN #{statusCode, jdbcType=VARCHAR} = 'ST_20' THEN SYSDATE ELSE NULL END,
+    'N'
+  )
+</insert>
+
+
   
 <!--   신청서 하나만조회 -->
 <select id="selectApplicationById"
@@ -103,5 +106,23 @@
       AND REGEXP_LIKE(code, '^[0-9]{3}$')
     ORDER BY name
   </select>
+  
+<select id="selectUserByAppNo"
+        parameterType="long"
+        resultType="first.example.firstclass.domain.UserDTO">
+  SELECT
+    U.id,
+    U.username,
+    U.name,
+    U.registration_number,
+    U.phone_number,
+    U.zip_number,
+    U.address_base,
+    U.address_detail
+  FROM TB_PARENTAL_LEAVE_APPLICATION A
+  JOIN TB_USER U
+    ON U.id = A.user_id
+  WHERE A.application_number = #{appNo}
+</select>
 
 </mapper>

@@ -131,11 +131,37 @@
 	button[name="action"][value="submit"]:disabled {
   	opacity: .6; cursor: not-allowed;
 	}
+	
+	/* toast */
+	.toast {
+	  position: fixed; left: 50%; bottom: 40px; transform: translateX(-50%);
+	  min-width: 260px; max-width: 90vw;
+	  background: rgba(33, 37, 41, .95); color: #fff;
+	  padding: 12px 16px; border-radius: 10px;
+	  box-shadow: 0 6px 16px rgba(0,0,0,.2);
+	  opacity: 0; pointer-events: none; transition: opacity .2s ease, transform .2s ease;
+	  z-index: 9999; font-size: 14px;
+	}
+	.toast.show { opacity: 1; transform: translateX(-50%) translateY(-6px); }
+	.toast.success { background: #28a745; }
+	.toast.warn    { background: #dc3545; }
+	.toast > strong { font-weight: 700; margin-right: 6px; }
+	
 </style>
 </head>
 <body>
 <script src="//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<div id="toast" class="toast"></div>
+<c:if test="${not empty error}">
+  <div class="notice-box" style="margin-bottom:16px;">
+    <span class="notice-icon">⚠️</span>
+    <div><h3>오류</h3><p>${fn:escapeXml(error)}</p></div>
+  </div>
+</c:if>
+<c:if test="${not empty message}">
+  <div class="info-box"><p>${fn:escapeXml(message)}</p></div>
+</c:if>
  <header class="header">
         <a href="${pageContext.request.contextPath}/main" class="logo"><img src="${pageContext.request.contextPath}/resources/images/logo.png" alt="Logo" width="80" height="80"></a>
         <nav>
@@ -192,7 +218,7 @@
     <div class="form-group">
       <label class="field-title">사업장 동의여부</label>
       <div class="input-field radio-group">
-        <input type="radio" id="consent-yes" name="businessAgree" value="Y" required>
+        <input type="radio" id="consent-yes" name="businessAgree" value="Y" >
         <label for="consent-yes">예</label>
         <input type="radio" id="consent-no" name="businessAgree" value="N">
         <label for="consent-no">아니요</label>
@@ -202,13 +228,13 @@
     <div class="form-group">
       <label class="field-title">사업장 이름</label>
       <div class="input-field">
-        <input type="text" name="businessName" placeholder="사업장 이름을 입력하세요" required>
+        <input type="text" name="businessName" placeholder="사업장 이름을 입력하세요" >
       </div>
     </div>
     <div class="form-group">
       <label class="field-title">사업장 등록번호</label>
       <div class="input-field">
-        <input type="text" name="businessRegiNumber" placeholder="'-' 없이 숫자만 입력하세요" required>
+        <input type="text" name="businessRegiNumber" placeholder="'-' 없이 숫자만 입력하세요" >
       </div>
     </div>
     <div class="form-group">
@@ -234,7 +260,7 @@
 			<div class="form-group">
 				<label class="field-title" for="start-date">① 육아휴직 시작일</label>
 				<div class="input-field">
-					<input type="date" id="start-date" name="startDate" required>
+					<input type="date" id="start-date" name="startDate" >
 				</div>
 			</div>
 
@@ -244,7 +270,7 @@
 					<div class="input-field"
 						style="display: flex; align-items: center; gap: 10px;">
 						<input type="date" id="end-date" name="endDate"
-							style="width: auto; flex-grow: 1;" required>
+							style="width: auto; flex-grow: 1;">
 						<button type="button" id="generate-forms-btn"
 							class="btn btn-primary">기간 생성</button>
 
@@ -267,15 +293,13 @@
 			<label class="field-title">통상임금(월)</label>
 			<div class="input-field">
 				<input type="text" id="regularWage" name="regularWage"
-					placeholder="숫자만 입력하세요" autocomplete="off"
-					required>
+					placeholder="숫자만 입력하세요" autocomplete="off">
 			</div>
 		</div>
 		<div class="form-group">
 			<label class="field-title">주당 소정근로시간</label>
 			<div class="input-field">
-				<input type="number" name="weeklyHours" placeholder="숫자만 입력하세요"
-					required>
+				<input type="number" name="weeklyHours" placeholder="숫자만 입력하세요">
 			</div>
 		</div>
 
@@ -287,7 +311,7 @@
 			<input type="hidden" name="childBirthDate" id="childBirthDateHidden">
 
 			<div class="input-field radio-group" style="margin-bottom:16px;">
-				<input type="radio" name="birthType" value="born" id="bt-born" required><label
+				<input type="radio" name="birthType" value="born" id="bt-born" ><label
 					for="bt-born">출생일</label> <input type="radio" name="birthType"
 					value="expected" id="bt-expected"><label for="bt-expected">출산예정일</label>
 			</div>
@@ -340,8 +364,7 @@
 				<label class="field-title">은행</label>
 				<div class="input-field">
 					<!-- bankCode로 서버에 전송 -->
-					<select name="bankCode" id="bankCode" required
-						data-selected="${applicationDTO.bankCode}">
+					<select name="bankCode" id="bankCode" data-selected="${applicationDTO.bankCode}">
 						<option value="" selected disabled>은행 선택</option>
 					</select>
 				</div>
@@ -350,7 +373,7 @@
 				<label class="field-title">계좌번호</label>
 				<div class="input-field">
 					<input type="text" name="accountNumber"
-						placeholder="'-' 없이 숫자만 입력하세요" required>
+						placeholder="'-' 없이 숫자만 입력하세요" >
 				</div>
 			</div>
 			<!-- 접수센터선택은 아직 아무것도 안됨 선택하는척 하는곳 -->
@@ -393,7 +416,7 @@
 			      신청인&nbsp;:&nbsp;${userDTO.name}
 			    </label>
 			    <div class="radio-group" style="justify-content:flex-end; gap:24px;">
-			      <input type="radio" id="gov-yes" name="govInfoAgree" value="Y" required>
+			      <input type="radio" id="gov-yes" name="govInfoAgree" value="Y">
 			      <label for="gov-yes">동의합니다.</label>
 			      <input type="radio" id="gov-no" name="govInfoAgree" value="N">
 			      <label for="gov-no">동의하지 않습니다.</label>
@@ -697,31 +720,6 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 });
 
-//===== 제출 버튼 활성화 조건: 필수칸 모두 입력 && 안내 체크박스 체크 =====
-const form = document.querySelector('form[action$="/apply"]');
-const submitBtn = document.querySelector('button[name="action"][value="submit"]');
-const agreeChk = document.getElementById('agree-notice');
-
-// 초기 상태: 비활성화
-if (submitBtn) submitBtn.disabled = true;
-
-function toggleSubmitEnabled() {
-  if (!form || !submitBtn || !agreeChk) return;
-  const valid = form.checkValidity();
-  submitBtn.disabled = !(agreeChk.checked && valid);
-}
-
-// 폼 내용이 바뀌거나 체크박스 상태가 바뀔 때마다 검사
-if (form) {
-  form.addEventListener('input',  toggleSubmitEnabled);
-  form.addEventListener('change', toggleSubmitEnabled);
-}
-if (agreeChk) {
-  agreeChk.addEventListener('change', toggleSubmitEnabled);
-}
-
-toggleSubmitEnabled();
-
 // ===== 다음 주소 API =====
 function execDaumPostcode(prefix) {
   new daum.Postcode({
@@ -839,16 +837,189 @@ document.addEventListener('focusin', function(e) {
   }
 });
 
-// ===== 제출 직전: 콤마 제거해서 숫자만 서버로 전송 =====
-(function attachStripOnSubmit(){
+function showToast(msg, type='warn', ms=2200) {
+	  const el = document.getElementById('toast');
+	  if (!el) return alert(msg);
+	  el.className = 'toast ' + (type || 'warn');
+	  el.textContent = msg;
+	  el.classList.add('show');
+	  clearTimeout(el._t);
+	  el._t = setTimeout(()=>el.classList.remove('show'), ms);
+	}
+	
+//====== 커스텀 검증: 모두 입력되었는지 ======
+function countUnits(startStr, endStr) {
+  if (!startStr || !endStr) return 0;
+  const start = new Date(startStr + 'T00:00:00');
+  const end   = new Date(endStr   + 'T00:00:00');
+  if (isNaN(start) || isNaN(end) || start > end) return 0;
+
+  function plusMonthsClamp(date, months) {
+    const y = date.getFullYear(), m = date.getMonth(), d = date.getDate();
+    const targetM = m + months, targetY = y + Math.floor(targetM / 12);
+    const normM = ((targetM % 12) + 12) % 12;
+    const last = new Date(targetY, normM + 1, 0).getDate();
+    const day = Math.min(d, last);
+    return new Date(targetY, normM, day);
+  }
+  function endOfUnit(start) {
+    const originalDay = start.getDate();
+    const nextSame = plusMonthsClamp(start, 1);
+    const lastOfNext = new Date(nextSame.getFullYear(), nextSame.getMonth()+1, 0).getDate();
+    const clamped = originalDay > lastOfNext;
+    const e = new Date(nextSame.getTime());
+    if (!clamped) e.setDate(e.getDate()-1);
+    return e;
+  }
+
+  let cnt = 0;
+  let cur = start;
+  while (cur <= end) {
+    let e = endOfUnit(cur);
+    if (e > end) e = end;
+    cnt++;
+    cur = new Date(e.getTime()); cur.setDate(cur.getDate()+1);
+    if (cnt > 13) break; // 안전 장치
+  }
+  return cnt;
+}
+
+function isAllFilled() {
+  const form = document.querySelector('form[action$="/apply"]');
+  if (!form) return false;
+
+  // 공통 필드들
+  const startDate = document.getElementById('start-date')?.value?.trim();
+  const endDate   = document.getElementById('end-date')?.value?.trim();
+
+  const businessAgree = form.querySelector('input[name="businessAgree"]:checked')?.value;
+  const businessName  = form.querySelector('input[name="businessName"]')?.value?.trim();
+  const businessRegi  = form.querySelector('input[name="businessRegiNumber"]')?.value?.trim();
+  const bizZip        = document.getElementById('biz-postcode')?.value?.trim();
+  const bizBase       = document.getElementById('biz-base')?.value?.trim();
+  const bizDetail     = document.getElementById('biz-detail')?.value?.trim();
+
+  const regularWage   = onlyDigits(document.getElementById('regularWage')?.value || '');
+  const weeklyHours   = form.querySelector('input[name="weeklyHours"]')?.value?.trim();
+
+  const bankCode      = document.getElementById('bankCode')?.value;
+  const accountNumber = form.querySelector('input[name="accountNumber"]')?.value?.trim();
+
+  const govAgree      = form.querySelector('input[name="govInfoAgree"]:checked')?.value;
+
+  // 자녀(출생/예정)
+  const birthType     = form.querySelector('input[name="birthType"]:checked')?.value;
+  const birthDate     = document.getElementById('birth-date')?.value?.trim();
+  const expectedDate  = document.getElementById('expected-date')?.value?.trim();
+  const childName     = document.getElementById('child-name')?.value?.trim();
+  const rrnA          = document.getElementById('child-rrn-a')?.value?.trim();
+  const rrnB          = document.getElementById('child-rrn-b')?.value?.trim();
+
+  // 단위기간/회사지급
+  const noPayment     = document.getElementById('no-payment')?.checked;
+  const unitCount     = countUnits(startDate, endDate);
+  const payInputs     = Array.from(document.querySelectorAll('input[name^="monthly_payment_"]'));
+
+  // 1) 날짜/기간
+  if (!startDate || !endDate) return false;
+  if (new Date(startDate) > new Date(endDate)) return false;
+  // 최대 12개월(이미 UI에서 동일 제약)
+  let monthCount = 0;
+  let mc = new Date(new Date(startDate).getFullYear(), new Date(startDate).getMonth(), 1);
+  const endMonth = new Date(new Date(endDate).getFullYear(), new Date(endDate).getMonth(), 1);
+  while (mc <= endMonth) { monthCount++; mc.setMonth(mc.getMonth()+1); }
+  if (monthCount > 12) return false;
+
+  // 2) 사업장 정보
+  if (!businessAgree) return false;
+  if (!businessName || !businessRegi || !bizZip || !bizBase || !bizDetail) return false;
+
+  // 3) 금액/시간
+  if (!regularWage || Number(regularWage) <= 0) return false;
+  if (!weeklyHours || Number(weeklyHours) <= 0) return false;
+
+  // 4) 자녀 정보
+  if (!birthType) return false;
+  if (birthType === 'born') {
+    if (!birthDate) return false;
+    // 자녀 이름/주민번호는 정책에 따라 필수 여부 결정(필요시 아래 두 줄도 강제)
+    // if (!childName) return false;
+    // if (!(rrnA && rrnA.length===6 && rrnB && rrnB.length===7)) return false;
+  } else {
+    if (!expectedDate) return false;
+  }
+
+  // 5) 계좌/동의
+  if (!bankCode || !accountNumber) return false;
+  if (!govAgree) return false;
+
+  // 6) 단위기간/회사지급액 입력 확인
+  //  - 기간 생성 버튼으로 payInputs가 unitCount만큼 있어야 함
+  if (unitCount === 0) return false;
+  if (!noPayment) {
+    if (payInputs.length !== unitCount) return false;
+    for (const inp of payInputs) {
+      const v = onlyDigits(inp.value || '');
+      if (!v) return false;                 // 비어있으면 실패
+      if (Number(v) < 0) return false;      // 음수 방지
+    }
+  }
+  // noPayment 체크 시엔 0으로 처리되므로 통과
+
+  return true;
+}
+
+//===== 제출 버튼 활성화/토글 =====
+(function wireSubmitControl(){
   const form = document.querySelector('form[action$="/apply"]');
   if (!form) return;
-  form.addEventListener('submit', function () {
+  const agreeChk  = document.getElementById('agree-notice');
+  const submitBtn = document.querySelector('button[name="action"][value="submit"]');
+  const draftBtn  = document.querySelector('button[name="action"][value="register"]');
+
+  // 임시저장: 항상 가능
+  if (draftBtn) draftBtn.disabled = false;
+
+  function refreshSubmitState() {
+    const ok    = isAllFilled();
+    const agree = !!(agreeChk && agreeChk.checked);
+    if (submitBtn) submitBtn.disabled = !(ok && agree);
+  }
+
+  // 폼 변화에 반응
+  ['input','change'].forEach(evt=>{
+    form.addEventListener(evt, refreshSubmitState);
+  });
+  if (agreeChk) agreeChk.addEventListener('change', refreshSubmitState);
+  refreshSubmitState();
+
+  // 제출 시 최종 가드 + 토스트 + 금액 콤마 제거
+  form.addEventListener('submit', function(e) {
+    const action = (e.submitter && e.submitter.name === 'action') ? e.submitter.value : null;
+
+    // 임시저장은 통과
+    if (action === 'register') return;
+
+    // 제출은 엄격 검증
+    if (!isAllFilled()) {
+      e.preventDefault();
+      showToast('모든 값을 입력해야 제출할 수 있습니다.', 'warn');
+      return;
+    }
+    if (!(agreeChk && agreeChk.checked)) {
+      e.preventDefault();
+      showToast('안내사항(부정수급 안내)에 동의해야 제출할 수 있습니다.', 'warn');
+      return;
+    }
+
+    // 금액 필드에서 콤마 제거(숫자만 서버로)
+    const wageEl = document.getElementById('regularWage');
     if (wageEl) wageEl.value = onlyDigits(wageEl.value);
     const payInputs = form.querySelectorAll('input[name^="monthly_payment_"]');
     payInputs.forEach(inp => { inp.value = onlyDigits(inp.value); });
   });
 })();
+
 </script>
 
 

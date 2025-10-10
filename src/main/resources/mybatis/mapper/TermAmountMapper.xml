@@ -33,6 +33,12 @@
     WHERE application_number = #{appNo}
     ORDER BY start_month_date
   </select>
+  
+  <delete id="deleteTermsByAppNo" parameterType="long">
+  DELETE FROM TB_TERM_AMOUNT
+  WHERE application_number = #{appNo}
+</delete>
+  
 </mapper>
 
 

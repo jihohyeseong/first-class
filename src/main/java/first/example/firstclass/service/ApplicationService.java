@@ -6,6 +6,7 @@ import first.example.firstclass.domain.ApplicationDTO;
 import first.example.firstclass.domain.ApplicationListDTO;
 import first.example.firstclass.domain.CodeDTO;
 import first.example.firstclass.domain.TermAmountDTO;
+import first.example.firstclass.domain.UserDTO;
 import first.example.firstclass.util.AES256Util;
 
 import lombok.RequiredArgsConstructor;
@@ -28,152 +29,236 @@ public class ApplicationService {
     private final AES256Util aes256Util;
 
     /* ============================================================
-       육아휴직 신청 등록 + 단위기간 계산 + 암호화
+       임시저장(ST_10) — 단일 insertApplication 사용
+       - 필수값 검증 없음 (NULL 허용 스키마 + CHK 제약으로 커버)
+       - submitted_dt는 매퍼 CASE WHEN으로 NULL
+       - terms 미생성
+    ============================================================ */
+    @Transactional
+    public Long createDraft(ApplicationDTO dto) {
+        try {
+            if (dto.getChildResiRegiNumber() != null && !dto.getChildResiRegiNumber().trim().isEmpty()) {
+                dto.setChildResiRegiNumber(aes256Util.encrypt(dto.getChildResiRegiNumber()));
+            }
+            if (dto.getAccountNumber() != null && !dto.getAccountNumber().trim().isEmpty()) {
+                dto.setAccountNumber(aes256Util.encrypt(dto.getAccountNumber()));
+            }
+        } catch (Exception e) { e.printStackTrace(); }
+
+        dto.setStatusCode("ST_10");
+
+        // 임시저장도 공용 insert 사용
+        applicationDAO.insertApplication(dto);
+
+        // ❗ 여기서 null일 수 있음 → Long으로 안전하게 반환
+        return dto.getApplicationNumber();
+    }
+    
+    @Transactional
+    public long saveDraftAndMaybeTerms(ApplicationDTO dto,
+                                       List<Long> monthlyCompanyPay,
+                                       boolean noCompanyPay) {
+        // 1) 민감정보 암호화(값이 있을 때만)
+        try {
+            if (dto.getChildResiRegiNumber() != null && !dto.getChildResiRegiNumber().trim().isEmpty()) {
+                dto.setChildResiRegiNumber(aes256Util.encrypt(dto.getChildResiRegiNumber()));
+            }
+            if (dto.getAccountNumber() != null && !dto.getAccountNumber().trim().isEmpty()) {
+                dto.setAccountNumber(aes256Util.encrypt(dto.getAccountNumber()));
+            }
+        } catch (Exception e) { e.printStackTrace(); }
+
+        // 2) 임시저장 상태
+        dto.setStatusCode("ST_10");
+
+        // 3) 부모 INSERT (하나의 insertApplication로 처리: submitted_dt는 ST_20일 때만 세팅됨)
+        applicationDAO.insertApplication(dto);
+        long appNo = dto.getApplicationNumber();
+
+        // 4) 계산 가능한지 체크 (모두 들어오면 계산)
+        if (readyForCalc(dto)) {
+            LocalDate start = dto.getStartDate().toLocalDate();
+            LocalDate end   = dto.getEndDate().toLocalDate();
+            long regularWage = dto.getRegularWage();
+
+            // 기존 term 싹 지우고 다시 넣기 (draft라도 재입력 가능)
+            termAmountDAO.deleteTermsByAppNo(appNo);
+
+            List<TermAmountDTO> terms = splitPeriodsAndCalc(
+                    start, end, regularWage,
+                    monthlyCompanyPay == null ? new ArrayList<>() : monthlyCompanyPay,
+                    noCompanyPay
+            );
+            long totalGov = terms.stream().mapToLong(t -> t.getGovPayment() == null ? 0L : t.getGovPayment()).sum();
+
+            for (TermAmountDTO t : terms) t.setApplicationNumber(appNo);
+            if (!terms.isEmpty()) termAmountDAO.insertBatch(terms);
+
+        }
+        // 계산 불가능하면 term은 건드리지 않음(부족한 값은 NULL 그대로)
+        return appNo;
+    }
+
+    private boolean readyForCalc(ApplicationDTO dto) {
+        return dto.getStartDate() != null
+            && dto.getEndDate()   != null
+            && dto.getRegularWage()!= null
+            && !dto.getEndDate().before(dto.getStartDate());
+    }
+
+    /* ============================================================
+       제출(ST_20) — 단위기간 계산 + 총액 산출 + 단일 insertApplication
+       - 컨트롤러에서 statusCode=ST_20 세팅 후 호출한다고 가정
+       - 매퍼가 submitted_dt = SYSDATE로 자동 처리
     ============================================================ */
     @Transactional
     public long createAllWithComputedPayment(ApplicationDTO dto,
                                              List<Long> monthlyCompanyPay,
                                              boolean noCompanyPay) {
-        // 민감 정보 암호화
-    	try {
-    		dto.setChildResiRegiNumber(aes256Util.encrypt(dto.getChildResiRegiNumber()));
-    	} catch (Exception e) {
-    	    e.printStackTrace();
-    	}
+        // 선택 암호화
+        try {
+            if (notBlank(dto.getChildResiRegiNumber())) {
+                dto.setChildResiRegiNumber(aes256Util.encrypt(dto.getChildResiRegiNumber()));
+            }
+        } catch (Exception ignore) {}
 
-    	try {
-    		dto.setAccountNumber(aes256Util.encrypt(dto.getAccountNumber()));
-    	} catch (Exception e) {
-    	    e.printStackTrace();
-    	}
-    	
+        try {
+            if (notBlank(dto.getAccountNumber())) {
+                dto.setAccountNumber(aes256Util.encrypt(dto.getAccountNumber()));
+            }
+        } catch (Exception ignore) {}
 
+        // 날짜/임금
         LocalDate start = toLocal(dto.getStartDate());
         LocalDate end   = toLocal(dto.getEndDate());
-
         long regularWage = nz(dto.getRegularWage());
 
-        // 1) 단위기간 계산 및 지급액 산출
+        // 단위기간/지급액 계산
         List<TermAmountDTO> terms = splitPeriodsAndCalc(start, end, regularWage, monthlyCompanyPay, noCompanyPay);
-
-        // 2) 총 정부 지급액
-        long totalGov = terms.stream()
-                .mapToLong(t -> nz(t.getGovPayment()))
-                .sum();
+        long totalGov = terms.stream().mapToLong(t -> nz(t.getGovPayment())).sum();
         dto.setPayment(totalGov);
 
-        // 3) 신청서 저장
+        // 신청서 저장 (ST_20로 들어오면 매퍼 CASE WHEN이 submitted_dt=SYSDATE)
         applicationDAO.insertApplication(dto);
-        long appNo = dto.getApplicationNumber();
+        Long appNo = dto.getApplicationNumber();
+        if (appNo != null) {
 
-        // 4) 단위기간 금액 저장
-        if (!terms.isEmpty()) {
-            for (TermAmountDTO t : terms) t.setApplicationNumber(appNo);
-            termAmountDAO.insertBatch(terms);
+            if ("ST_20".equals(dto.getStatusCode())) {
+                applicationDAO.updateSubmittedNow(appNo);
+            }
+        }
+        return appNo;
+    }
+
+
+    /* ============================================================
+       단위기간 및 정부/회사 지급액 계산
+    ============================================================ */
+    private List<TermAmountDTO> splitPeriodsAndCalc(LocalDate startDate, LocalDate endDate,
+                                                    long regularWage, List<Long> monthlyCompanyPay,
+                                                    boolean noCompanyPay) {
+        if (startDate == null || endDate == null) {
+            throw new IllegalArgumentException("기간이 비어 있습니다.");
+        }
+        if (endDate.isBefore(startDate)) {
+            throw new IllegalArgumentException("종료일이 시작일보다 빠릅니다.");
         }
 
-        // 5) 제출 상태(ST_20)일 경우 제출일시 업데이트
-        if ("ST_20".equals(dto.getStatusCode())) {
-            applicationDAO.updateSubmittedNow(appNo);
+        List<TermAmountDTO> result = new ArrayList<>();
+        LocalDate periodStart = startDate;
+        int monthIdx = 1;
+
+        while (!periodStart.isAfter(endDate)) {
+            LocalDate nextSame = periodStart.plusMonths(1);
+            boolean clamped = (nextSame.getDayOfMonth() != periodStart.getDayOfMonth());
+            LocalDate periodEnd = clamped ? nextSame : nextSame.minusDays(1);
+            if (periodEnd.isAfter(endDate)) periodEnd = endDate;
+
+            boolean isLast = periodEnd.equals(endDate);
+
+            long companyPayment = (!noCompanyPay && monthlyCompanyPay != null && monthlyCompanyPay.size() >= monthIdx)
+                    ? nz(monthlyCompanyPay.get(monthIdx - 1)) : 0L;
+
+            long base = computeGovBase(regularWage, monthIdx);
+            long govPayment = calcGovPayment(base, companyPayment, periodStart, periodEnd, isLast);
+
+            LocalDate paymentDate = periodEnd.withDayOfMonth(1).plusMonths(1);
+
+            TermAmountDTO term = new TermAmountDTO();
+            term.setStartMonthDate(Date.valueOf(periodStart));
+            term.setEndMonthDate(Date.valueOf(periodEnd));
+            term.setPaymentDate(Date.valueOf(paymentDate));
+            term.setCompanyPayment(companyPayment);
+            term.setGovPayment(govPayment);
+            result.add(term);
+
+            periodStart = periodEnd.plusDays(1);
+            monthIdx++;
         }
+        return result;
+    }
 
-		return appNo;
-	}
+    private long calcGovPayment(long base, long companyPayment, LocalDate start, LocalDate end, boolean isLast) {
+        if (!isLast) return Math.max(0L, base - companyPayment);
 
-	/*
-	 * ============================================================ 단위기간 및 정부/회사 지급액
-	 * 계산 ============================================================
-	 */
-	private List<TermAmountDTO> splitPeriodsAndCalc(LocalDate startDate, LocalDate endDate, long regularWage,
-			List<Long> monthlyCompanyPay, boolean noCompanyPay) {
-		if (endDate.isBefore(startDate)) {
-			throw new IllegalArgumentException("종료일이 시작일보다 빠릅니다.");
-		}
+        YearMonth endYm = YearMonth.from(end);
+        long daysInTerm = ChronoUnit.DAYS.between(start, end) + 1;
+        long daysInEndMonth = endYm.lengthOfMonth();
+        double ratio = Math.max(0.0, Math.min(1.0, (double) daysInTerm / daysInEndMonth));
+        long prorated = Math.round(base * ratio);
+        return Math.max(0L, prorated - companyPayment);
+    }
 
-		List<TermAmountDTO> result = new ArrayList<>();
-		LocalDate periodStart = startDate;
-		int monthIdx = 1;
-
-		while (!periodStart.isAfter(endDate)) {
-			// 다음달 '같은 일자'(없으면 말일로 클램프된 날짜)
-			LocalDate nextSame = periodStart.plusMonths(1);
-
-			// 클램프 여부: 원래 일자 != nextSame의 일자
-			boolean clamped = (nextSame.getDayOfMonth() != periodStart.getDayOfMonth());
-
-			// 규칙:
-			// - 클램프 O → 그 달의 말일 그대로
-			// - 클램프 X → (다음달 같은 날) - 1일
-			LocalDate periodEnd = clamped ? nextSame : nextSame.minusDays(1);
-
-			if (periodEnd.isAfter(endDate)) {
-				periodEnd = endDate;
-			}
-
-			boolean isLast = periodEnd.equals(endDate);
-
-			long companyPayment = (!noCompanyPay && monthlyCompanyPay != null && monthlyCompanyPay.size() >= monthIdx)
-					? nz(monthlyCompanyPay.get(monthIdx - 1))
-					: 0L;
-
-			long base = computeGovBase(regularWage, monthIdx);
-			long govPayment = calcGovPayment(base, companyPayment, periodStart, periodEnd, isLast);
-
-			LocalDate paymentDate = periodEnd.withDayOfMonth(1).plusMonths(1);
-
-			TermAmountDTO term = new TermAmountDTO();
-			term.setStartMonthDate(Date.valueOf(periodStart));
-			term.setEndMonthDate(Date.valueOf(periodEnd));
-			term.setPaymentDate(Date.valueOf(paymentDate));
-			term.setCompanyPayment(companyPayment);
-			term.setGovPayment(govPayment);
-			result.add(term);
-
-			periodStart = periodEnd.plusDays(1);
-			monthIdx++;
-		}
-		return result;
-	}
-
-	/* 정부 지급액 계산 */
-	private long calcGovPayment(long base, long companyPayment, LocalDate start, LocalDate end, boolean isLast) {
-		if (!isLast)
-			return Math.max(0L, base - companyPayment);
-
-		YearMonth endYm = YearMonth.from(end);
-		long daysInTerm = ChronoUnit.DAYS.between(start, end) + 1;
-		long daysInEndMonth = endYm.lengthOfMonth();
-		double ratio = Math.max(0.0, Math.min(1.0, (double) daysInTerm / daysInEndMonth));
-		long prorated = Math.round(base * ratio);
-		return Math.max(0L, prorated - companyPayment);
-	}
-
-	/* 정부 기본 지급액 */
-	private long computeGovBase(long regularWage, int monthIdx) {
-		if (monthIdx <= 3)
-			return Math.min(regularWage, 2_500_000L);
+    private long computeGovBase(long regularWage, int monthIdx) {
+        if (monthIdx <= 3) return Math.min(regularWage, 2_500_000L);
         if (monthIdx <= 6) return Math.min(regularWage, 2_000_000L);
         long eighty = Math.round(regularWage * 0.8);
         return Math.min(eighty, 1_600_000L);
     }
+    
+    @Transactional
+    public void recalcAndReplaceTerms(long appNo,
+                                      LocalDate start, LocalDate end,
+                                      long regularWage,
+                                      List<Long> monthlyCompanyPay,
+                                      boolean noCompanyPay) {
+
+        // 1) 기존 단위기간 삭제
+        termAmountDAO.deleteTermsByAppNo(appNo);
+
+        // 2) 새로 계산
+        List<TermAmountDTO> terms = splitPeriodsAndCalc(
+                start, end, regularWage, monthlyCompanyPay, noCompanyPay
+        );
+        for (TermAmountDTO t : terms) {
+            t.setApplicationNumber(appNo);
+        }
+
+        // 3) 배치 저장 (비어있으면 스킵)
+        if (!terms.isEmpty()) {
+            termAmountDAO.insertBatch(terms);
+        }
+    }
 
     /* ============================================================
-       조회 및 복호화
+       조회
     ============================================================ */
     public ApplicationDTO findById(long appNo) {
         ApplicationDTO dto = applicationDAO.selectApplicationById(appNo);
-        
-    	try {
-    		dto.setChildResiRegiNumber(aes256Util.decrypt(dto.getChildResiRegiNumber()));
-    	} catch (Exception e) {
-    	    e.printStackTrace();
-    	}
+        if (dto == null) return null;
 
-    	try {
-    		dto.setAccountNumber(aes256Util.decrypt(dto.getAccountNumber()));
-    	} catch (Exception e) {
-    	    e.printStackTrace();
-    	}
+        try {
+            if (notBlank(dto.getChildResiRegiNumber())) {
+                dto.setChildResiRegiNumber(aes256Util.decrypt(dto.getChildResiRegiNumber()));
+            }
+        } catch (Exception ignore) {}
+
+        try {
+            if (notBlank(dto.getAccountNumber())) {
+                dto.setAccountNumber(aes256Util.decrypt(dto.getAccountNumber()));
+            }
+        } catch (Exception ignore) {}
+
         return dto;
     }
 
@@ -186,16 +271,30 @@ public class ApplicationService {
     }
 
     /* ============================================================
-       공통 유틸 메서드
+       공통 유틸
     ============================================================ */
     private static long nz(Long v) { return v == null ? 0L : v; }
 
     private static LocalDate toLocal(Date d) {
         return (d == null) ? null : d.toLocalDate();
     }
-    
+
+    private static boolean notBlank(String s) {
+        return s != null && !s.trim().isEmpty();
+    }
+
     public List<CodeDTO> getBanks() {
         return applicationDAO.selectBankCode();
     }
-
+    
+    public UserDTO findApplicantByAppNo(long appNo) {
+        UserDTO user = applicationDAO.selectUserByAppNo(appNo);
+        if (user == null) return null;
+        try {
+            if (notBlank(user.getRegistrationNumber())) {
+                user.setRegistrationNumber(aes256Util.decrypt(user.getRegistrationNumber()));
+            }
+        } catch (Exception ignore) {}
+        return user;
+    }
 }

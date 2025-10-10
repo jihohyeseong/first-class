@@ -167,19 +167,25 @@ h2{
 			<tbody>
 				<tr>
 					<th>이름</th>
-					<td colspan="3"><c:out value="${userDTO.name}"/></td>
+					<td colspan="3"><c:out value="${userDTO.name}" /></td>
 				</tr>
 				<tr>
 					<th>주민등록번호</th>
-					<td colspan="3"><c:out value="${userDTO.registrationNumber}"/></td>
+					<td colspan="3"><c:set var="rrnRaw"
+							value="${userDTO.registrationNumber}" /> <c:set var="rrnDigits"
+							value="${fn:replace(fn:replace(fn:trim(rrnRaw), '-', ''), ' ', '')}" />
+						${fn:substring(rrnDigits,0,6)}-${fn:substring(rrnDigits,6,7)}******
+
+					</td>
 				</tr>
 				<tr>
 					<th>휴대전화번호</th>
-					<td colspan="3"><c:out value="${userDTO.phoneNumber}"/></td>
+					<td colspan="3"><c:out value="${userDTO.phoneNumber}" /></td>
 				</tr>
 				<tr>
 					<th>주소</th>
-					<td colspan="3"><c:out value="${userDTO.zipNumber} ${userDTO.addressBase} ${userDTO.addressDetail}"/></td>
+					<td colspan="3"><c:out
+							value="${userDTO.zipNumber} ${userDTO.addressBase} ${userDTO.addressDetail}" /></td>
 				</tr>
 			</tbody>
 		</table>
@@ -194,22 +200,38 @@ h2{
 					<td><c:choose>
 							<c:when test="${app.businessAgree == 'Y'}">예</c:when>
 							<c:when test="${app.businessAgree == 'N'}">아니요</c:when>
-							<c:otherwise>-</c:otherwise>
+							<c:otherwise>미선택</c:otherwise>
 						</c:choose></td>
 					<th>사업장 이름</th>
-					<td>${app.businessName}</td>
+					<td>${empty app.businessName ? '미입력' : app.businessName}</td>
 				</tr>
 				<tr>
 					<th>사업장 <br>등록번호</th>
-					<td>${app.businessRegiNumber}</td>
+					<td>${empty app.businessRegiNumber ? '미입력' : app.businessRegiNumber}</td>
 					
 					<th>인사담당자 <br>연락처</th>
 					<td>02-9876-5432</td>
 				</tr>
 				<tr>
 					<th>사업장 주소</th>
-					<td colspan="3">(${app.businessZipNumber})
-						${app.businessAddrBase} ${app.businessAddrDetail}</td>
+					<td colspan="3">
+					  <c:choose>
+					    <c:when test="${empty app.businessZipNumber
+					                    and empty app.businessAddrBase
+					                    and empty app.businessAddrDetail}">
+					      미입력
+					    </c:when>
+					    <c:otherwise>
+					      <c:if test="${not empty app.businessZipNumber}">
+					        (${app.businessZipNumber})&nbsp;
+					      </c:if>
+					      <c:out value="${app.businessAddrBase}"/>
+					      <c:if test="${not empty app.businessAddrDetail}">
+					        &nbsp;<c:out value="${app.businessAddrDetail}"/>
+					      </c:if>
+					    </c:otherwise>
+					  </c:choose>
+					</td>
 				</tr>
 			</tbody>
 		</table>
@@ -221,9 +243,9 @@ h2{
 			<tbody>
 				<tr>
 					<th>육아휴직 <br>시작일</th>
-					<td>2025.01.01</td>
+					<td>${empty app.startDate ? '미입력' : app.startDate}</td>
 					<th>총 휴직 기간</th>
-					<td>6개월 (2025.01.01 ~ 2025.06.30)</td>
+					<td>(${empty app.startDate ? '미입력' : app.startDate} ~ ${empty app.endDate ? '미입력' : app.endDate})</td>
 				</tr>
 				<tr>
 					<th>월별 분할 <br>신청 여부</th>
@@ -277,17 +299,29 @@ h2{
 						test="${empty app.childName and empty app.childResiRegiNumber}">
 						<tr>
 							<th>출산예정일</th>
-							<td colspan="3"><fmt:formatDate
-									value="${app.childBirthDate}" pattern="yyyy.MM.dd" /></td>
+							<td colspan="3">
+							  <c:choose>
+							    <c:when test="${empty app.childBirthDate}">미입력</c:when>
+							    <c:otherwise>
+							      <fmt:formatDate value="${app.childBirthDate}" pattern="yyyy.MM.dd"/>
+							    </c:otherwise>
+							  </c:choose>
+							</td>
 						</tr>
 					</c:when>
 					<c:otherwise>
 						<tr>
 							<th>자녀 이름</th>
 							<td><c:out value="${app.childName}" /></td>
-							<th>출산(예정)일</th>
-							<td><fmt:formatDate value="${app.childBirthDate}"
-									pattern="yyyy.MM.dd" /></td>
+							<th>출산일</th>
+							<td colspan="3">
+							  <c:choose>
+							    <c:when test="${empty app.childBirthDate}">미입력</c:when>
+							    <c:otherwise>
+							      <fmt:formatDate value="${app.childBirthDate}" pattern="yyyy.MM.dd"/>
+							    </c:otherwise>
+							  </c:choose>
+							</td>
 						</tr>
 						<tr>
 							<th>주민등록번호</th>
@@ -295,7 +329,7 @@ h2{
 									<c:when test="${not empty app.childResiRegiNumber}">
 										<c:out value="${fn:substring(app.childResiRegiNumber, 0, 7)}" />******
 									</c:when>
-									<c:otherwise>-</c:otherwise>
+									<c:otherwise>미입력</c:otherwise>
 								</c:choose></td>
 						</tr>
 					</c:otherwise>
@@ -310,7 +344,7 @@ h2{
 			<tbody>
 				<tr>
 					<th>은행</th>
-					<td><c:out value="${app.bankName}"/></td>
+					<td><c:out value="${app.bankName}" default="미입력"/></td>
 					<th>계좌번호</th>
 					<td>
 						<c:choose>
@@ -319,7 +353,7 @@ h2{
 								<c:set var="len" value="${fn:length(acc)}"/>
 								****<c:out value="${fn:substring(acc, len - 4, len)}"/>
 							</c:when>
-							<c:otherwise>-</c:otherwise>
+							<c:otherwise>미입력</c:otherwise>
 						</c:choose>
 					</td>
 				</tr>
@@ -364,7 +398,7 @@ h2{
 					<td colspan="3"><c:choose>
 							<c:when test="${app.govInfoAgree == 'Y'}">예</c:when>
 							<c:when test="${app.govInfoAgree == 'N'}">아니요</c:when>
-							<c:otherwise>-</c:otherwise>
+							<c:otherwise>미선택</c:otherwise>
 						</c:choose></td>
 				</tr>
 			</tbody>
