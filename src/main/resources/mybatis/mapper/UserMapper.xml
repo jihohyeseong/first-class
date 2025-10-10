@@ -57,4 +57,18 @@
     	FROM TB_User
     	WHERE id = #{id}
     </select>
+    
+    <!-- 비밀번호찾기 db 검증  -->
+    <select id="existsByUsernameAndPhoneNumber" parameterType="string" resultType="boolean">
+	    SELECT CASE WHEN COUNT(*) > 0 THEN 1 ELSE 0 END
+	    FROM TB_User
+	    WHERE username = #{username} AND phone_number = #{phoneNumber}
+	</select>
+	
+	<!-- 비밀번호 재설정 -->
+	<update id="updatePasswordByUsername">
+		UPDATE TB_User
+		SET password = #{password}
+		WHERE username = #{username}
+	</update>
 </mapper>

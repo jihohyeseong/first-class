@@ -34,6 +34,17 @@ public class JoinService {
 		
 		return userDAO.existsByUsername(username);
 	}
+
+	public boolean checkUserExists(String username, String phoneNumber) {
+		
+		return userDAO.existsByUsernameAndPhoneNumber(username, phoneNumber);
+	}
+
+	public boolean updatePassword(String username, String newPassword) {
+		
+		String password = bCryptPasswordEncoder.encode(newPassword);
+		return userDAO.updatePasswordByUsername(username, password);
+	}
 	
 	
 }
