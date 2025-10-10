@@ -73,6 +73,7 @@ public class ApplicationController {
         	redirectAttributes.addFlashAttribute("error", "해당 신청 정보를 조회할 권한이 없습니다.");
             return "redirect:/main"; // 또는 신청 목록 페이지로 리디렉션
         }
+        UserDTO user = userService.findById(app.getUserId());
         
         List<TermAmountDTO> terms = applicationService.findTerms(appNo);
 
@@ -83,7 +84,7 @@ public class ApplicationController {
         model.addAttribute("app", app);
         model.addAttribute("terms", terms);
         model.addAttribute("isSubmitted", "ST_20".equals(app.getStatusCode()));
-        model.addAttribute("userDTO", loginUser);
+        model.addAttribute("userDTO", user);
         model.addAttribute("isAdmin", isAdmin);
 
         return "applicationDetail";

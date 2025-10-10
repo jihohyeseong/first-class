@@ -12,7 +12,7 @@ public class UserDTO {
 	private String zipNumber;
 	private String addressBase;
 	private String addressDetail;
-	private String userName;
+	private String username;
 	private String phoneNumber;
 	
 

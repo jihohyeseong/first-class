@@ -25,4 +25,15 @@ public class UserService {
 		}
         return user;
     }
+
+	public UserDTO findById(Long userId) {
+		
+		UserDTO user = userDAO.findById(userId);
+		try {
+			user.setRegistrationNumber(aes256Util.decrypt(user.getRegistrationNumber()));
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+        return user;
+	}
 }
