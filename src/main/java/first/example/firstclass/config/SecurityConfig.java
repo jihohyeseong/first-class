@@ -28,11 +28,11 @@ public class SecurityConfig {
 	                new AntPathRequestMatcher("/login"),
 	                new AntPathRequestMatcher("/loginProc"),
 	                new AntPathRequestMatcher("/join/**"),
-	                new AntPathRequestMatcher("/joinProc")
+	                new AntPathRequestMatcher("/joinProc"),
+	                new AntPathRequestMatcher("/find/**")
 	            ).permitAll()
 	            .requestMatchers(
-	            		new AntPathRequestMatcher("/admin"), 
-	            		new AntPathRequestMatcher("/adminlist")
+	            		new AntPathRequestMatcher("/admin/**")
 	            ).hasRole("ADMIN")
 	            .anyRequest().authenticated();
         
@@ -48,7 +48,7 @@ public class SecurityConfig {
 
                     if (isAdmin) {
                         // ADMIN이면 /adminlist로 리디렉션
-                        response.sendRedirect("/firstclass/adminlist");
+                        response.sendRedirect("/firstclass/admin/applications");
                     } else {
                         // 일반 사용자이면 /main으로 리디렉션
                         response.sendRedirect("/firstclass/main");

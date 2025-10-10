@@ -107,7 +107,7 @@
                     <button type="submit" class="login-btn">로그인</button>
                 </form>
                 <div class="links">
-                    <a href="${pageContext.request.contextPath}/join">회원가입</a> | <a href="#">아이디/비밀번호 찾기</a>
+                    <a href="${pageContext.request.contextPath}/join">회원가입</a> | <a href="${pageContext.request.contextPath}/find/account">아이디/비밀번호 찾기</a>
                 </div>
             </div>
         </div>

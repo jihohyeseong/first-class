@@ -7,6 +7,6 @@
     <select id="findAllRejectCode" resultType="CodeDTO">
     	SELECT code, name
     	FROM TB_Code
-    	WHERE code LIKE 'RJ%';
+    	WHERE code LIKE 'RJ%'
     </select>
 </mapper>

@@ -95,5 +95,26 @@ public class JoinController {
 	        return ResponseEntity.status(HttpStatus.OK).body("사용 가능한 아이디입니다.");
 	}
 	
+	// 아이디, 비밀번호 찾기 페이지
+	@GetMapping("/find/account")
+	public String findAccountPage() {
+		
+		return "account/accountfind";
+	}
+	
+	// 아이디찾기 페이지
+	@GetMapping("/find/account/id")
+	public String findAccountIdPage() {
+		
+		return "account/find_id";
+	}
+	
+	
+	// 비밀번호찾기 페이지
+	@GetMapping("/find/account/password")
+	public String findAccountPasswordPage() {
+		
+		return "account/find_password";
+	}
 	
 }
