@@ -14,6 +14,7 @@ import org.springframework.validation.FieldError;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import first.example.firstclass.domain.JoinDTO;
@@ -109,12 +110,80 @@ public class JoinController {
 		return "account/find_id";
 	}
 	
+	// 아이디찾기
+	@PostMapping("/find/id")
+	@ResponseBody
+	public ResponseEntity<Map<String, Object>> findId(@RequestParam String name,
+													  @RequestParam String phoneNumber){
+
+		Map<String, Object> response = new HashMap<>();
+		String username = joinService.findUsername(name, phoneNumber);
+		
+		if (username != null) {
+			response.put("success", true);
+			response.put("redirectUrl", "/find/id/result");
+			response.put("username", username);
+		} 
+		else {
+			response.put("success", false);
+			response.put("message", "입력하신 정보와 일치하는 회원이 없습니다.");
+		}
+		return ResponseEntity.status(HttpStatus.OK).body(response);
+	}
 	
 	// 비밀번호찾기 페이지
 	@GetMapping("/find/account/password")
 	public String findAccountPasswordPage() {
 		
 		return "account/find_password";
+	}
+	
+	// 비밀번호 찾기
+	@PostMapping("/find/password")
+	@ResponseBody
+	public ResponseEntity<Map<String, Object>> findPassword(@RequestParam String username,
+            												@RequestParam String phoneNumber){
+		
+		Map<String, Object> response = new HashMap<>();
+        boolean userExists = joinService.checkUserExists(username, phoneNumber);
+
+        if (userExists) {
+            response.put("success", true);
+            response.put("redirectUrl", "/find/reset/password");
+            response.put("username", username);
+        } 
+        else {
+            response.put("success", false);
+            response.put("message", "입력하신 정보와 일치하는 회원이 없습니다.");
+        }
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+	}
+	
+	// 비밀번호 변경 페이지
+	@GetMapping("/find/reset/password")
+	public String passwordResetPage() {
+		
+		return "account/reset_password";
+	}
+	
+	// 새 비밀번호 생성
+	@PostMapping("/find/password/new")
+	@ResponseBody
+	public ResponseEntity<Map<String, Object>> setNewPassword(@RequestParam String username,
+															  @RequestParam String newPassword){
+
+		Map<String, Object> response = new HashMap<>();
+		boolean updateSuccess = joinService.updatePassword(username, newPassword);
+		
+		if (updateSuccess) {
+			response.put("success", true);
+			response.put("redirectUrl", "/login");
+		} 
+		else {
+			response.put("success", false);
+			response.put("message", "비밀번호는 최소 8자 이상이어야 하며, 특수문자 하나 이상을 포함해야 합니다.");
+		}
+		return ResponseEntity.status(HttpStatus.OK).body(response);
 	}
 	
 }
