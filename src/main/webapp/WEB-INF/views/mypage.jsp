@@ -179,7 +179,7 @@
 
 <body>
    <header class="header">
-        <a href="#" class="logo"><img src="${pageContext.request.contextPath}/resources/images/logo.png" alt="Logo" width="80" height="80"></a>
+        <a href="${pageContext.request.contextPath}/main" class="logo"><img src="${pageContext.request.contextPath}/resources/images/logo.png" alt="Logo" width="80" height="80"></a>
         <nav>
         	<ul class="header-nav">
            		<li><a class="nav-link active" href="${pageContext.request.contextPath}/calc">모의 계산하기</a></li>

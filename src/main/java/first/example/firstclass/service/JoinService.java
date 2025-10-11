@@ -42,8 +42,16 @@ public class JoinService {
 
 	public boolean updatePassword(String username, String newPassword) {
 		
+		String regex = "^(?=.*[!@#$%^&*(),.?\":{}|<>])[A-Za-z\\d!@#$%^&*(),.?\":{}|<>]{8,}$";
+	    if (newPassword == null || !newPassword.matches(regex))
+	        return false;
 		String password = bCryptPasswordEncoder.encode(newPassword);
-		return userDAO.updatePasswordByUsername(username, password);
+		return userDAO.updatePasswordByUsername(username, password) > 0 ? true : false;
+	}
+
+	public String findUsername(String name, String phoneNumber) {
+		
+		return userDAO.findUsernameByNameAndPhoneNumber(name, phoneNumber);
 	}
 	
 	

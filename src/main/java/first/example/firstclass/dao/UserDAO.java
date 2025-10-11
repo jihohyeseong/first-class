@@ -22,6 +22,8 @@ public interface UserDAO {
 
 	boolean existsByUsernameAndPhoneNumber(@Param("username")String username, @Param("phoneNumber")String phoneNumber);
 
-	boolean updatePasswordByUsername(@Param("username")String username, @Param("password")String password);
+	int updatePasswordByUsername(@Param("username")String username, @Param("password")String password);
+
+	String findUsernameByNameAndPhoneNumber(@Param("name")String name, @Param("phoneNumber")String phoneNumber);
 
 }

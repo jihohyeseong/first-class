@@ -56,7 +56,7 @@
         <div class="reset-form-card">
             <h2>새 비밀번호 입력</h2>
             <form id="resetPasswordForm" action="${pageContext.request.contextPath}/find/password/new" method="post">
-                <input type="hidden" name="username" value="${username}">
+                <input type="hidden" name="username" value="${param.username}">
                 <div class="form-group">
                     <label for="newPassword">새 비밀번호</label>
                     <input type="password" id="newPassword" name="newPassword" placeholder="8자 이상, 특수문자 포함" required>
@@ -87,13 +87,6 @@
                     return; // 함수 종료
                 }
 
-                // 3. 비밀번호 정책 검사 (최소 8자, 특수문자 1개 이상)
-                var passwordPolicy = /^(?=.*[!@#$%^&*(),.?":{}|<>]).{8,}$/;
-                if (!passwordPolicy.test(newPassword)) {
-                    alert('비밀번호는 최소 8자 이상이어야 하며, 특수문자를 하나 이상 포함해야 합니다.');
-                    $('#newPassword').focus();
-                    return; // 함수 종료
-                }
 
                 // 4. AJAX 통신
                 var formData = $(this).serialize();
@@ -109,6 +102,7 @@
                             alert('비밀번호가 성공적으로 변경되었습니다. 로그인 페이지로 이동합니다.');
                             window.location.href = '${pageContext.request.contextPath}' + response.redirectUrl;
                         } else {
+                        	console.log(response);
                             alert(response.message);
                         }
                     },

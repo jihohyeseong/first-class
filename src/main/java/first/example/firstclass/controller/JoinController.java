@@ -110,6 +110,27 @@ public class JoinController {
 		return "account/find_id";
 	}
 	
+	// 아이디찾기
+	@PostMapping("/find/id")
+	@ResponseBody
+	public ResponseEntity<Map<String, Object>> findId(@RequestParam String name,
+													  @RequestParam String phoneNumber){
+
+		Map<String, Object> response = new HashMap<>();
+		String username = joinService.findUsername(name, phoneNumber);
+		
+		if (username != null) {
+			response.put("success", true);
+			response.put("redirectUrl", "/find/id/result");
+			response.put("username", username);
+		} 
+		else {
+			response.put("success", false);
+			response.put("message", "입력하신 정보와 일치하는 회원이 없습니다.");
+		}
+		return ResponseEntity.status(HttpStatus.OK).body(response);
+	}
+	
 	// 비밀번호찾기 페이지
 	@GetMapping("/find/account/password")
 	public String findAccountPasswordPage() {

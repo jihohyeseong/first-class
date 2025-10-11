@@ -59,7 +59,7 @@
     </select>
     
     <!-- 비밀번호찾기 db 검증  -->
-    <select id="existsByUsernameAndPhoneNumber" parameterType="string" resultType="boolean">
+    <select id="existsByUsernameAndPhoneNumber" resultType="boolean">
 	    SELECT CASE WHEN COUNT(*) > 0 THEN 1 ELSE 0 END
 	    FROM TB_User
 	    WHERE username = #{username} AND phone_number = #{phoneNumber}
@@ -71,4 +71,11 @@
 		SET password = #{password}
 		WHERE username = #{username}
 	</update>
+	
+	<!-- 아이디찾기 db 검증  -->
+    <select id="findUsernameByNameAndPhoneNumber" resultType="string">
+	    SELECT username
+	    FROM TB_User
+	    WHERE name = #{name} AND phone_number = #{phoneNumber}
+	</select>
 </mapper>
