@@ -12,6 +12,10 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+<%-- =============================================== --%>
+<%-- ============= [추가] jQuery CDN 링크 ============ --%>
+<%-- =============================================== --%>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
 <style>
 :root{
 	--primary-color:#3f58d4;
@@ -112,6 +116,44 @@ h2{
 }
 .detail-btn:hover{background-color:var(--primary-light-color)}
 .success-text{color:var(--success-color);font-weight:500}
+
+/* 모달 스타일 */
+.modal-overlay{
+    position:fixed;top:0;left:0;width:100%;height:100%;
+    background-color:rgba(0,0,0,0.5);display:flex;
+    justify-content:center;align-items:center;z-index:1000;
+    transition: opacity 0.2s ease-in-out;
+}
+.modal-content{
+    background-color:var(--white-color);padding:30px 40px;
+    border-radius:12px;width:100%;max-width:500px;
+    box-shadow:var(--shadow-md);
+    transform: scale(0.95);
+    transition: transform 0.2s ease-in-out;
+}
+.modal-overlay.visible .modal-content {
+    transform: scale(1);
+}
+.modal-content h2{
+    margin-top:0;text-align:center;color:var(--dark-gray-color);
+    border-bottom:none;padding-bottom:0;margin-bottom:25px;
+    font-size: 22px;
+}
+.form-group{margin-bottom:20px}
+.form-group label{
+    display:block;font-weight:500;margin-bottom:8px;font-size:16px;
+}
+.form-control{
+    width:100%;padding:10px;font-size:15px;
+    border:1px solid var(--border-color);border-radius:8px;
+    font-family: 'Noto Sans KR', sans-serif;
+}
+textarea.form-control {
+    resize: vertical;
+}
+.modal-buttons{
+    display:flex;justify-content:flex-end;gap:10px;margin-top:30px;
+}
 </style>
 </head>
 <body>
@@ -135,8 +177,7 @@ h2{
 
 <main class="main-container">
 	<h1>육아휴직 급여 신청서 상세 보기</h1>
-
-	<div class="info-table-container">
+    <div class="info-table-container">
 		<h2 class="section-title">접수정보</h2>
 		<table class="info-table table-4col">
 			<tbody>
@@ -175,7 +216,6 @@ h2{
 							value="${userDTO.registrationNumber}" /> <c:set var="rrnDigits"
 							value="${fn:replace(fn:replace(fn:trim(rrnRaw), '-', ''), ' ', '')}" />
 						${fn:substring(rrnDigits,0,6)}-${fn:substring(rrnDigits,6,7)}******
-
 					</td>
 				</tr>
 				<tr>
@@ -215,22 +255,20 @@ h2{
 				<tr>
 					<th>사업장 주소</th>
 					<td colspan="3">
-					  <c:choose>
-					    <c:when test="${empty app.businessZipNumber
-					                    and empty app.businessAddrBase
-					                    and empty app.businessAddrDetail}">
-					      미입력
-					    </c:when>
-					    <c:otherwise>
-					      <c:if test="${not empty app.businessZipNumber}">
-					        (${app.businessZipNumber})&nbsp;
-					      </c:if>
-					      <c:out value="${app.businessAddrBase}"/>
-					      <c:if test="${not empty app.businessAddrDetail}">
-					        &nbsp;<c:out value="${app.businessAddrDetail}"/>
-					      </c:if>
-					    </c:otherwise>
-					  </c:choose>
+						<c:choose>
+							<c:when test="${empty app.businessZipNumber and empty app.businessAddrBase and empty app.businessAddrDetail}">
+								미입력
+							</c:when>
+							<c:otherwise>
+								<c:if test="${not empty app.businessZipNumber}">
+									(${app.businessZipNumber})&nbsp;
+								</c:if>
+								<c:out value="${app.businessAddrBase}"/>
+								<c:if test="${not empty app.businessAddrDetail}">
+									&nbsp;<c:out value="${app.businessAddrDetail}"/>
+								</c:if>
+							</c:otherwise>
+						</c:choose>
 					</td>
 				</tr>
 			</tbody>
@@ -254,8 +292,7 @@ h2{
 			</tbody>
 		</table>
 
-		<h3 class="section-title" style="font-size: 16px; margin-top: 25px;">월별
-			지급 내역</h3>
+		<h3 class="section-title" style="font-size: 16px; margin-top: 25px;">월별 지급 내역</h3>
 		<table class="info-table table-4col">
 			<thead>
 				<tr>
@@ -270,10 +307,8 @@ h2{
 				<c:forEach var="t" items="${terms}" varStatus="st">
 					<tr>
 						<td><c:out value="${st.index + 1}" />개월차</td>
-						<td><c:out value="${t.startMonthDate}" /> ~ <c:out
-								value="${t.endMonthDate}" /></td>
-						<td><fmt:formatNumber value="${t.companyPayment}"
-								type="number" /></td>
+						<td><c:out value="${t.startMonthDate}" /> ~ <c:out value="${t.endMonthDate}" /></td>
+						<td><fmt:formatNumber value="${t.companyPayment}" type="number" /></td>
 						<td><fmt:formatNumber value="${t.govPayment}" type="number" /></td>
 						<td><c:out value="${t.paymentDate}" /></td>
 					</tr>
@@ -281,8 +316,7 @@ h2{
 
 				<c:if test="${empty terms}">
 					<tr>
-						<td colspan="5" style="text-align: center; color: #888;">단위기간
-							내역이 없습니다.</td>
+						<td colspan="5" style="text-align: center; color: #888;">단위기간 내역이 없습니다.</td>
 					</tr>
 				</c:if>
 			</tbody>
@@ -295,17 +329,16 @@ h2{
 		<table class="info-table table-4col">
 			<tbody>
 				<c:choose>
-					<c:when
-						test="${empty app.childName and empty app.childResiRegiNumber}">
+					<c:when test="${empty app.childName and empty app.childResiRegiNumber}">
 						<tr>
 							<th>출산예정일</th>
 							<td colspan="3">
-							  <c:choose>
-							    <c:when test="${empty app.childBirthDate}">미입력</c:when>
-							    <c:otherwise>
-							      <fmt:formatDate value="${app.childBirthDate}" pattern="yyyy.MM.dd"/>
-							    </c:otherwise>
-							  </c:choose>
+								<c:choose>
+									<c:when test="${empty app.childBirthDate}">미입력</c:when>
+									<c:otherwise>
+										<fmt:formatDate value="${app.childBirthDate}" pattern="yyyy.MM.dd"/>
+									</c:otherwise>
+								</c:choose>
 							</td>
 						</tr>
 					</c:when>
@@ -314,13 +347,13 @@ h2{
 							<th>자녀 이름</th>
 							<td><c:out value="${app.childName}" /></td>
 							<th>출산일</th>
-							<td colspan="3">
-							  <c:choose>
-							    <c:when test="${empty app.childBirthDate}">미입력</c:when>
-							    <c:otherwise>
-							      <fmt:formatDate value="${app.childBirthDate}" pattern="yyyy.MM.dd"/>
-							    </c:otherwise>
-							  </c:choose>
+							<td>
+								<c:choose>
+									<c:when test="${empty app.childBirthDate}">미입력</c:when>
+									<c:otherwise>
+										<fmt:formatDate value="${app.childBirthDate}" pattern="yyyy.MM.dd"/>
+									</c:otherwise>
+								</c:choose>
 							</td>
 						</tr>
 						<tr>
@@ -419,49 +452,147 @@ h2{
 	</div>
 
 	<div class="button-container">
-	    <c:choose>
-	        <%-- 1. isAdmin이 true일 경우: 지급/부지급 버튼 표시 --%>
-	        <c:when test="${isAdmin}">
-	            <form action="${pageContext.request.contextPath}/apply/approve" method="post" style="display:inline;">
-	                <sec:csrfInput/>
-	                <input type="hidden" name="appNo" value="${app.applicationNumber}"/>
-	                <button type="submit" class="btn bottom-btn btn-primary">지급</button>
-	            </form>
-	            <form action="${pageContext.request.contextPath}/apply/reject" method="post" style="display:inline;">
-	                <sec:csrfInput/>
-	                <input type="hidden" name="appNo" value="${app.applicationNumber}"/>
-	                <button type="submit" class="btn bottom-btn btn-secondary" style="margin-left:15px;">부지급</button>
-	            </form>
-	        </c:when>
+		<c:choose>
+			<c:when test="${isAdmin}">
+				<form action="${pageContext.request.contextPath}/apply/approve" method="post" style="display:inline;">
+					<sec:csrfInput/>
+					<input type="hidden" name="appNo" value="${app.applicationNumber}"/>
+					<button type="submit" class="btn bottom-btn btn-primary">지급</button>
+				</form>
+
+				<form id="reject-form" action="${pageContext.request.contextPath}/apply/reject" method="post" style="display:inline;">
+					<sec:csrfInput/>
+					<input type="hidden" name="appNo" value="${app.applicationNumber}"/>
+                    <input type="hidden" name="rejectCode" id="hidden-reject-code"/>
+                    <input type="hidden" name="rejectDetail" id="hidden-reject-detail"/>
+					<button type="button" id="reject-btn" class="btn bottom-btn btn-secondary" style="margin-left:15px;">부지급</button>
+				</form>
+			</c:when>
 	
-	        <%-- 2. isAdmin이 false이거나 값이 없을 경우 (기본값): 기존 버튼 표시 --%>
-	        <c:otherwise>
-	            <a href="${pageContext.request.contextPath}/apply/edit?appNo=${app.applicationNumber}"
-	               class="btn bottom-btn btn-primary">신청 내용 수정</a>
+			<c:otherwise>
+				<a href="${pageContext.request.contextPath}/apply/edit?appNo=${app.applicationNumber}"
+					class="btn bottom-btn btn-primary">신청 내용 수정</a>
 	
-	            <a href="${pageContext.request.contextPath}/main"
-	               class="btn bottom-btn btn-secondary" style="margin-left:15px;">목록으로 돌아가기</a>
+				<a href="${pageContext.request.contextPath}/main"
+					class="btn bottom-btn btn-secondary" style="margin-left:15px;">목록으로 돌아가기</a>
 	
-	            <c:choose>
-	                <c:when test="${isSubmitted}">
-	                    <button class="btn bottom-btn btn-secondary" style="margin-left:15px;" disabled>제출 완료</button>
-	                </c:when>
-	                <c:otherwise>
-	                    <form action="${pageContext.request.contextPath}/apply/submit" method="post" style="display:inline;">
-	                        <sec:csrfInput/>
-	                        <input type="hidden" name="appNo" value="${app.applicationNumber}"/>
-	                        <button type="submit" class="btn bottom-btn btn-primary" style="margin-left:15px;">제출하기</button>
-	                    </form>
-	                </c:otherwise>
-	            </c:choose>
-	        </c:otherwise>
-	    </c:choose>
+				<c:choose>
+					<c:when test="${isSubmitted}">
+						<button class="btn bottom-btn btn-secondary" style="margin-left:15px;" disabled>제출 완료</button>
+					</c:when>
+					<c:otherwise>
+						<form action="${pageContext.request.contextPath}/apply/submit" method="post" style="display:inline;">
+							<sec:csrfInput/>
+							<input type="hidden" name="appNo" value="${app.applicationNumber}"/>
+							<button type="submit" class="btn bottom-btn btn-primary" style="margin-left:15px;">제출하기</button>
+						</form>
+					</c:otherwise>
+				</c:choose>
+			</c:otherwise>
+		</c:choose>
 	</div>
 </main>
+
+<%-- 부지급 사유 모달 --%>
+<div id="reject-modal" class="modal-overlay" style="display:none;">
+    <div class="modal-content">
+        <h2>부지급 사유 입력</h2>
+        <div class="form-group">
+            <label for="reject-code">거절 사유</label>
+            <select id="reject-code" name="rejectCode" class="form-control" required>
+                <option value="">사유를 선택하세요</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="reject-detail">상세 사유</label>
+            <textarea id="reject-detail" name="rejectDetail" class="form-control" rows="5" placeholder="상세 거절 사유를 입력하세요. (선택사항)"></textarea>
+        </div>
+        <div class="modal-buttons">
+            <button type="button" id="cancel-reject-btn" class="btn btn-secondary">취소</button>
+            <button type="button" id="confirm-reject-btn" class="btn btn-primary">확인</button>
+        </div>
+    </div>
+</div>
 
 <footer class="footer">
 	<p>&copy; 2025 육아휴직 서비스. All Rights Reserved.</p>
 </footer>
+
+<%-- =============================================== --%>
+<%-- =========== [수정] jQuery 사용 스크립트 ========== --%>
+<%-- =============================================== --%>
+<script>
+$(document).ready(function() {
+    const rejectModal = $('#reject-modal');
+
+    // '부지급' 버튼 클릭 이벤트
+    $('#reject-btn').on('click', function(event) {
+        event.preventDefault();
+
+        $.ajax({
+            url: '${pageContext.request.contextPath}/code/reject',
+            type: 'GET',
+            dataType: 'json',
+            success: function(data) {
+                const rejectCodeSelect = $('#reject-code');
+                rejectCodeSelect.html('<option value="">사유를 선택하세요</option>'); // 기존 옵션 초기화
+
+                // API로 받은 데이터로 select 옵션 채우기
+                $.each(data, function(index, item) {
+                    rejectCodeSelect.append($('<option>', {
+                        value: item.code,
+                        text: item.name
+                    }));
+                });
+
+                // 모달 표시
+                rejectModal.css('display', 'flex');
+                setTimeout(() => rejectModal.addClass('visible'), 10);
+            },
+            error: function(xhr, status, error) {
+                console.error("AJAX Error: ", status, error);
+                alert('거절 사유 목록을 불러오는 데 실패했습니다. 잠시 후 다시 시도해주세요.');
+            }
+        });
+    });
+
+    // 모달 '확인' 버튼 이벤트
+    $('#confirm-reject-btn').on('click', function() {
+        const selectedCode = $('#reject-code').val();
+        const detailReason = $('#reject-detail').val();
+
+        if (!selectedCode) {
+            alert('거절 사유를 선택해주세요.');
+            return;
+        }
+
+        // 숨겨진 input에 값 설정 후 폼 전송
+        $('#hidden-reject-code').val(selectedCode);
+        $('#hidden-reject-detail').val(detailReason);
+        $('#reject-form').submit();
+    });
+
+    // 모달 '취소' 버튼 이벤트
+    $('#cancel-reject-btn').on('click', function() {
+        closeModal();
+    });
+
+    // 모달 외부 영역 클릭 시 닫기
+    rejectModal.on('click', function(event) {
+        if (event.target === this) {
+            closeModal();
+        }
+    });
+
+    // 모달 닫기 함수
+    function closeModal() {
+        rejectModal.removeClass('visible');
+        setTimeout(() => {
+            rejectModal.css('display', 'none');
+        }, 200);
+    }
+});
+</script>
 
 </body>
 </html>
