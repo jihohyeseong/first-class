@@ -133,20 +133,34 @@ public class ApplicationService {
         LocalDate end   = toLocal(dto.getEndDate());
         long regularWage = nz(dto.getRegularWage());
 
-        // 단위기간/지급액 계산
+     // (2) 단위기간/지급액 계산
         List<TermAmountDTO> terms = splitPeriodsAndCalc(start, end, regularWage, monthlyCompanyPay, noCompanyPay);
         long totalGov = terms.stream().mapToLong(t -> nz(t.getGovPayment())).sum();
         dto.setPayment(totalGov);
 
-        // 신청서 저장 (ST_20로 들어오면 매퍼 CASE WHEN이 submitted_dt=SYSDATE)
+        // (3) 신청서 저장 (ST_20이면 매퍼에서 submitted_dt 자동 세팅)
         applicationDAO.insertApplication(dto);
         Long appNo = dto.getApplicationNumber();
-        if (appNo != null) {
 
+        // ⬇⬇⬇ 여기가 빠져 있어서 테이블이 안 만들어졌던 부분 ⬇⬇⬇
+        if (appNo != null) {
+            // 이전 단위기간 싹 지우고
+            termAmountDAO.deleteTermsByAppNo(appNo);
+
+            // 새 단위기간에 신청서 번호 채워서
+            for (TermAmountDTO t : terms) t.setApplicationNumber(appNo);
+
+            // 배치 저장
+            if (!terms.isEmpty()) {
+                termAmountDAO.insertBatch(terms);
+            }
+
+            // (옵션) 제출일시 보정 — 매퍼 CASE WHEN을 쓰지만, 보수적으로 한 번 더
             if ("ST_20".equals(dto.getStatusCode())) {
                 applicationDAO.updateSubmittedNow(appNo);
             }
         }
+
         return appNo;
     }
 
