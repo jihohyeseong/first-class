@@ -125,4 +125,16 @@
   WHERE A.application_number = #{appNo}
 </select>
 
+	<!-- 관리자 부지급 -->
+	<update id="updateApplicationJudge" parameterType="AdminJudgeDTO">
+		UPDATE TB_PARENTAL_LEAVE_APPLICATION
+		SET
+			processor_id = #{processorId},
+			payment_result = #{paymentResult},
+			rejection_reason_code = #{rejectionReasonCode},
+			reject_comment = #{rejectComment},
+			examine_dt = sysdate
+		WHERE application_number = #{applicationNumber}
+	</update>
+
 </mapper>

@@ -4,11 +4,16 @@ import java.beans.PropertyEditorSupport;
 import java.sql.Date;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+
 import javax.servlet.http.HttpServletRequest;
 
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
@@ -19,10 +24,12 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.InitBinder;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import first.example.firstclass.domain.AdminJudgeDTO;
 import first.example.firstclass.domain.ApplicationDTO;
 import first.example.firstclass.domain.CodeDTO;
 import first.example.firstclass.domain.CustomUserDetails;
@@ -297,5 +304,60 @@ public class ApplicationController {
     @ResponseBody
     public List<CodeDTO> banks() {
         return applicationService.getBanks();
+    }
+    
+    // 관리자 지급
+    @PostMapping("/admin/judge/approve")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> adminApprove(@RequestBody AdminJudgeDTO adminJudgeDTO){
+    	
+    	Map<String, Object> response = new HashMap<>();
+    	UserDTO userDTO = currentUserOrNull();
+        if (userDTO == null) {
+        	response.put("success", false);
+			response.put("message", "로그인 해주세요.");
+			response.put("redirectUrl", "/login");
+        }
+        
+        boolean updateSuccess = applicationService.adminApprove(adminJudgeDTO, userDTO.getId());
+    	
+    	if (updateSuccess) {
+			response.put("success", true);
+			response.put("redirectUrl", "/admin/applications");
+		} 
+		else {
+			response.put("success", false);
+			response.put("message", "이미 처리된 신청서입니다.");
+			response.put("redirectUrl", "/admin/applications");
+		}
+    	
+		return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+    
+    // 관리자 부지급
+    @PostMapping("/admin/judge/reject")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> adminReject(@RequestBody AdminJudgeDTO adminJudgeDTO){
+    	
+    	Map<String, Object> response = new HashMap<>();
+    	UserDTO userDTO = currentUserOrNull();
+        if (userDTO == null) {
+        	response.put("success", false);
+			response.put("message", "로그인 해주세요.");
+			response.put("redirectUrl", "/login");
+        }
+    	
+    	boolean updateSuccess = applicationService.adminReject(adminJudgeDTO, userDTO.getId());
+    	
+    	if (updateSuccess) {
+			response.put("success", true);
+			response.put("redirectUrl", "/admin/applications");
+		} 
+		else {
+			response.put("success", false);
+			response.put("message", "거절 사유를 선택해주세요.");
+		}
+    	
+		return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 }

@@ -158,7 +158,7 @@ textarea.form-control {
 </head>
 <body>
 	<header class="header">
-		<a href="${pageContext.request.contextPath}${isAdmin ? '/adminlist' : '/main'}" class="logo"><img src="${pageContext.request.contextPath}/resources/images/logo.png" alt="Logo" width="80" height="80"></a>
+		<a href="${pageContext.request.contextPath}${isAdmin ? '/admin/applications' : '/main'}" class="logo"><img src="${pageContext.request.contextPath}/resources/images/logo.png" alt="Logo" width="80" height="80"></a>
 		<nav>
 			<sec:authorize access="isAnonymous()">
 				<a href="${pageContext.request.contextPath}/login" class="btn btn-primary">로그인</a>
@@ -454,11 +454,7 @@ textarea.form-control {
 	<div class="button-container">
 		<c:choose>
 			<c:when test="${isAdmin}">
-				<form action="${pageContext.request.contextPath}/apply/approve" method="post" style="display:inline;">
-					<sec:csrfInput/>
-					<input type="hidden" name="appNo" value="${app.applicationNumber}"/>
-					<button type="submit" class="btn bottom-btn btn-primary">지급</button>
-				</form>
+				<button type="button" class="btn bottom-btn btn-primary approve-btn">지급</button>
 
 				<form id="reject-form" action="${pageContext.request.contextPath}/apply/reject" method="post" style="display:inline;">
 					<sec:csrfInput/>
@@ -518,80 +514,131 @@ textarea.form-control {
 	<p>&copy; 2025 육아휴직 서비스. All Rights Reserved.</p>
 </footer>
 
-<%-- =============================================== --%>
-<%-- =========== [수정] jQuery 사용 스크립트 ========== --%>
-<%-- =============================================== --%>
 <script>
-$(document).ready(function() {
-    const rejectModal = $('#reject-modal');
+	$(function() {
+	    const rejectModal = $('#reject-modal');
+	    const rejectForm = $('#reject-form');
+		
+	    // 지급
+	    $('.approve-btn').on('click', function() {
+	        
+	        if (confirm('지급확정하시겠습니까?')) {
+	            const applicationNumber = ${param.appNo};
 
-    // '부지급' 버튼 클릭 이벤트
-    $('#reject-btn').on('click', function(event) {
-        event.preventDefault();
+	            const requestData = {
+	                applicationNumber: applicationNumber
+	            };
 
-        $.ajax({
-            url: '${pageContext.request.contextPath}/code/reject',
-            type: 'GET',
-            dataType: 'json',
-            success: function(data) {
-                const rejectCodeSelect = $('#reject-code');
-                rejectCodeSelect.html('<option value="">사유를 선택하세요</option>'); // 기존 옵션 초기화
+	            $.ajax({
+	                url: '${pageContext.request.contextPath}/admin/judge/approve',
+	                type: 'POST',
+	                contentType: 'application/json',
+	                data: JSON.stringify(requestData),
+	                success: function(data) {
+	                    if (data.message) {
+	                        alert(data.message);
+	                    }
 
-                // API로 받은 데이터로 select 옵션 채우기
-                $.each(data, function(index, item) {
-                    rejectCodeSelect.append($('<option>', {
-                        value: item.code,
-                        text: item.name
-                    }));
-                });
-
-                // 모달 표시
-                rejectModal.css('display', 'flex');
-                setTimeout(() => rejectModal.addClass('visible'), 10);
-            },
-            error: function(xhr, status, error) {
-                console.error("AJAX Error: ", status, error);
-                alert('거절 사유 목록을 불러오는 데 실패했습니다. 잠시 후 다시 시도해주세요.');
-            }
-        });
-    });
-
-    // 모달 '확인' 버튼 이벤트
-    $('#confirm-reject-btn').on('click', function() {
-        const selectedCode = $('#reject-code').val();
-        const detailReason = $('#reject-detail').val();
-
-        if (!selectedCode) {
-            alert('거절 사유를 선택해주세요.');
-            return;
-        }
-
-        // 숨겨진 input에 값 설정 후 폼 전송
-        $('#hidden-reject-code').val(selectedCode);
-        $('#hidden-reject-detail').val(detailReason);
-        $('#reject-form').submit();
-    });
-
-    // 모달 '취소' 버튼 이벤트
-    $('#cancel-reject-btn').on('click', function() {
-        closeModal();
-    });
-
-    // 모달 외부 영역 클릭 시 닫기
-    rejectModal.on('click', function(event) {
-        if (event.target === this) {
-            closeModal();
-        }
-    });
-
-    // 모달 닫기 함수
-    function closeModal() {
-        rejectModal.removeClass('visible');
-        setTimeout(() => {
-            rejectModal.css('display', 'none');
-        }, 200);
-    }
-});
+	                    if (data.redirectUrl) {
+	                        window.location.href = '${pageContext.request.contextPath}' + data.redirectUrl;
+	                    }
+	                },
+	                error: function(xhr, status, error) {
+	                    console.error('Error:', error);
+	                    alert('오류가 발생했습니다. 다시 시도해주세요.');
+	                }
+	            });
+	        }
+	    });
+	    
+	    // '부지급' 버튼 클릭 이벤트
+	    $('#reject-btn').on('click', function(event) {
+	        event.preventDefault();
+	
+	        $.ajax({
+	            url: '${pageContext.request.contextPath}/code/reject',
+	            type: 'GET',
+	            dataType: 'json',
+	            success: function(data) {
+	                const rejectCodeSelect = $('#reject-code');
+	                rejectCodeSelect.html('<option value="">사유를 선택하세요</option>'); // 기존 옵션 초기화
+	
+	                $.each(data, function(index, item) {
+	                    rejectCodeSelect.append($('<option>', {
+	                        value: item.code,
+	                        text: item.name
+	                    }));
+	                });
+	
+	                rejectModal.css('display', 'flex');
+	                setTimeout(() => rejectModal.addClass('visible'), 10);
+	            },
+	            error: function(xhr, status, error) {
+	                console.error("AJAX Error: ", status, error);
+	                alert('거절 사유 목록을 불러오는 데 실패했습니다. 잠시 후 다시 시도해주세요.');
+	            }
+	        });
+	    });
+	
+	    $('#confirm-reject-btn').on('click', function() {
+	        const selectedCode = $('#reject-code').val();
+	        const detailReason = $('#reject-detail').val();
+	
+	        const applicationNumber = ${param.appNo};
+	
+	        const requestData = {
+	            applicationNumber: applicationNumber,
+	            rejectionReasonCode: selectedCode,
+	            rejectComment: detailReason
+	        };
+	
+	        // AJAX POST 요청
+	        $.ajax({
+	            url: '${pageContext.request.contextPath}/admin/judge/reject',
+	            type: 'POST',
+	            contentType: 'application/json',
+	            data: JSON.stringify(requestData),
+	            dataType: 'json',
+	            success: function(response) {
+	                if (response.success) {
+	                    alert('부지급 처리가 완료되었습니다.');
+	                    window.location.href = '${pageContext.request.contextPath}' + response.redirectUrl;
+	                } else {
+	                	console.log(response);
+	                    let errorMessage = response.message || '처리 중 오류가 발생했습니다.';
+	                    alert(errorMessage);
+	                    if (response.redirectUrl) {
+	                        window.location.href = '${pageContext.request.contextPath}' + response.redirectUrl;
+	                    }
+	                }
+	            },
+	            error: function(xhr, status, error) {
+	                console.error("부지급 처리 AJAX Error: ", status, error);
+	                alert('서버와의 통신 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
+	            }
+	        });
+	    });
+	
+	    // 모달 '취소' 버튼 이벤트
+	    $('#cancel-reject-btn').on('click', function() {
+	        closeModal();
+	    });
+	
+	    // 모달 외부 영역 클릭 시 닫기
+	    rejectModal.on('click', function(event) {
+	        if (event.target === this) {
+	            closeModal();
+	        }
+	    });
+	
+	    // 모달 닫기 함수
+	    function closeModal() {
+	        rejectModal.removeClass('visible');
+	        setTimeout(() => {
+	            rejectModal.css('display', 'none');
+	        }, 200);
+	    }
+	});
 </script>
 
 </body>

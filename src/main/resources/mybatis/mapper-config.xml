@@ -11,5 +11,6 @@
 		<typeAlias alias="UserVO" type="first.example.firstclass.domain.UserVO" />
 		<typeAlias alias="UserDTO" type="first.example.firstclass.domain.UserDTO" />
 		<typeAlias alias="CodeDTO" type="first.example.firstclass.domain.CodeDTO" />
+		<typeAlias alias="AdminJudgeDTO" type="first.example.firstclass.domain.AdminJudgeDTO" />
 	</typeAliases>
 </configuration>

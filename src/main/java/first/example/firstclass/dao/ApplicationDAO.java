@@ -5,6 +5,7 @@ import java.util.List;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
+import first.example.firstclass.domain.AdminJudgeDTO;
 import first.example.firstclass.domain.ApplicationDTO;
 import first.example.firstclass.domain.ApplicationListDTO;
 import first.example.firstclass.domain.CodeDTO;
@@ -20,4 +21,6 @@ public interface ApplicationDAO {
     
     List<CodeDTO> selectBankCode();
     UserDTO selectUserByAppNo(@Param("appNo") long appNo);
+    
+	int updateApplicationJudge(AdminJudgeDTO adminJudgeDTO);
 }

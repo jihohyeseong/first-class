@@ -2,6 +2,7 @@ package first.example.firstclass.service;
 
 import first.example.firstclass.dao.ApplicationDAO;
 import first.example.firstclass.dao.TermAmountDAO;
+import first.example.firstclass.domain.AdminJudgeDTO;
 import first.example.firstclass.domain.ApplicationDTO;
 import first.example.firstclass.domain.ApplicationListDTO;
 import first.example.firstclass.domain.CodeDTO;
@@ -311,4 +312,23 @@ public class ApplicationService {
         } catch (Exception ignore) {}
         return user;
     }
+
+	public boolean adminReject(AdminJudgeDTO adminJudgeDTO, Long userId) {
+		
+		if(adminJudgeDTO.getRejectionReasonCode() == null || "".equals(adminJudgeDTO.getRejectionReasonCode()))
+			return false;
+		adminJudgeDTO.setProcessorId(userId);
+		adminJudgeDTO.setPaymentResult("N");
+		
+		return applicationDAO.updateApplicationJudge(adminJudgeDTO) > 0 ? true : false;
+	}
+
+	public boolean adminApprove(AdminJudgeDTO adminJudgeDTO, Long userId) {
+		
+		// 이미 처리된 건인지 조건 추가하기
+		adminJudgeDTO.setProcessorId(userId);
+		adminJudgeDTO.setPaymentResult("Y");
+		
+		return applicationDAO.updateApplicationJudge(adminJudgeDTO) > 0 ? true : false;
+	}
 }
