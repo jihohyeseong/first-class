@@ -396,7 +396,7 @@
 
                 <form action="${pageContext.request.contextPath}/admin/applications" method="get" class="table-filters">
                     <div class="search-box">
-                        <input type="text" name="keyword" placeholder="직원 이름 또는 ID로 검색..." value="${keyword}">
+                        <input type="text" name="keyword" placeholder="직원 이름 또는 신청번호로 검색..." value="${keyword}">
                         <button type="submit" style="background:none; border:none; position:absolute; right:10px; top:50%; transform:translateY(-50%); cursor:pointer;">
                             <i class="bi bi-search"></i>
                         </button>

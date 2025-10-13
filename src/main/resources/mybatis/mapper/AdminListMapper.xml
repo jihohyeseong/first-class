@@ -5,7 +5,7 @@
     <sql id="searchCondition">
         <where>
             <if test="keyword != null and keyword != ''">
-                (u.name LIKE '%' || #{keyword} || '%' OR u.username LIKE '%' || #{keyword} || '%')
+                (u.name LIKE '%' || #{keyword} || '%' OR p.application_number LIKE '%' || #{keyword} || '%')
             </if>
             <if test="status != null and status != ''">
                 <choose>
