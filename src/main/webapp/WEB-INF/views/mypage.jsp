@@ -135,7 +135,7 @@
 
 <body>
    <%@ include file="header.jsp" %>
-
+ 
    <main class="main-container">
      <h2>마이페이지</h2>
      <form action="${pageContext.request.contextPath}/mypage/updateAddress" method="post">
