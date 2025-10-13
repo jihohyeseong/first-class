@@ -8,6 +8,7 @@ public class AdminListDTO {
     private Long userId;
     private String name;
     private String statusCode;
+    private String paymentResult;
     private String submittedDate;
     private String statusName;
 }

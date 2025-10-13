@@ -103,6 +103,8 @@
         }
         .main-content {
             padding: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
         }
 
 		/* 검색바 */
@@ -134,17 +136,28 @@
         /* 처리상태 카드 */
         .stat-cards-container {
             display: flex;
-            gap: 1.5rem;
+            justify-content: space-between;
+            width: 100%;
+            box-sizing: border-box;
+            gap: 0.7rem;
             margin-bottom: 3rem;
         }
         .stat-card {
             flex: 1;
+            min-width: 0;
             background-color: #fff;
-            padding: 1.25rem;
+            padding: 2rem;
             border: 1px solid #e9ecef;
             border-radius: 0.75rem;
             transition: all 0.2s ease-in-out;
         }
+        /* a 태그를 flex item으로 만들기 */
+		.stat-cards-container > a {
+		    flex: 1;
+		    min-width: 0;
+		    text-decoration: none;
+		    color: inherit;
+		}
         .stat-card:hover {
             transform: translateY(-5px);
             box-shadow: 0 4px 12px rgba(0,0,0,0.08);
@@ -183,6 +196,10 @@
             padding: 1.5rem;
             border-radius: 0.75rem;
             border: 1px solid #e9ecef;
+            box-sizing: border-box;
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
         }
         .table-header {
             display: flex;
@@ -326,38 +343,49 @@
             <h2 class="page-title">관리자 신청 목록</h2>
 
             <div class="stat-cards-container">
-                <div class="stat-card active">
-                    <div class="stat-card-header">
-                        <div>
-                            <h6>대기 중 신청</h6><h1>${counts.pending}</h1><small>현재 검토가 필요한 신청</small>
-                        </div>
-                        <i class="bi bi-clock-history"></i>
-                    </div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-card-header">
-                        <div>
-                            <h6>승인된 신청</h6><h1>${counts.approved}</h1><small>성공적으로 승인된 신청</small>
-                        </div>
-                        <i class="bi bi-check-circle" style="color: #198754;"></i>
-                    </div>
-                </div>
-                <div class="stat-card">
-                     <div class="stat-card-header">
-                        <div>
-                            <h6>반려된 신청</h6><h1>${counts.rejected}</h1><small>문제가 있어 반려된 신청</small>
-                        </div>
-                        <i class="bi bi-x-circle" style="color: #dc3545;"></i>
-                    </div>
-                </div>
-                <div class="stat-card">
-                     <div class="stat-card-header">
-                        <div>
-                            <h6>총 신청 수</h6><h1>${counts.total}</h1><small>모든 육아휴직 신청 수</small>
-                        </div>
-                        <i class="bi bi-files" style="color: #0dcaf0;"></i>
-                    </div>
-                </div>
+	            <a href="${pageContext.request.contextPath}/admin/applications?status=PENDING">
+		        	<div class="stat-card ${status == 'PENDING' ? 'active' : ''}">
+		                    <div class="stat-card-header">
+		                        <div>
+		                            <h6>대기 중 신청</h6><h1>${counts.pending}</h1><small>현재 검토가 필요한 신청</small>
+		                        </div>
+		                        <i class="bi bi-clock-history"></i>
+		                    </div>
+		             </div>
+	             </a>
+
+             	<a href="${pageContext.request.contextPath}/admin/applications?status=APPROVED">
+	                <div class="stat-card ${status == 'APPROVED' ? 'active' : ''}">
+	                    <div class="stat-card-header">
+	                        <div>
+	                            <h6>승인된 신청</h6><h1>${counts.approved}</h1><small>성공적으로 승인된 신청</small>
+	                        </div>
+	                        <i class="bi bi-check-circle" style="color: #198754;"></i>
+	                    </div>
+	                </div>
+                </a>
+                
+                <a href="${pageContext.request.contextPath}/admin/applications?status=REJECTED">
+	                <div class="stat-card ${status == 'REJECTED' ? 'active' : ''}">
+	                     <div class="stat-card-header">
+	                        <div>
+	                            <h6>반려된 신청</h6><h1>${counts.rejected}</h1><small>문제가 있어 반려된 신청</small>
+	                        </div>
+	                        <i class="bi bi-x-circle" style="color: #dc3545;"></i>
+	                    </div>
+	                </div>
+                </a>
+                
+                <a href="${pageContext.request.contextPath}/admin/applications">
+	                <div class="stat-card ${empty status ? 'active' : ''}">
+	                     <div class="stat-card-header">
+	                        <div>
+	                            <h6>총 신청 수</h6><h1>${counts.total}</h1><small>모든 육아휴직 신청 수</small>
+	                        </div>
+	                        <i class="bi bi-files" style="color: #0dcaf0;"></i>
+	                    </div>
+	                </div>
+                </a>
             </div>
 
             <div class="table-wrapper">
@@ -373,7 +401,7 @@
                             <i class="bi bi-search"></i>
                         </button>
                     </div>
-                    <%-- status 필터 --%>
+                    <%-- 처리 상태 필터 --%>
                     <select name="status" onchange="this.form.submit()">
                         <option value="">모든 상태</option>
                         <option value="ST_20" ${status == 'ST_20' ? 'selected' : ''}>대기</option>
@@ -405,11 +433,11 @@
                                                 <c:when test="${app.statusName == '대기'}">
                                                     <span class="badge badge-wait">${app.statusName}</span>
                                                 </c:when>
-                                                <c:when test="${app.statusName == '승인'}">
-                                                    <span class="badge badge-approved">${app.statusName}</span>
+                                                <c:when test="${app.paymentResult == 'Y'}">
+                                                    <span class="badge badge-approved">승인</span>
                                                 </c:when>
                                                 <c:otherwise>
-                                                    <span class="badge badge-rejected">${app.statusName}</span>
+                                                    <span class="badge badge-rejected">반려</span>
                                                 </c:otherwise>
                                             </c:choose>
                                         </td>

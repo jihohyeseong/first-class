@@ -8,7 +8,20 @@
                 (u.name LIKE '%' || #{keyword} || '%' OR u.username LIKE '%' || #{keyword} || '%')
             </if>
             <if test="status != null and status != ''">
-                AND p.status_code = #{status}
+                <choose>
+	                <when test="status == 'PENDING' or status == 'ST_20'">
+	                    AND p.status_code IN ('ST_20', 'ST_30')
+	                </when>
+	                <when test="status == 'APPROVED'">
+	                    AND p.status_code = 'ST_40' AND p.payment_result = 'Y'
+	                </when>
+	                <when test="status == 'REJECTED'">
+	                    AND p.status_code = 'ST_40' AND p.payment_result = 'N'
+	                </when>
+	                <when test="status == 'ST_40'">
+	                    AND p.status_code = 'ST_40'
+	                </when>
+            	</choose>
             </if>
             AND p.delt_at = 'N'
             AND p.status_code != 'ST_10'
@@ -23,6 +36,7 @@
             u.name AS name,
             p.status_code AS statusCode,
             TO_CHAR(p.submitted_dt, 'YYYY-MM-DD') AS submittedDate,
+            p.payment_result AS paymentResult,
             CASE
                 WHEN p.status_code IN ('ST_20', 'ST_30') THEN '대기'
                 WHEN p.status_code = 'ST_40' THEN '처리완료'
@@ -53,6 +67,7 @@
         FROM TB_PARENTAL_LEAVE_APPLICATION
         WHERE status_code = #{statusCode}
           AND delt_at = 'N'
+          AND payment_result = #{paymentResult}
     </select>
 	
 	<select id="selectStatusCountIn" resultType="int">

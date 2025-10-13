@@ -39,9 +39,9 @@ public class AdminListService {
         List<String> pendingStatusCodes = Arrays.asList("ST_20", "ST_30");
         counts.put("pending", adminListDAO.selectStatusCountIn(pendingStatusCodes));
         
-        // 승인/반려는 '처리완료'(ST_40) 상태로 해두고 향후 수정
-        counts.put("approved", adminListDAO.selectStatusCount("ST_40"));
-        counts.put("rejected", 0); // 반려 로직은 아직 없으므로 0으로 설정
+        // 승인/반려
+        counts.put("approved", adminListDAO.selectStatusCount("ST_40", "Y"));
+        counts.put("rejected", adminListDAO.selectStatusCount("ST_40", "N")); 
         
         //결과 반환
         result.put("list", applicationList);

@@ -18,7 +18,7 @@ public interface AdminListDAO {
     int selectTotalCount(@Param("keyword") String keyword, @Param("status") String status);
 
     //처리 상태별 조회
-    int selectStatusCount(@Param("statusCode") String statusCode);
+    int selectStatusCount(@Param("statusCode") String statusCode, @Param("paymentResult") String paymentResult);
     
     //대기중 합산
     int selectStatusCountIn(@Param("codes") List<String> codes);
