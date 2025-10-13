@@ -21,9 +21,8 @@
             --gray-color: #868e96;
             --dark-gray-color: #343a40;
             --border-color: #dee2e6;
-            --status-submitted: #007bff;
-            --status-processing: #ffc107;
-            --status-approved: #28a745;
+            --success-color: #28a745; /* [추가] 성공 색상 변수 */
+            --danger-color: #dc3545; /* [추가] 위험 색상 변수 */
             --shadow-sm: 0 1px 3px rgba(0,0,0,0.05);
             --shadow-md: 0 4px 8px rgba(0,0,0,0.07);
         }
@@ -31,46 +30,46 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
    html { height: 100%; }
    body {
-      display: flex; flex-direction: column; min-height: 100vh;
-      font-family: 'Noto Sans KR', sans-serif;
-      background-color: var(--light-gray-color);
-      color: var(--dark-gray-color);
+     display: flex; flex-direction: column; min-height: 100vh;
+     font-family: 'Noto Sans KR', sans-serif;
+     background-color: var(--light-gray-color);
+     color: var(--dark-gray-color);
    }
    a { text-decoration: none; color: inherit; }
 	
    .btn {
-            display: inline-block;
-            padding: 10px 20px;
-            font-size: 15px;
-            font-weight: 500;
-            border-radius: 8px;
-            border: 1px solid var(--border-color);
-            cursor: pointer;
-            transition: all 0.2s ease-in-out;
-            text-align: center;
-        }
-    .btn-primary { background-color: var(--primary-color); color: var(--white-color); border-color: var(--primary-color); }
-    .btn-primary:hover { background-color: #364ab1; box-shadow: var(--shadow-md); transform: translateY(-2px); }
-    .btn-logout { background-color: var(--dark-gray-color); color: var(--white-color); border: none; }
-    .btn-logout:hover { background-color: #555; }
-    .btn-secondary { background-color: var(--white-color); color: var(--gray-color); border-color: var(--border-color); }
-    .btn-secondary:hover { background-color: var(--light-gray-color); color: var(--dark-gray-color); border-color: #ccc; }
+         display: inline-block;
+         padding: 10px 20px;
+         font-size: 15px;
+         font-weight: 500;
+         border-radius: 8px;
+         border: 1px solid var(--border-color);
+         cursor: pointer;
+         transition: all 0.2s ease-in-out;
+         text-align: center;
+       }
+   .btn-primary { background-color: var(--primary-color); color: var(--white-color); border-color: var(--primary-color); }
+   .btn-primary:hover { background-color: #364ab1; box-shadow: var(--shadow-md); transform: translateY(-2px); }
+   .btn-logout { background-color: var(--dark-gray-color); color: var(--white-color); border: none; }
+   .btn-logout:hover { background-color: #555; }
+   .btn-secondary { background-color: var(--white-color); color: var(--gray-color); border-color: var(--border-color); }
+   .btn-secondary:hover { background-color: var(--light-gray-color); color: var(--dark-gray-color); border-color: #ccc; }
    
    .header {
-            background-color: var(--white-color);
-            padding: 15px 40px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid var(--border-color);
-            box-shadow: var(--shadow-sm);
-            position: sticky;
-            top: 0;
-            z-index: 10;
-        }
-    .header .logo img { vertical-align: middle; }
-    .header nav { display: flex; align-items: center; gap: 15px; }
-    .header .welcome-msg { font-size: 16px; color: var(--dark-gray-color); }
+         background-color: var(--white-color);
+         padding: 15px 40px;
+         display: flex;
+         justify-content: space-between;
+         align-items: center;
+         border-bottom: 1px solid var(--border-color);
+         box-shadow: var(--shadow-sm);
+         position: sticky;
+         top: 0;
+         z-index: 10;
+       }
+   .header .logo img { vertical-align: middle; }
+   .header nav { display: flex; align-items: center; gap: 15px; }
+   .header .welcome-msg { font-size: 16px; color: var(--dark-gray-color); }
 		
 	.header-nav {
 		    position: absolute;
@@ -187,7 +186,7 @@
         }
         .stat-card .bi {
             font-size: 1.8rem;
-            color: #adb5bd;
+            color: #adb5bd; /* [수정됨] 모든 아이콘 색상을 회색으로 통일 */
         }
 
         /* Table Wrapper */
@@ -254,9 +253,10 @@
             border-radius: 50rem;
             color: #fff;
         }
-        .badge-wait { background-color: #3f58d4; color: #fff; }
-        .badge-approved { background-color: #3f58d4; color: #fff; }
-        .badge-rejected { background-color: #3f58d4; color: #fff; }
+        /* [수정됨] 배지 색상을 상태에 맞게 변경 */
+        .badge-wait { background-color: var(--primary-color); }
+        .badge-approved { background-color: var(--success-color); }
+        .badge-rejected { background-color: var(--gray-color); }
 
         .table-btn {
             display: inline-block;
@@ -322,20 +322,20 @@
 	        <a href="#" class="logo"><img src="${pageContext.request.contextPath}/resources/images/logo.png" alt="Logo" width="80" height="80"></a>
 	        <nav>
 	        	<ul class="header-nav">
-	           		<li><a class="nav-link active" href="${pageContext.request.contextPath}/calc">육아휴직 신청현황</a></li>
-	            </ul>
+	        		<li><a class="nav-link active" href="${pageContext.request.contextPath}/calc">육아휴직 신청현황</a></li>
+	            </ul>
 				<sec:authorize access="isAnonymous()">
-                <a href="${pageContext.request.contextPath}/login" class="btn btn-primary">로그인</a>
-            </sec:authorize>
-            <sec:authorize access="isAuthenticated()">
-                <span class="welcome-msg">
-                    <sec:authentication property="principal.username"/>님, 환영합니다.
-                </span>
-                <form id="logout-form" action="${pageContext.request.contextPath}/logout" method="post" style="display: none;">
-                    <sec:csrfInput/>
-                </form>
-                <a href="#" onclick="document.getElementById('logout-form').submit(); return false;" class="btn btn-logout">로그아웃</a>
-            </sec:authorize>
+                    <a href="${pageContext.request.contextPath}/login" class="btn btn-primary">로그인</a>
+                </sec:authorize>
+                <sec:authorize access="isAuthenticated()">
+                    <span class="welcome-msg">
+                        <sec:authentication property="principal.username"/>님, 환영합니다.
+                    </span>
+                    <form id="logout-form" action="${pageContext.request.contextPath}/logout" method="post" style="display: none;">
+                        <sec:csrfInput/>
+                    </form>
+                    <a href="#" onclick="document.getElementById('logout-form').submit(); return false;" class="btn btn-logout">로그아웃</a>
+                </sec:authorize>
 			</nav>
 		</header>
 
@@ -343,46 +343,46 @@
             <h2 class="page-title">관리자 신청 목록</h2>
 
             <div class="stat-cards-container">
+                <a href="${pageContext.request.contextPath}/admin/applications">
+	                <div class="stat-card ${empty status ? 'active' : ''}">
+	                    <div class="stat-card-header">
+	                        <div>
+	                            <h6>총 신청 수</h6><h1>${counts.total}</h1><small>모든 육아휴직 신청 수</small>
+	                        </div>
+	                        <i class="bi bi-files"></i>
+	                    </div>
+	                </div>
+                </a>
+
 	            <a href="${pageContext.request.contextPath}/admin/applications?status=PENDING">
 		        	<div class="stat-card ${status == 'PENDING' ? 'active' : ''}">
-		                    <div class="stat-card-header">
-		                        <div>
-		                            <h6>대기 중 신청</h6><h1>${counts.pending}</h1><small>현재 검토가 필요한 신청</small>
-		                        </div>
-		                        <i class="bi bi-clock-history"></i>
-		                    </div>
-		             </div>
-	             </a>
+	                    <div class="stat-card-header">
+	                        <div>
+	                            <h6>대기 중 신청</h6><h1>${counts.pending}</h1><small>현재 검토가 필요한 신청</small>
+	                        </div>
+	                        <i class="bi bi-clock-history"></i>
+	                    </div>
+	                </div>
+	            </a>
 
-             	<a href="${pageContext.request.contextPath}/admin/applications?status=APPROVED">
+                <a href="${pageContext.request.contextPath}/admin/applications?status=APPROVED">
 	                <div class="stat-card ${status == 'APPROVED' ? 'active' : ''}">
 	                    <div class="stat-card-header">
 	                        <div>
 	                            <h6>승인된 신청</h6><h1>${counts.approved}</h1><small>성공적으로 승인된 신청</small>
 	                        </div>
-	                        <i class="bi bi-check-circle" style="color: #198754;"></i>
+	                        <i class="bi bi-check-circle"></i>
 	                    </div>
 	                </div>
                 </a>
                 
                 <a href="${pageContext.request.contextPath}/admin/applications?status=REJECTED">
 	                <div class="stat-card ${status == 'REJECTED' ? 'active' : ''}">
-	                     <div class="stat-card-header">
+	                    <div class="stat-card-header">
 	                        <div>
 	                            <h6>반려된 신청</h6><h1>${counts.rejected}</h1><small>문제가 있어 반려된 신청</small>
 	                        </div>
-	                        <i class="bi bi-x-circle" style="color: #dc3545;"></i>
-	                    </div>
-	                </div>
-                </a>
-                
-                <a href="${pageContext.request.contextPath}/admin/applications">
-	                <div class="stat-card ${empty status ? 'active' : ''}">
-	                     <div class="stat-card-header">
-	                        <div>
-	                            <h6>총 신청 수</h6><h1>${counts.total}</h1><small>모든 육아휴직 신청 수</small>
-	                        </div>
-	                        <i class="bi bi-files" style="color: #0dcaf0;"></i>
+	                        <i class="bi bi-x-circle"></i>
 	                    </div>
 	                </div>
                 </a>
