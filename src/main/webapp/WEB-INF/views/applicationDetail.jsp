@@ -456,35 +456,56 @@ textarea.form-control {
 			<c:when test="${isAdmin}">
 				<button type="button" class="btn bottom-btn btn-primary approve-btn">지급</button>
 
-				<form id="reject-form" action="${pageContext.request.contextPath}/apply/reject" method="post" style="display:inline;">
-					<sec:csrfInput/>
-					<input type="hidden" name="appNo" value="${app.applicationNumber}"/>
-                    <input type="hidden" name="rejectCode" id="hidden-reject-code"/>
-                    <input type="hidden" name="rejectDetail" id="hidden-reject-detail"/>
-					<button type="button" id="reject-btn" class="btn bottom-btn btn-secondary" style="margin-left:15px;">부지급</button>
+				<form id="reject-form"
+					action="${pageContext.request.contextPath}/apply/reject"
+					method="post" style="display: inline;">
+					<sec:csrfInput />
+					<input type="hidden" name="appNo" value="${app.applicationNumber}" />
+					<input type="hidden" name="rejectCode" id="hidden-reject-code" /> <input
+						type="hidden" name="rejectDetail" id="hidden-reject-detail" />
+					<button type="button" id="reject-btn"
+						class="btn bottom-btn btn-secondary" style="margin-left: 15px;">부지급</button>
 				</form>
 			</c:when>
-	
+
 			<c:otherwise>
-				<a href="${pageContext.request.contextPath}/apply/edit?appNo=${app.applicationNumber}"
-					class="btn bottom-btn btn-primary">신청 내용 수정</a>
-	
 				<a href="${pageContext.request.contextPath}/main"
-					class="btn bottom-btn btn-secondary" style="margin-left:15px;">목록으로 돌아가기</a>
-	
+					class="btn bottom-btn btn-secondary">목록으로 돌아가기</a>
+
 				<c:choose>
 					<c:when test="${isSubmitted}">
-						<button class="btn bottom-btn btn-secondary" style="margin-left:15px;" disabled>제출 완료</button>
+						<button class="btn bottom-btn btn-secondary"
+							style="margin-left: 15px;" disabled>제출 완료</button>
 					</c:when>
 					<c:otherwise>
-						<form action="${pageContext.request.contextPath}/apply/submit" method="post" style="display:inline;">
-							<sec:csrfInput/>
-							<input type="hidden" name="appNo" value="${app.applicationNumber}"/>
-							<button type="submit" class="btn bottom-btn btn-primary" style="margin-left:15px;">제출하기</button>
+						<!-- 임시저장 상태(ST_10)에서만 노출되는 버튼들 -->
+						<a
+							href="${pageContext.request.contextPath}/apply/edit?appNo=${app.applicationNumber}"
+							class="btn bottom-btn btn-primary" style="margin-left: 15px;">신청
+							내용 수정</a>
+
+						<form action="${pageContext.request.contextPath}/apply/submit"
+							method="post" style="display: inline;">
+							<sec:csrfInput />
+							<input type="hidden" name="appNo"
+								value="${app.applicationNumber}" />
+							<button type="submit" class="btn bottom-btn btn-primary"
+								style="margin-left: 15px;">제출하기</button>
+						</form>
+
+						<form action="${pageContext.request.contextPath}/apply/delete"
+							method="post" style="display: inline;">
+							<sec:csrfInput />
+							<input type="hidden" name="appNo"
+								value="${app.applicationNumber}" />
+							<button type="submit" class="btn bottom-btn btn-secondary"
+								style="margin-left: 15px;"
+								onclick="return confirm('정말 삭제하시겠습니까?');">삭제</button>
 						</form>
 					</c:otherwise>
 				</c:choose>
 			</c:otherwise>
+
 		</c:choose>
 	</div>
 </main>

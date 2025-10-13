@@ -284,6 +284,45 @@ public class ApplicationService {
     public List<TermAmountDTO> findTerms(long appNo) {
         return termAmountDAO.selectByApplicationNumber(appNo);
     }
+    /* ============================================================
+    신청서수정/삭제
+ ============================================================ */
+    
+    @Transactional
+    public long updateApplication(ApplicationDTO dto,
+                                  List<Long> monthlyCompanyPay,
+                                  boolean noCompanyPay,
+                                  boolean recomputeTerms) {
+        // 선택 암호화(값 전달된 경우만)
+        try {
+            if (dto.getChildResiRegiNumber() != null)
+                dto.setChildResiRegiNumber(dto.getChildResiRegiNumber().trim().isEmpty()
+                        ? "" : aes256Util.encrypt(dto.getChildResiRegiNumber()));
+            if (dto.getAccountNumber() != null)
+                dto.setAccountNumber(dto.getAccountNumber().trim().isEmpty()
+                        ? "" : aes256Util.encrypt(dto.getAccountNumber()));
+        } catch (Exception ignore) {}
+
+        applicationDAO.updateApplicationSelective(dto);
+
+        if (recomputeTerms && dto.getStartDate() != null && dto.getEndDate() != null && dto.getRegularWage() != null) {
+            recalcAndReplaceTerms(
+                dto.getApplicationNumber(),
+                dto.getStartDate().toLocalDate(),
+                dto.getEndDate().toLocalDate(),
+                dto.getRegularWage(),
+                monthlyCompanyPay,
+                noCompanyPay
+            );
+        }
+        return dto.getApplicationNumber();
+    }
+
+    @Transactional
+    public void deleteApplication(long appNo) {
+        termAmountDAO.deleteTermsByAppNo(appNo);
+        applicationDAO.softDeleteApplication(appNo);
+    }
 
     /* ============================================================
        공통 유틸

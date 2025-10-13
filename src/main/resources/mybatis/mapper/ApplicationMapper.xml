@@ -7,123 +7,124 @@
         useGeneratedKeys="true"
         keyProperty="applicationNumber"
         keyColumn="APPLICATION_NUMBER">
-  INSERT INTO TB_PARENTAL_LEAVE_APPLICATION (
-    user_id, start_date, end_date,
-    bank_code, account_number,
-    regular_wage, weekly_hours,
-    status_code,
-    child_name, child_resi_regi_number, child_birth_date,
-    business_regi_number, business_name,
-    business_zip_number, business_addr_base, business_addr_detail,
-    payment, business_agree, gov_info_agree,
-    submitted_dt, delt_at
-  ) VALUES (
-    #{userId,             jdbcType=NUMERIC},
-    #{startDate,          jdbcType=DATE},
-    #{endDate,            jdbcType=DATE},
-    #{bankCode,           jdbcType=VARCHAR},
-    #{accountNumber,      jdbcType=VARCHAR},
-    #{regularWage,        jdbcType=NUMERIC},
-    #{weeklyHours,        jdbcType=NUMERIC},
-    #{statusCode,         jdbcType=VARCHAR},
-    #{childName,              jdbcType=VARCHAR},
-    #{childResiRegiNumber,    jdbcType=VARCHAR},
-    #{childBirthDate,         jdbcType=DATE},
-    #{businessRegiNumber,     jdbcType=VARCHAR},
-    #{businessName,           jdbcType=VARCHAR},
-    #{businessZipNumber,      jdbcType=VARCHAR},
-    #{businessAddrBase,       jdbcType=VARCHAR},
-    #{businessAddrDetail,     jdbcType=VARCHAR},
-    #{payment,            jdbcType=NUMERIC},
-    #{businessAgree,      jdbcType=CHAR},
-    #{govInfoAgree,       jdbcType=CHAR},
-    CASE WHEN #{statusCode, jdbcType=VARCHAR} = 'ST_20' THEN SYSDATE ELSE NULL END,
-    'N'
-  )
-</insert>
-
-
-  
-<!--   신청서 하나만조회 -->
-<select id="selectApplicationById"
-        parameterType="long"
-        resultType="first.example.firstclass.domain.ApplicationDTO">
-  SELECT
-    A.application_number,
-    A.user_id,
-    A.start_date, A.end_date,
-    A.bank_code,
-    A.account_number,
-    A.regular_wage, A.weekly_hours,
-    A.status_code,
-    C.name AS statusName,   -- 상태 라벨
-    B.name AS bankName,     -- 은행 라벨
-    A.child_name, A.child_resi_regi_number, A.child_birth_date,
-    A.business_regi_number, A.business_name,
-    A.business_zip_number, A.business_addr_base, A.business_addr_detail,
-    A.payment, A.business_agree, A.gov_info_agree,
-    A.submitted_dt
-  FROM TB_PARENTAL_LEAVE_APPLICATION A
-  LEFT JOIN TB_CODE C ON C.code = A.status_code  -- 🔸 그룹 조건 제거
-  LEFT JOIN TB_CODE B ON B.code = A.bank_code    -- 🔸 그룹 조건 제거
-  WHERE A.application_number = #{appNo}
-</select>
-  
-  <!-- 임시저장말고 제출시 코드바꾸고 제출날짜저장용 -->
-<update id="updateSubmittedNow">
-  UPDATE TB_PARENTAL_LEAVE_APPLICATION
-  SET status_code = 'ST_20',
-      submitted_dt = SYSDATE
-  WHERE application_number = #{appNo}
-    AND submitted_dt IS NULL
-</update>
-
-<!-- 유저아이디로 전체 게시글 조회(메인페이지용) -->
-<select id="selectListByUserId"
-        parameterType="long"
-        resultType="first.example.firstclass.domain.ApplicationListDTO">
-  SELECT
-    A.application_number AS applicationNumber,
-    CASE
-      WHEN A.status_code = 'ST_10' THEN '미신청'
-      ELSE TO_CHAR(A.submitted_dt, 'YYYY-MM-DD')
-    END AS submittedDate,
-    C.name AS statusName
-  FROM TB_PARENTAL_LEAVE_APPLICATION A
-  JOIN TB_CODE C
-    ON A.status_code = C.code
-  WHERE A.user_id = #{userId}
-  ORDER BY A.application_number DESC
-</select>
-
-<select id="selectBankCode"
-          resultType="first.example.firstclass.domain.CodeDTO">
-    SELECT
-      code AS code,
-      name AS name
-    FROM TB_Code
-    WHERE LENGTH(code) = 3
-      AND REGEXP_LIKE(code, '^[0-9]{3}$')
-    ORDER BY name
-  </select>
-  
-<select id="selectUserByAppNo"
-        parameterType="long"
-        resultType="first.example.firstclass.domain.UserDTO">
-  SELECT
-    U.id,
-    U.username,
-    U.name,
-    U.registration_number,
-    U.phone_number,
-    U.zip_number,
-    U.address_base,
-    U.address_detail
-  FROM TB_PARENTAL_LEAVE_APPLICATION A
-  JOIN TB_USER U
-    ON U.id = A.user_id
-  WHERE A.application_number = #{appNo}
-</select>
+	  INSERT INTO TB_PARENTAL_LEAVE_APPLICATION (
+	    user_id, start_date, end_date,
+	    bank_code, account_number,
+	    regular_wage, weekly_hours,
+	    status_code,
+	    child_name, child_resi_regi_number, child_birth_date,
+	    business_regi_number, business_name,
+	    business_zip_number, business_addr_base, business_addr_detail,
+	    payment, business_agree, gov_info_agree,
+	    submitted_dt, delt_at
+	  ) VALUES (
+	    #{userId,             jdbcType=NUMERIC},
+	    #{startDate,          jdbcType=DATE},
+	    #{endDate,            jdbcType=DATE},
+	    #{bankCode,           jdbcType=VARCHAR},
+	    #{accountNumber,      jdbcType=VARCHAR},
+	    #{regularWage,        jdbcType=NUMERIC},
+	    #{weeklyHours,        jdbcType=NUMERIC},
+	    #{statusCode,         jdbcType=VARCHAR},
+	    #{childName,              jdbcType=VARCHAR},
+	    #{childResiRegiNumber,    jdbcType=VARCHAR},
+	    #{childBirthDate,         jdbcType=DATE},
+	    #{businessRegiNumber,     jdbcType=VARCHAR},
+	    #{businessName,           jdbcType=VARCHAR},
+	    #{businessZipNumber,      jdbcType=VARCHAR},
+	    #{businessAddrBase,       jdbcType=VARCHAR},
+	    #{businessAddrDetail,     jdbcType=VARCHAR},
+	    #{payment,            jdbcType=NUMERIC},
+	    #{businessAgree,      jdbcType=CHAR},
+	    #{govInfoAgree,       jdbcType=CHAR},
+	    CASE WHEN #{statusCode, jdbcType=VARCHAR} = 'ST_20' THEN SYSDATE ELSE NULL END,
+	    'N'
+	  )
+	</insert>
+	
+	
+	  
+	<!--   신청서 하나만조회 -->
+	<select id="selectApplicationById"
+	        parameterType="long"
+	        resultType="first.example.firstclass.domain.ApplicationDTO">
+	  SELECT
+	    A.application_number,
+	    A.user_id,
+	    A.start_date, A.end_date,
+	    A.bank_code,
+	    A.account_number,
+	    A.regular_wage, A.weekly_hours,
+	    A.status_code,
+	    C.name AS statusName,   -- 상태 라벨
+	    B.name AS bankName,     -- 은행 라벨
+	    A.child_name, A.child_resi_regi_number, A.child_birth_date,
+	    A.business_regi_number, A.business_name,
+	    A.business_zip_number, A.business_addr_base, A.business_addr_detail,
+	    A.payment, A.business_agree, A.gov_info_agree,
+	    A.submitted_dt
+	  FROM TB_PARENTAL_LEAVE_APPLICATION A
+	  LEFT JOIN TB_CODE C ON C.code = A.status_code  -- 🔸 그룹 조건 제거
+	  LEFT JOIN TB_CODE B ON B.code = A.bank_code    -- 🔸 그룹 조건 제거
+	  WHERE A.application_number = #{appNo}
+	</select>
+	  
+	  <!-- 임시저장말고 제출시 코드바꾸고 제출날짜저장용 -->
+	<update id="updateSubmittedNow">
+	  UPDATE TB_PARENTAL_LEAVE_APPLICATION
+	  SET status_code = 'ST_20',
+	      submitted_dt = SYSDATE
+	  WHERE application_number = #{appNo}
+	    AND submitted_dt IS NULL
+	</update>
+	
+	<!-- 유저아이디로 전체 게시글 조회(메인페이지용) -->
+	<select id="selectListByUserId"
+	        parameterType="long"
+	        resultType="first.example.firstclass.domain.ApplicationListDTO">
+	  SELECT
+	    A.application_number AS applicationNumber,
+	    CASE
+	      WHEN A.status_code = 'ST_10' THEN '미신청'
+	      ELSE TO_CHAR(A.submitted_dt, 'YYYY-MM-DD')
+	    END AS submittedDate,
+	    C.name AS statusName
+	  FROM TB_PARENTAL_LEAVE_APPLICATION A
+	  JOIN TB_CODE C
+	    ON A.status_code = C.code
+	  WHERE A.user_id = #{userId}
+	  AND A.delt_at = 'N'
+	  ORDER BY A.application_number DESC
+	</select>
+	
+	<select id="selectBankCode"
+	          resultType="first.example.firstclass.domain.CodeDTO">
+	    SELECT
+	      code AS code,
+	      name AS name
+	    FROM TB_Code
+	    WHERE LENGTH(code) = 3
+	      AND REGEXP_LIKE(code, '^[0-9]{3}$')
+	    ORDER BY name
+	  </select>
+	  
+	<select id="selectUserByAppNo"
+	        parameterType="long"
+	        resultType="first.example.firstclass.domain.UserDTO">
+	  SELECT
+	    U.id,
+	    U.username,
+	    U.name,
+	    U.registration_number,
+	    U.phone_number,
+	    U.zip_number,
+	    U.address_base,
+	    U.address_detail
+	  FROM TB_PARENTAL_LEAVE_APPLICATION A
+	  JOIN TB_USER U
+	    ON U.id = A.user_id
+	  WHERE A.application_number = #{appNo}
+	</select>
 
 	<!-- 관리자 부지급 -->
 	<update id="updateApplicationJudge" parameterType="AdminJudgeDTO">
@@ -136,5 +137,44 @@
 			examine_dt = sysdate
 		WHERE application_number = #{applicationNumber}
 	</update>
+
+	<update id="softDeleteApplication" parameterType="long">
+	  UPDATE TB_PARENTAL_LEAVE_APPLICATION
+	     SET delt_at = 'Y'
+	   WHERE application_number = #{appNo}
+	</update>
+	
+	<!-- 신청서 수정-->
+	<update id="updateApplicationSelective"
+        parameterType="first.example.firstclass.domain.ApplicationDTO">
+	  UPDATE TB_PARENTAL_LEAVE_APPLICATION
+	  <trim prefix="SET" suffixOverrides=",">
+	    <if test="startDate         != null">start_date            = #{startDate,      jdbcType=DATE},</if>
+	    <if test="endDate           != null">end_date              = #{endDate,        jdbcType=DATE},</if>
+	    <if test="bankCode          != null">bank_code = #{bankCode},</if>
+	    <if test="accountNumber     != null">account_number = #{accountNumber},</if>
+	    <if test="regularWage       != null">regular_wage          = #{regularWage},</if>
+	    <if test="weeklyHours       != null">weekly_hours          = #{weeklyHours},</if>
+	    <if test="statusCode        != null">status_code           = #{statusCode},</if>
+	    <if test="childName         != null">child_name            = #{childName},</if>
+	    <if test="childResiRegiNumber != null">child_resi_regi_number = #{childResiRegiNumber},</if>
+	    <if test="childBirthDate    != null">child_birth_date      = #{childBirthDate, jdbcType=DATE},</if>
+	    <if test="businessRegiNumber!= null">business_regi_number = #{businessRegiNumber},</if>
+	    <if test="businessName      != null">business_name    = #{businessName},</if>
+	    <if test="businessZipNumber != null">business_zip_number = #{businessZipNumber},</if>
+	    <if test="businessAddrBase  != null">business_addr_base  = #{businessAddrBase},</if>
+	    <if test="businessAddrDetail!= null">business_addr_detail= #{businessAddrDetail},</if>
+	    <if test="payment           != null">payment               = #{payment},</if>
+	    <if test="businessAgree     != null">business_agree        = #{businessAgree},</if>
+	    <if test="govInfoAgree      != null">gov_info_agree        = #{govInfoAgree},</if>
+	
+	    <!-- 제출 상태로 바뀔 때만 submitted_dt 세팅 -->
+	    <if test="statusCode == 'ST_20'">
+	      submitted_dt = CASE WHEN submitted_dt IS NULL THEN SYSDATE ELSE submitted_dt END,
+	    </if>
+	  </trim>
+	  WHERE application_number = #{applicationNumber}
+	</update>
+		
 
 </mapper>

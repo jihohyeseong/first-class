@@ -245,6 +245,82 @@ public class ApplicationController {
             return "redirect:/apply";
         }
     }
+    
+    /* ======= 신청서 수정/삭제 ======= */
+    @GetMapping("/apply/edit")
+    public String edit(@RequestParam long appNo, Model model, RedirectAttributes ra) {
+        UserDTO login = currentUserOrNull();
+        if (login == null) return "redirect:/login";
+
+        ApplicationDTO app = applicationService.findById(appNo);
+        if (app == null) { ra.addFlashAttribute("error", "존재하지 않는 신청입니다."); return "redirect:/main"; }
+
+        boolean isAdmin = hasRole("ROLE_ADMIN");
+        if (!app.getUserId().equals(login.getId()) && !isAdmin) {
+            ra.addFlashAttribute("error", "권한이 없습니다.");
+            return "redirect:/main";
+        }
+
+        UserDTO user = applicationService.findApplicantByAppNo(appNo);
+        if (user != null && user.getRegistrationNumber() != null) {
+            user.setRegistrationNumber(maskRrn(user.getRegistrationNumber()));
+        }
+
+        model.addAttribute("app", app);
+        model.addAttribute("userDTO", user);
+        model.addAttribute("isAdmin", isAdmin);
+        return "applicationEdit";
+    }
+
+    @PostMapping("/apply/edit")
+    public String update(
+            @ModelAttribute ApplicationDTO form,
+            BindingResult binding,
+            HttpServletRequest request,
+            @RequestParam(name="noPayment", defaultValue="false") boolean noPayment,
+            @RequestParam(name="recomputeTerms", defaultValue="true") boolean recomputeTerms,
+            RedirectAttributes ra
+    ) {
+        UserDTO login = currentUserOrNull();
+        if (login == null) { ra.addFlashAttribute("error","로그인이 필요합니다."); return "redirect:/login"; }
+
+        // 동의값(넘어오면 반영)
+        String bizAgree = request.getParameter("businessAgree");
+        if (bizAgree != null) form.setBusinessAgree(yn(bizAgree));
+        String govAgree = request.getParameter("govInfoAgree");
+        if (govAgree != null) form.setGovInfoAgree(yn(govAgree));
+
+        List<Long> monthlyCompanyPay = collectMonthlyCompanyPays(request);
+
+        try {
+            long appNo = applicationService.updateApplication(form, monthlyCompanyPay, noPayment, recomputeTerms);
+            ra.addFlashAttribute("message", "수정 완료");
+            return "redirect:/apply/detail?appNo=" + appNo;
+        } catch (Exception e) {
+            log.error("수정 오류", e);
+            ra.addFlashAttribute("error", "수정 중 오류: " + e.getMessage());
+            return "redirect:/apply/edit?appNo=" + form.getApplicationNumber();
+        }
+    }
+
+    @PostMapping("/apply/delete")
+    public String delete(@RequestParam long appNo, RedirectAttributes ra) {
+        UserDTO login = currentUserOrNull();
+        if (login == null) return "redirect:/login";
+
+        ApplicationDTO app = applicationService.findById(appNo);
+        if (app == null) { ra.addFlashAttribute("error", "이미 삭제되었거나 존재하지 않습니다."); return "redirect:/main"; }
+
+        boolean isAdmin = hasRole("ROLE_ADMIN");
+        if (!app.getUserId().equals(login.getId()) && !isAdmin) {
+            ra.addFlashAttribute("error","권한이 없습니다.");
+            return "redirect:/main";
+        }
+
+        applicationService.deleteApplication(appNo);
+        ra.addFlashAttribute("message","삭제되었습니다.");
+        return "redirect:/main";
+    }
 
     /* ======= 공통 유틸 ======= */
 

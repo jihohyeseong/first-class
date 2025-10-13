@@ -23,4 +23,7 @@ public interface ApplicationDAO {
     UserDTO selectUserByAppNo(@Param("appNo") long appNo);
     
 	int updateApplicationJudge(AdminJudgeDTO adminJudgeDTO);
+	
+	int updateApplicationSelective(ApplicationDTO dto);
+    int softDeleteApplication(@Param("appNo") long appNo);
 }
