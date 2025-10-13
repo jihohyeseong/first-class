@@ -37,23 +37,21 @@
 	}
 	a { text-decoration: none; color: inherit; }
 
-	/* [수정됨] 컨테이너 기본 상태: 중앙 정렬 */
 	.calculator-container {
 		display: flex;
-		justify-content: center; /* 자식 요소를 중앙에 배치 */
+		justify-content: center;
 		align-items: flex-start;
 		gap: 30px;
-		max-width: 1200px; /* 너비를 조금 더 확보 */
+		max-width: 1200px;
 		width: 100%;
 		margin: 40px auto;
-		padding: 0 20px; /* 좌우 여백 */
+		padding: 0 20px;
 		transition: justify-content 0.6s ease-in-out;
 	}
 
-	/* [수정됨] 입력 패널 기본 상태: 넓게 중앙에 위치 */
 	.input-panel {
-		flex: 0 1 70%; /* 늘어나지 않음, 줄어들 수 있음, 기본 너비 70% */
-		max-width: 700px; /* 너무 넓어지는 것을 방지 */
+		flex: 0 1 70%;
+		max-width: 700px;
 		background-color: var(--white-color);
 		padding: 40px;
 		border-radius: 16px;
@@ -61,32 +59,29 @@
 		transition: flex 0.6s ease-in-out, max-width 0.6s ease-in-out;
 	}
 
-	/* [수정됨] 결과 패널 기본 상태: 숨겨져 있고 너비가 없음 */
 	.result-panel {
-		flex: 0 0 0; /* 너비가 0 */
+		flex: 0 0 0;
 		opacity: 0;
-		overflow: hidden; /* 내용이 넘치지 않도록 */
+		overflow: hidden;
 		background-color: var(--white-color);
-		padding: 40px 0; /* 세로 패딩만 유지 */
+		padding: 40px 0;
 		border-radius: 16px;
 		box-shadow: var(--shadow-md);
 		transition: flex 0.6s ease-in-out, opacity 0.4s 0.2s ease, padding 0.6s ease-in-out;
 	}
 
-	/* [추가됨] 계산 버튼 클릭 후 활성화 상태 */
 	.calculator-container.results-shown {
-		justify-content: space-between; /* 양쪽으로 정렬 */
+		justify-content: space-between;
 	}
 	.calculator-container.results-shown .input-panel {
-		flex: 1 1 45%; /* 최종 너비 */
+		flex: 1 1 45%;
 		max-width: none;
 	}
 	.calculator-container.results-shown .result-panel {
-		flex: 1 1 55%; /* 최종 너비 */
+		flex: 1 1 55%;
 		opacity: 1;
-		padding: 40px; /* 가로 패딩 복원 */
+		padding: 40px;
 	}
-
 
 	.result-placeholder {
 		text-align: center;
@@ -228,15 +223,15 @@
 			</div>
 			
 			<div class="input-group">
-				<label for="startDate">휴직 시작일</label> 
+				<label for="startDate">휴직 시작일</label> 
 				<input type="date" id="startDate" required>
 			</div>
 			<div class="input-group">
-				<label for="endDate">휴직 종료일</label> 
+				<label for="endDate">휴직 종료일</label> 
 				<input type="date" id="endDate" required>
 			</div>
 			<div class="input-group">
-				<label for="salary">통상임금 (월)</label> 
+				<label for="salary">통상임금 (월)</label> 
 				<input type="text" id="salary" inputmode="numeric" required>
 			</div>
 			<div class="button-group">
@@ -277,13 +272,10 @@
 	</div>
 
 	<script>
-		// [추가됨] 메인 컨테이너 변수
 		const calculatorContainer = document.getElementById("calculator-container");
-
 		const startDateInput = document.getElementById("startDate");
 		const endDateInput = document.getElementById("endDate");
 		const salaryInput = document.getElementById("salary");
-		
 		const resultPanel = document.getElementById("result-panel");
 		const resultPlaceholder = document.getElementById("result-placeholder");
 		const resultSection = document.getElementById("result-section");
@@ -295,34 +287,36 @@
 			e.target.value = value ? parseInt(value, 10).toLocaleString('ko-KR') : '';
 		});
 		
+		// [수정됨] 10원 단위로 버림 처리
 		const formatCurrency = function(number) {
-			return isNaN(number) ? '0' : Math.round(number).toLocaleString('ko-KR');
+			if (isNaN(number)) return '0';
+			const flooredToTen = Math.floor(number / 10) * 10;
+			return flooredToTen.toLocaleString('ko-KR');
 		};
 
-		// [추가] 새로운 함수들
-		function splitPeriodsAndCalc(startDate, endDate, regularWage) {
+		function splitPeriodsAndCalc(startDateStr, endDateStr, regularWage) {
 		    const result = [];
-		    let periodStart = new Date(startDate);
-		    const finalEnd = new Date(endDate);
+		    let periodStart = new Date(startDateStr);
+		    const finalEnd = new Date(endDateStr);
 		    let monthIdx = 1;
 
-		    while (periodStart <= finalEnd) {
-		        let periodEnd = new Date(periodStart);
-		        periodEnd.setMonth(periodEnd.getMonth() + 1);
-		        periodEnd.setDate(periodEnd.getDate() - 1);
+		    while (periodStart <= finalEnd && monthIdx <= 12) {
+		        let chunkEndDate = new Date(periodStart);
+		        chunkEndDate.setMonth(chunkEndDate.getMonth() + 1);
+		        chunkEndDate.setDate(chunkEndDate.getDate() - 1);
 
+				const daysInChunk = Math.round((chunkEndDate - periodStart) / (1000 * 60 * 60 * 24)) + 1;
+
+		        let periodEnd = new Date(chunkEndDate);
 		        if (periodEnd > finalEnd) {
 		            periodEnd = new Date(finalEnd);
 		        }
 
-		        const isLast = (periodEnd.getTime() === finalEnd.getTime());
 		        const govBase = computeGovBase(regularWage, monthIdx);
-		        const govPayment = calcGovPayment(govBase, 0, periodStart, periodEnd, isLast);
+		        const govPayment = calcGovPayment(govBase, periodStart, periodEnd, daysInChunk);
 
 		        result.push({
 		            month: monthIdx,
-		            startDate: new Date(periodStart),
-		            endDate: new Date(periodEnd),
 		            govPayment: govPayment
 		        });
 
@@ -330,7 +324,6 @@
 		        periodStart.setDate(periodStart.getDate() + 1);
 		        monthIdx++;
 		    }
-
 		    return result;
 		}
 
@@ -340,18 +333,27 @@
 		    const eighty = Math.round(regularWage * 0.8);
 		    return Math.min(eighty, 1600000);
 		}
-
-		function calcGovPayment(base, companyPayment, startDate, endDate, isLast) {
-		    if (!isLast) return Math.max(0, base - companyPayment);
-
-		    const daysInTerm = Math.floor((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
-		    const daysInEndMonth = new Date(endDate.getFullYear(), endDate.getMonth() + 1, 0).getDate();
-		    const ratio = Math.max(0.0, Math.min(1.0, daysInTerm / daysInEndMonth));
-		    const prorated = Math.round(base * ratio);
-		    return Math.max(0, prorated - companyPayment);
+		
+		function calcGovPayment(base, startDate, endDate, daysInChunk) {
+			const daysInTerm = Math.round((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
+			
+			if (daysInTerm === daysInChunk) {
+				return base;
+			}
+			
+			const ratio = daysInTerm / daysInChunk;
+			// [수정됨] 1원 단위 버림 처리 (최종 포맷팅에서 10원 단위로 한번 더 처리됨)
+			return Math.floor(base * ratio);
 		}
 
-		// [수정] calculateLeaveBenefit 함수 전체 교체
+		function getRawLeaveMonths(start, end) {
+			const startDate = new Date(start);
+			const endDate = new Date(end);
+			let months = (endDate.getFullYear() - startDate.getFullYear()) * 12 - startDate.getMonth() + endDate.getMonth();
+			if (endDate.getDate() >= startDate.getDate()) months++;
+			return months;
+		}
+
 		function calculateLeaveBenefit() {
 		    const salary = parseInt(salaryInput.value.replace(/,/g, ''), 10);
 		    
@@ -367,6 +369,12 @@
 		        alert("통상임금은 유효한 숫자만 입력해주세요.");
 		        return;
 		    }
+			
+			const rawMonths = getRawLeaveMonths(startDateInput.value, endDateInput.value);
+			if (rawMonths > 12) {
+				alert("휴직 기간은 최대 12개월까지 선택할 수 있습니다.");
+				return;
+			}
 
 		    const terms = splitPeriodsAndCalc(startDateInput.value, endDateInput.value, salary);
 
@@ -377,10 +385,14 @@
 		        total += term.govPayment;
 		        const row = resultTbody.insertRow();
 		        row.insertCell().textContent = term.month + '개월';
-		        row.insertCell().textContent = formatCurrency(term.govPayment) + '원';
+				
+				const payCell = row.insertCell();
+				payCell.innerHTML = formatCurrency(term.govPayment) + '원' + 
+					'<br><span style="font-size: 0.8em; color: var(--gray-color);">(0원)</span>';
 		    });
 
-		    totalAmount.textContent = formatCurrency(total) + '원';
+			totalAmount.innerHTML = formatCurrency(total) + '원' +
+				'<br><span style="font-size: 0.8em; color: var(--gray-color);">(0원)</span>';
 		    
 		    calculatorContainer.classList.add('results-shown');
 		    resultPlaceholder.style.display = 'none';
@@ -392,16 +404,14 @@
 			endDateInput.value = '';
 			salaryInput.value = '';
 			
-			// [수정됨] 클래스를 제거하여 애니메이션 트리거
 			calculatorContainer.classList.remove('results-shown');
 			
-			// 결과 영역의 내용을 애니메이션 시간 후에 초기화
 			setTimeout(function() {
 				resultSection.style.display = 'none';
 				resultPlaceholder.style.display = 'block';
 				resultTbody.innerHTML = '';
 				totalAmount.textContent = '';
-			}, 300); // CSS transition 시간보다 짧게 설정 가능
+			}, 300);
 		}
 	</script>
 
