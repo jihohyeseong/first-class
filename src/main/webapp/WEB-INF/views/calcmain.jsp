@@ -223,15 +223,15 @@
 			</div>
 			
 			<div class="input-group">
-				<label for="startDate">휴직 시작일</label> 
+				<label for="startDate">휴직 시작일</label> 
 				<input type="date" id="startDate" required>
 			</div>
 			<div class="input-group">
-				<label for="endDate">휴직 종료일</label> 
+				<label for="endDate">휴직 종료일</label> 
 				<input type="date" id="endDate" required>
 			</div>
 			<div class="input-group">
-				<label for="salary">통상임금 (월)</label> 
+				<label for="salary">통상임금 (월)</label> 
 				<input type="text" id="salary" inputmode="numeric" required>
 			</div>
 			<div class="button-group">
@@ -252,7 +252,7 @@
 					<caption>육아휴직 급여 계산 결과</caption>
 					<thead>
 						<tr>
-							<th>개월차</th>
+							<th>개월차 및 기간</th>
 							<th>예상 지급액</th>
 						</tr>
 					</thead>
@@ -271,7 +271,7 @@
 
 	</div>
 
-	<script>
+<script>
 		const calculatorContainer = document.getElementById("calculator-container");
 		const startDateInput = document.getElementById("startDate");
 		const endDateInput = document.getElementById("endDate");
@@ -287,62 +287,108 @@
 			e.target.value = value ? parseInt(value, 10).toLocaleString('ko-KR') : '';
 		});
 		
-		// [수정됨] 10원 단위로 버림 처리
 		const formatCurrency = function(number) {
 			if (isNaN(number)) return '0';
 			const flooredToTen = Math.floor(number / 10) * 10;
 			return flooredToTen.toLocaleString('ko-KR');
 		};
 
+		const formatDate = function(date) {
+			const y = date.getFullYear();
+			const m = String(date.getMonth() + 1).padStart(2, '0');
+			const d = String(date.getDate()).padStart(2, '0');
+			return y + '.' + m + '.' + d;
+		};
+
+		function getPeriodEndDate(originalStart, periodNumber) {
+			// 다음 기간이 시작되는 날을 먼저 계산 (최초 시작일 + N개월)
+			let nextPeriodStart = new Date(
+				originalStart.getFullYear(),
+				originalStart.getMonth() + periodNumber,
+				originalStart.getDate()
+			);
+
+			// 날짜를 더했을 때 월이 자동으로 넘어가는 경우 (예: 1월 31일 + 1개월 -> 3월 3일)
+			// 이는 해당 월에 그 날짜가 없다는 의미 (예: 2월 31일은 없음)
+			if (nextPeriodStart.getDate() !== originalStart.getDate()) {
+				// 이 경우, 다음 기간의 시작일은 그 다음달 1일이 됨 (예: 3월 1일)
+				nextPeriodStart = new Date(
+					originalStart.getFullYear(),
+					originalStart.getMonth() + periodNumber + 1,
+					1
+				);
+			}
+			
+			// 현재 기간의 종료일은 다음 기간 시작일의 바로 전날임
+			nextPeriodStart.setDate(nextPeriodStart.getDate() - 1);
+			return nextPeriodStart;
+		}
+		
+		/**
+		 * [수정됨] 기간 분할 및 급여 계산 메인 함수
+		 */
 		function splitPeriodsAndCalc(startDateStr, endDateStr, regularWage) {
-		    const result = [];
-		    let periodStart = new Date(startDateStr);
-		    const finalEnd = new Date(endDateStr);
-		    let monthIdx = 1;
+			const results = [];
+			const originalStartDate = new Date(startDateStr);
+			let currentPeriodStart = new Date(originalStartDate);
+			const finalEndDate = new Date(endDateStr);
+			let monthIdx = 1;
 
-		    while (periodStart <= finalEnd && monthIdx <= 12) {
-		        let chunkEndDate = new Date(periodStart);
-		        chunkEndDate.setMonth(chunkEndDate.getMonth() + 1);
-		        chunkEndDate.setDate(chunkEndDate.getDate() - 1);
+			while (currentPeriodStart <= finalEndDate && monthIdx <= 12) {
+				// 헬퍼 함수를 이용해 현재 개월차의 이론적인 종료일을 계산
+				const theoreticalEndDate = getPeriodEndDate(originalStartDate, monthIdx);
 
-				const daysInChunk = Math.round((chunkEndDate - periodStart) / (1000 * 60 * 60 * 24)) + 1;
+				// 실제 종료일은 이론적 종료일과 전체 휴직 종료일 중 더 빠른 날짜
+				let actualPeriodEnd = new Date(theoreticalEndDate);
+				if (actualPeriodEnd > finalEndDate) {
+					actualPeriodEnd = new Date(finalEndDate);
+				}
+				
+				// 마지막달이 비정상적으로 계산되는 것을 방지
+				if (currentPeriodStart > actualPeriodEnd) {
+					break;
+				}
 
-		        let periodEnd = new Date(chunkEndDate);
-		        if (periodEnd > finalEnd) {
-		            periodEnd = new Date(finalEnd);
-		        }
+				const govBase = computeGovBase(regularWage, monthIdx);
+				const govPayment = calcGovPayment(govBase, currentPeriodStart, actualPeriodEnd, theoreticalEndDate);
 
-		        const govBase = computeGovBase(regularWage, monthIdx);
-		        const govPayment = calcGovPayment(govBase, periodStart, periodEnd, daysInChunk);
+				results.push({
+					month: monthIdx,
+					startDate: new Date(currentPeriodStart),
+					endDate: new Date(actualPeriodEnd),
+					govPayment: govPayment
+				});
 
-		        result.push({
-		            month: monthIdx,
-		            govPayment: govPayment
-		        });
-
-		        periodStart = new Date(periodEnd);
-		        periodStart.setDate(periodStart.getDate() + 1);
-		        monthIdx++;
-		    }
-		    return result;
+				// 다음 개월차의 시작일은 현재 종료일 + 1일
+				currentPeriodStart = new Date(actualPeriodEnd);
+				currentPeriodStart.setDate(currentPeriodStart.getDate() + 1);
+				
+				monthIdx++;
+			}
+			return results;
 		}
 
 		function computeGovBase(regularWage, monthIdx) {
-		    if (monthIdx <= 3) return Math.min(regularWage, 2500000);
-		    if (monthIdx <= 6) return Math.min(regularWage, 2000000);
-		    const eighty = Math.round(regularWage * 0.8);
-		    return Math.min(eighty, 1600000);
+		    if (monthIdx <= 3) return Math.min(regularWage, 2500000);
+		    if (monthIdx <= 6) return Math.min(regularWage, 2000000);
+		    const eighty = Math.round(regularWage * 0.8);
+		    return Math.min(eighty, 1600000);
 		}
 		
-		function calcGovPayment(base, startDate, endDate, daysInChunk) {
-			const daysInTerm = Math.round((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
+		function calcGovPayment(base, startDate, endDate, theoreticalFullEndDate) {
+			const getDaysBetween = (d1, d2) => Math.round((d2.getTime() - d1.getTime()) / (1000 * 60 * 60 * 24)) + 1;
 			
-			if (daysInTerm === daysInChunk) {
+			const daysInTerm = getDaysBetween(startDate, endDate);
+			
+			// 이론적인 한달 시작일은 현재 기간의 시작일
+			let theoreticalFullStartDate = new Date(startDate);
+			const daysInFullMonth = getDaysBetween(theoreticalFullStartDate, theoreticalFullEndDate);
+		
+			if (daysInTerm >= daysInFullMonth) {
 				return base;
 			}
 			
-			const ratio = daysInTerm / daysInChunk;
-			// [수정됨] 1원 단위 버림 처리 (최종 포맷팅에서 10원 단위로 한번 더 처리됨)
+			const ratio = daysInTerm / daysInFullMonth;
 			return Math.floor(base * ratio);
 		}
 
@@ -355,20 +401,20 @@
 		}
 
 		function calculateLeaveBenefit() {
-		    const salary = parseInt(salaryInput.value.replace(/,/g, ''), 10);
-		    
-		    if (!startDateInput.value || !endDateInput.value || !salaryInput.value) {
-		        alert("휴직 시작일, 종료일, 통상임금을 모두 입력해주세요.");
-		        return;
-		    }
-		    if (new Date(startDateInput.value) >= new Date(endDateInput.value)) {
-		        alert("휴직 종료일은 시작일보다 이후여야 합니다.");
-		        return;
-		    }
-		    if (isNaN(salary) || salary <= 0) {
-		        alert("통상임금은 유효한 숫자만 입력해주세요.");
-		        return;
-		    }
+		    const salary = parseInt(salaryInput.value.replace(/,/g, ''), 10);
+		    
+		    if (!startDateInput.value || !endDateInput.value || !salaryInput.value) {
+		        alert("휴직 시작일, 종료일, 통상임금을 모두 입력해주세요.");
+		        return;
+		    }
+		    if (new Date(startDateInput.value) >= new Date(endDateInput.value)) {
+		        alert("휴직 종료일은 시작일보다 이후여야 합니다.");
+		        return;
+		    }
+		    if (isNaN(salary) || salary <= 0) {
+		        alert("통상임금은 유효한 숫자만 입력해주세요.");
+		        return;
+		    }
 			
 			const rawMonths = getRawLeaveMonths(startDateInput.value, endDateInput.value);
 			if (rawMonths > 12) {
@@ -376,27 +422,32 @@
 				return;
 			}
 
-		    const terms = splitPeriodsAndCalc(startDateInput.value, endDateInput.value, salary);
+		    const terms = splitPeriodsAndCalc(startDateInput.value, endDateInput.value, salary);
 
-		    resultTbody.innerHTML = "";
-		    let total = 0;
+		    resultTbody.innerHTML = "";
+		    let total = 0;
 
-		    terms.forEach(term => {
-		        total += term.govPayment;
-		        const row = resultTbody.insertRow();
-		        row.insertCell().textContent = term.month + '개월';
+		    terms.forEach(term => {
+		        total += term.govPayment;
+		        const row = resultTbody.insertRow();
 				
+		        const monthCell = row.insertCell();
+				monthCell.innerHTML = term.month + '개월차' +
+					'<br><span style="font-size: 0.8em; color: var(--gray-color);">' +
+					formatDate(term.startDate) + ' ~ ' + formatDate(term.endDate) +
+					'</span>';
+
 				const payCell = row.insertCell();
-				payCell.innerHTML = formatCurrency(term.govPayment) + '원' + 
+				payCell.innerHTML = formatCurrency(term.govPayment) + '원' + 
 					'<br><span style="font-size: 0.8em; color: var(--gray-color);">(0원)</span>';
-		    });
+		    });
 
 			totalAmount.innerHTML = formatCurrency(total) + '원' +
 				'<br><span style="font-size: 0.8em; color: var(--gray-color);">(0원)</span>';
-		    
-		    calculatorContainer.classList.add('results-shown');
-		    resultPlaceholder.style.display = 'none';
-		    resultSection.style.display = 'block';
+		    
+		    calculatorContainer.classList.add('results-shown');
+		    resultPlaceholder.style.display = 'none';
+		    resultSection.style.display = 'block';
 		}
 		
 		function resetForm() {
