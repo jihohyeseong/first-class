@@ -7,6 +7,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -436,4 +437,84 @@ public class ApplicationController {
     	
 		return ResponseEntity.status(HttpStatus.OK).body(response);
     }
+    
+    @PostMapping("/apply/submit")
+    public String submitDraft(@RequestParam("appNo") long appNo, RedirectAttributes ra) {
+        System.out.println(">>> /apply/submit hit, appNo=" + appNo);
+
+        String redirect;
+        try {
+            // 1) 로그인/권한
+            UserDTO login = currentUserOrNull();
+            if (login == null) {
+                ra.addFlashAttribute("error", "로그인이 필요합니다.");
+                redirect = "redirect:/login";
+                System.out.println("[return] login==null -> " + redirect);
+                return redirect;
+            }
+
+            ApplicationDTO app = applicationService.findById(appNo);
+            if (app == null) {
+                ra.addFlashAttribute("error", "존재하지 않는 신청입니다.");
+                redirect = "redirect:/main";
+                System.out.println("[return] app==null -> " + redirect);
+                return redirect;
+            }
+
+            System.out.println("[check] owner: app.userId=" + app.getUserId() + ", login.id=" + login.getId());
+            if (!Objects.equals(app.getUserId(), login.getId())) {
+                ra.addFlashAttribute("error", "권한이 없습니다.");
+                redirect = "redirect:/main";
+                System.out.println("[return] owner mismatch -> " + redirect);
+                return redirect;
+            }
+
+            System.out.println("[check] status=" + app.getStatusCode());
+            if (!"ST_10".equals(app.getStatusCode())) {
+                ra.addFlashAttribute("error", "이미 제출되었거나 제출할 수 없는 상태입니다.");
+                redirect = "redirect:/apply/detail?appNo=" + appNo;
+                System.out.println("[return] not ST_10 -> " + redirect);
+                return redirect;
+            }
+
+            // 2) 단위기간 포함 검증
+            List<TermAmountDTO> terms = applicationService.findTerms(appNo);
+            System.out.println("[check] terms.size=" + (terms == null ? 0 : terms.size()));
+            List<String> missing = applicationService.validateForSubmit(app, terms);
+            if (!missing.isEmpty()) {
+                ra.addFlashAttribute("error", "제출 불가: " + String.join(", ", missing));
+                redirect = "redirect:/apply/detail?appNo=" + appNo;
+                System.out.println("[return] missing -> " + missing + " / " + redirect);
+                return redirect;
+            }
+
+            // 3) 제출 처리 (영향 행수 확인)
+            int updated = applicationService.submitAndReturnCount(appNo);
+            System.out.println("[update] submitted rows=" + updated);
+            if (updated == 0) {
+                ra.addFlashAttribute("error", "제출 처리 대상이 없습니다(이미 제출되었거나 submitted_dt NOT NULL).");
+                redirect = "redirect:/apply/detail?appNo=" + appNo;
+                System.out.println("[return] updated=0 -> " + redirect);
+                return redirect;
+            }
+
+            ra.addFlashAttribute("message", "제출이 완료되었습니다.");
+            redirect = "redirect:/apply/complete?appNo=" + appNo;
+            System.out.println("[return] OK -> " + redirect);
+            return redirect;
+
+        } catch (Exception e) {
+            ra.addFlashAttribute("error", "제출 중 오류: " + e.getMessage());
+            redirect = "redirect:/apply/detail?appNo=" + appNo;
+            System.out.println("[catch] " + e.getClass().getSimpleName() + ": " + e.getMessage());
+            System.out.println("[return] catch -> " + redirect);
+            return redirect;
+
+        } finally {
+            System.out.println("<<< /apply/submit finally appNo=" + appNo);
+        }
+    }
+
+
+
 }

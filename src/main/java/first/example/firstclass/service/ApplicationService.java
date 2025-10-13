@@ -11,6 +11,8 @@ import first.example.firstclass.domain.UserDTO;
 import first.example.firstclass.util.AES256Util;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,8 +21,12 @@ import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
+import java.util.function.BiConsumer;
+import java.util.function.Predicate;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ApplicationService {
@@ -323,6 +329,90 @@ public class ApplicationService {
         termAmountDAO.deleteTermsByAppNo(appNo);
         applicationDAO.softDeleteApplication(appNo);
     }
+    
+    public List<String> validateForSubmit(ApplicationDTO app, List<TermAmountDTO> terms) {
+        List<String> errs = new ArrayList<>();
+
+        // 도우미
+        Predicate<String> blank = s -> (s == null || s.trim().isEmpty());
+        BiConsumer<String,Object> req = (label, v) -> {
+            if (v == null) errs.add(label);
+            else if (v instanceof String && blank.test((String)v)) errs.add(label);
+        };
+
+        // 1) 기본 필드
+        req.accept("육아휴직 시작일", app.getStartDate());
+        req.accept("육아휴직 종료일", app.getEndDate());
+        req.accept("사업장 동의여부", app.getBusinessAgree());
+        req.accept("사업장 이름", app.getBusinessName());
+        req.accept("사업장 등록번호", app.getBusinessRegiNumber());
+        req.accept("사업장 우편번호", app.getBusinessZipNumber());
+        req.accept("사업장 기본주소", app.getBusinessAddrBase());
+        req.accept("사업장 상세주소", app.getBusinessAddrDetail());
+        req.accept("통상임금(월)", app.getRegularWage());
+        req.accept("주당 소정근로시간", app.getWeeklyHours());
+        req.accept("은행 코드", app.getBankCode());
+        req.accept("계좌번호", app.getAccountNumber());
+        req.accept("행정정보 공동이용 동의", app.getGovInfoAgree());
+
+        // 2) 날짜/상태 제약
+        if (app.getStartDate() != null && app.getEndDate() != null) {
+            if (app.getStartDate().after(app.getEndDate())) {
+                errs.add("기간(시작일이 종료일보다 늦음)");
+            } else {
+                // 최대 12개월 제한
+                Calendar a = Calendar.getInstance(); a.setTime(app.getStartDate());
+                Calendar b = Calendar.getInstance(); b.setTime(app.getEndDate());
+                int months = (b.get(Calendar.YEAR)-a.get(Calendar.YEAR))*12
+                           + (b.get(Calendar.MONTH)-a.get(Calendar.MONTH)) + 1;
+                if (months > 12) errs.add("기간(최대 12개월 초과)");
+            }
+        }
+
+        // 3) 자녀 정보
+        // childBirthDate 는 무조건 필요
+        req.accept("자녀 출생/예정일", app.getChildBirthDate());
+        boolean bornMode = !blank.test(app.getChildName()) || !blank.test(app.getChildResiRegiNumber());
+        if (bornMode) {
+            req.accept("자녀 이름", app.getChildName());
+            req.accept("자녀 주민등록번호", app.getChildResiRegiNumber());
+        }
+        // bornMode 가 아니면 출산예정일만으로 제출 가능(정책대로 유지)
+
+        // 5) 금액/시간 유효값
+        if (app.getRegularWage() != null && app.getRegularWage() <= 0) errs.add("통상임금(월)>0");
+        if (app.getWeeklyHours() != null && app.getWeeklyHours() <= 0) errs.add("주당 소정근로시간>0");
+
+        // 6) 단위기간 + 회사지급액
+        if (terms == null || terms.isEmpty()) {
+            errs.add("단위기간(월별 구간 없음)");
+        } else {
+            for (int i = 0; i < terms.size(); i++) {
+                TermAmountDTO t = terms.get(i);
+                if (t.getStartMonthDate() == null || t.getEndMonthDate() == null) {
+                    errs.add("단위기간 " + (i+1) + "의 기간");
+                }
+                // 회사지급액은 null 금지(0 허용)
+                if (t.getCompanyPayment() == null) {
+                    errs.add("단위기간 " + (i+1) + "의 사업장 지급액");
+                } else if (t.getCompanyPayment() < 0) {
+                    errs.add("단위기간 " + (i+1) + "의 사업장 지급액(음수 불가)");
+                }
+            }
+        }
+
+        return errs;
+    }
+    
+    @Transactional
+    public void submit(long appNo) {
+    	int updated = applicationDAO.updateSubmittedNow(appNo);
+		log.info("[SUBMIT] appNo={}, updated={}", appNo, updated);
+        if (updated == 0) {
+            throw new IllegalStateException("이미 제출되었거나 존재하지 않는 신청입니다.");
+        }
+    }
+
 
     /* ============================================================
        공통 유틸
@@ -371,5 +461,10 @@ public class ApplicationService {
 		adminJudgeDTO.setStatusCode("ST_40");
 		
 		return applicationDAO.updateApplicationJudge(adminJudgeDTO) > 0 ? true : false;
+	}
+	
+	@Transactional
+	public int submitAndReturnCount(long appNo) {
+	    return applicationDAO.updateSubmittedNow(appNo);
 	}
 }

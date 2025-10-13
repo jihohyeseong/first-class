@@ -180,7 +180,18 @@
         </nav>
     </header>
 
+<c:if test="${not empty error}">
+  <div class="notice-box" style="margin-bottom:16px;">
+    <span class="notice-icon">⚠️</span>
+    <div><h3>오류</h3><p>${fn:escapeXml(error)}</p></div>
+  </div>
+</c:if>
 
+<c:if test="${not empty message}">
+  <div class="info-box" style="margin-bottom:16px;">
+    <p>${fn:escapeXml(message)}</p>
+  </div>
+</c:if>
 	<main class="main-container">
 	<h1>육아휴직 급여 신청서 수정</h1>
 
@@ -272,18 +283,52 @@
 			</div>
 		</div>
 
-		<!-- ===== 급여 신청 기간 ===== -->
+<!-- ===== 급여 신청 기간 ===== -->
 		<div class="form-section">
 			<h2>급여 신청 기간</h2>
-			<p style="color: #888; margin-top: -15px; margin-bottom: 20px;">※
-				사업주로부터 부여받은 총 휴직 기간 중 급여를 지급받으려는 기간을 입력해 주세요.</p>
+			<p style="color: #888; margin-top: -15px; margin-bottom: 20px;">
+				※ 사업주로부터 부여받은 총 휴직 기간 중 급여를 지급받으려는 기간을 입력해 주세요.</p>
 
-			<!-- startDate / endDate: DTO 필드명과 일치 -->
+			<%-- (1) terms 기반 start/end fallback --%>
+			<c:if test="${empty app.startDate and not empty terms}">
+				<c:set var="startFromTerms" value="${terms[0].startMonthDate}" />
+			</c:if>
+			<c:if test="${empty app.endDate and not empty terms}">
+				<c:set var="endFromTerms"
+					value="${terms[fn:length(terms)-1].endMonthDate}" />
+			</c:if>
+
+			<%-- (1-1) input value에 넣을 문자열 미리 계산 --%>
+			<c:set var="startDateVal" value="" />
+			<c:set var="endDateVal" value="" />
+
+			<c:choose>
+				<c:when test="${not empty app.startDate}">
+					<fmt:formatDate value="${app.startDate}" pattern="yyyy-MM-dd"
+						var="startDateVal" />
+				</c:when>
+				<c:when test="${not empty startFromTerms}">
+					<fmt:formatDate value="${startFromTerms}" pattern="yyyy-MM-dd"
+						var="startDateVal" />
+				</c:when>
+			</c:choose>
+
+			<c:choose>
+				<c:when test="${not empty app.endDate}">
+					<fmt:formatDate value="${app.endDate}" pattern="yyyy-MM-dd"
+						var="endDateVal" />
+				</c:when>
+				<c:when test="${not empty endFromTerms}">
+					<fmt:formatDate value="${endFromTerms}" pattern="yyyy-MM-dd"
+						var="endDateVal" />
+				</c:when>
+			</c:choose>
+
 			<div class="form-group">
 				<label class="field-title" for="start-date">① 육아휴직 시작일</label>
 				<div class="input-field">
 					<input type="date" id="start-date" name="startDate"
-						value="<fmt:formatDate value='${app.startDate}' pattern='yyyy-MM-dd'/>">
+						value="${startDateVal}">
 				</div>
 			</div>
 
@@ -293,22 +338,51 @@
 					<div class="input-field"
 						style="display: flex; align-items: center; gap: 10px;">
 						<input type="date" id="end-date" name="endDate"
-							value="<fmt:formatDate value='${app.endDate}' pattern='yyyy-MM-dd'/>">
+							value="${endDateVal}">
 						<button type="button" id="generate-forms-btn"
 							class="btn btn-primary">기간 생성</button>
 
-						<!-- 회사지급 없음 체크 → name 추가! -->
+						<%-- (2) allZero 및 표시 여부 계산 --%>
+						<c:set var="allZero" value="${true}" />
+						<c:forEach var="t0" items="${terms}">
+							<c:if
+								test="${t0.companyPayment != null and t0.companyPayment != 0}">
+								<c:set var="allZero" value="${false}" />
+							</c:if>
+						</c:forEach>
+						<c:set var="npDisplay" value="${empty terms ? 'none' : 'flex'}" />
+
 						<label id="no-payment-wrapper"
-							style="display: none; align-items: center; gap: 6px; margin-left: 8px;">
-							<input type="checkbox" id="no-payment" name="noPayment" /> 사업장
-							지급액 없음
+							style="display:${npDisplay}; align-items:center; gap:6px; margin-left:8px;">
+							<input type="checkbox" id="no-payment" name="noPayment"
+							<c:if test="${allZero}">checked</c:if> /> 사업장 지급액 없음
 						</label>
 					</div>
 				</div>
 			</div>
 
-			<!-- JS가 monthly_payment_1..N 입력을 생성 -->
-			<div id="dynamic-forms-container" class="dynamic-form-container"></div>
+			<!-- (3) 서버가 단위기간을 바로 렌더 -->
+			<div id="dynamic-forms-container" class="dynamic-form-container">
+				<c:if test="${not empty terms}">
+					<c:forEach var="t" items="${terms}" varStatus="st">
+						<div class="dynamic-form-row">
+							<div class="date-range-display">
+								<div>
+									<fmt:formatDate value="${t.startMonthDate}"
+										pattern="yyyy.MM.dd" />
+									&nbsp;~&nbsp;
+									<fmt:formatDate value="${t.endMonthDate}" pattern="yyyy.MM.dd" />
+								</div>
+							</div>
+							<div class="payment-input-field" style="margin-left: auto;">
+								<!-- value는 숫자 원본(콤마 없이). 표시는 JS에서 콤마 처리 가능 -->
+								<input type="text" name="monthly_payment_${st.index + 1}"
+									value="<c:out value='${t.companyPayment}'/>" autocomplete="off">
+							</div>
+						</div>
+					</c:forEach>
+				</c:if>
+			</div>
 		</div>
 
 		<!-- ===== 통상임금 / 주당시간 ===== -->
@@ -561,85 +635,86 @@
 		  function getPaymentInputs() {
 		    return formsContainer.querySelectorAll('input[name^="monthly_payment_"]');
 		  }
-		  function applyNoPaymentState() {
-		    var inputs = getPaymentInputs();
-		    inputs.forEach(function(inp){
-		      if (noPaymentChk && noPaymentChk.checked) {
-		        inp.value = 0;
-		        inp.readOnly = true;
-		        inp.classList.add('readonly-like');
-		      } else {
-		        inp.readOnly = false;
-		        inp.classList.remove('readonly-like');
-		      }
-		    });
-		  }
+		  function applyNoPaymentState(init=false) {
+			  var inputs = getPaymentInputs();
+			  inputs.forEach(function(inp){
+			    if (noPaymentChk && noPaymentChk.checked) {
+			      if (!init) { // 초기 호출이면 값은 그대로 둔다
+			        inp.value = 0;
+			      }
+			      inp.readOnly = true;
+			      inp.classList.add('readonly-like');
+			    } else {
+			      inp.readOnly = false;
+			      inp.classList.remove('readonly-like');
+			    }
+			  });
+			}
 
-		  // ===== 날짜 입력 토글 =====
-		  startDateInput.addEventListener('change', function() {
-		    if (startDateInput.value) {
-		      periodInputSection.style.display = 'block';
-		      endDateInput.min = startDateInput.value;
-		      formsContainer.innerHTML = '';
-		      if (noPaymentWrapper) noPaymentWrapper.style.display = 'none';
-		    } else {
-		      periodInputSection.style.display = 'none';
-		    }
-		  });
-		  endDateInput.addEventListener('change', function () {
-		    formsContainer.innerHTML = '';
-		    if (noPaymentWrapper) noPaymentWrapper.style.display = 'none';
-		  });
-		  if (noPaymentChk) noPaymentChk.addEventListener('change', applyNoPaymentState);
+			// 체크박스는 사용자 토글 때만 0 채우도록
+			if (noPaymentChk) {
+			  noPaymentChk.addEventListener('change', function () {
+			    applyNoPaymentState(false); // 이때만 0 대입 허용
+			  });
+			}
 
-		  // ===== 기간 생성 (사용자 입력 기반: DB 변수 절대 사용 X) =====
-		  generateBtn.addEventListener('click', function() {
-		    if (!startDateInput.value || !endDateInput.value) {
-		      alert('육아휴직 시작일과 종료일을 모두 선택해주세요.');
-		      return;
-		    }
-		    var startDate = new Date(startDateInput.value + 'T00:00:00');
-		    var endDate   = new Date(endDateInput.value   + 'T00:00:00');
-		    if (startDate > endDate) { alert('종료일은 시작일보다 빠를 수 없습니다.'); return; }
+			generateBtn.addEventListener('click', function() {
+			  if (!startDateInput.value || !endDateInput.value) {
+			    alert('육아휴직 시작일과 종료일을 모두 선택해주세요.');
+			    return;
+			  }
 
-		    // 최대 12개월 제한
-		    var monthCount = 0;
-		    var mc = new Date(startDate.getFullYear(), startDate.getMonth(), 1);
-		    var endMonth = new Date(endDate.getFullYear(), endDate.getMonth(), 1);
-		    while (mc <= endMonth) { monthCount++; mc.setMonth(mc.getMonth() + 1); }
-		    if (monthCount > 12) { alert('최대 12개월까지만 신청 가능합니다. 종료일을 조정해주세요.'); return; }
+			  var startDate = new Date(startDateInput.value + 'T00:00:00');
+			  var endDate   = new Date(endDateInput.value   + 'T00:00:00');
+			  if (startDate > endDate) { alert('종료일은 시작일보다 빠를 수 없습니다.'); return; }
 
-		    // UI 초기화
-		    formsContainer.innerHTML = '';
-		    if (noPaymentWrapper) noPaymentWrapper.style.display = 'none';
+			  // 최대 12개월 제한
+			  var monthCount = 0;
+			  var mc = new Date(startDate.getFullYear(), startDate.getMonth(), 1);
+			  var endMonth = new Date(endDate.getFullYear(), endDate.getMonth(), 1);
+			  while (mc <= endMonth) { monthCount++; mc.setMonth(mc.getMonth() + 1); }
+			  if (monthCount > 12) { alert('최대 12개월까지만 신청 가능합니다. 종료일을 조정해주세요.'); return; }
 
-		    // 단위기간 생성 (DB 변수 t, idx 절대 사용하지 말 것!)
-		    var currentStartDate = new Date(startDate.getTime());
-		    var i = 1;
-		    while (currentStartDate <= endDate) {
-		      var candidateEnd = endOfUnit(currentStartDate);
-		      var displayEnd   = (candidateEnd > endDate) ? new Date(endDate.getTime()) : candidateEnd;
+			  // UI 초기화
+			  formsContainer.innerHTML = '';
+			  if (noPaymentWrapper) noPaymentWrapper.style.display = 'none';
 
-		      var row = document.createElement('div');
-		      row.className = 'dynamic-form-row';
-		      row.innerHTML =
-		        '<div class="date-range-display"><div>' +
-		          formatDate(currentStartDate) + ' ~ ' + formatDate(displayEnd) +
-		        '</div></div>' +
-		        '<div class="payment-input-field" style="margin-left:auto;">' +
-		          // 기본값 빈칸으로 두고 싶으면 value 제거, 0을 기본으로 보여주고 싶으면 value="0" 추가
-		          '<input type="text" name="monthly_payment_' + i + '" placeholder="해당 기간의 사업장 지급액(원) 입력" autocomplete="off">' +
-		        '</div>';
-		      formsContainer.appendChild(row);
+			  // 단위기간 생성
+			  var currentStartDate = new Date(startDate.getTime());
+			  var i = 1;
+			  while (currentStartDate <= endDate) {
+			    var candidateEnd = endOfUnit(currentStartDate);
+			    var displayEnd   = (candidateEnd > endDate) ? new Date(endDate.getTime()) : candidateEnd;
 
-		      currentStartDate = new Date(displayEnd.getTime());
-		      currentStartDate.setDate(currentStartDate.getDate() + 1);
-		      i++;
-		      if (i > 13) { alert('최대 12개월(12구간)까지만 신청 가능합니다.'); formsContainer.innerHTML = ''; return; }
-		    }
+			    var row = document.createElement('div');
+			    row.className = 'dynamic-form-row';
+			    row.innerHTML =
+			      '<div class="date-range-display"><div>' +
+			        formatDate(currentStartDate) + ' ~ ' + formatDate(displayEnd) +
+			      '</div></div>' +
+			      '<div class="payment-input-field" style="margin-left:auto;">' +
+			        // 기본값은 빈칸으로 두기 (자동 0 방지)
+			        '<input type="text" name="monthly_payment_' + i + '" placeholder="해당 기간의 사업장 지급액(원) 입력" autocomplete="off">' +
+			      '</div>';
+			    formsContainer.appendChild(row);
 
-		    if (noPaymentWrapper) { noPaymentWrapper.style.display = 'flex'; applyNoPaymentState(); }
-		  });
+			    currentStartDate = new Date(displayEnd.getTime());
+			    currentStartDate.setDate(currentStartDate.getDate() + 1);
+			    i++;
+			    if (i > 13) { alert('최대 12개월(12구간)까지만 신청 가능합니다.'); formsContainer.innerHTML = ''; return; }
+			  }
+
+			  // 새로 생성한 경우: 자동 체크 금지, 표시만 하고 초기 상태 적용(값 보존)
+			  if (noPaymentWrapper) {
+			    noPaymentWrapper.style.display = 'flex';
+			  }
+			  if (noPaymentChk) {
+			    noPaymentChk.checked = false;      // 자동 체크하지 않음
+			  }
+			  applyNoPaymentState(true);           // 초기 호출: 값은 덮지 않음
+			});
+
+
 
 		  // ===== 자녀정보(출생/예정) hidden 동기화 =====
 		  const hidden   = document.getElementById('childBirthDateHidden');
@@ -804,7 +879,7 @@
 		  }
 
 		  function isAllFilled() {
-		    const form = document.querySelector('form[action$="/apply/update"]');
+			const form = document.querySelector('form[action$="/apply/edit"]');
 		    if (!form) return false;
 
 		    const startDate = document.getElementById('start-date')?.value?.trim();
@@ -904,50 +979,55 @@
 		  })();
 
 		  // ===== 기존 단위기간 렌더 또는 자동생성 =====
+		  const alreadyRendered = document.querySelectorAll('#dynamic-forms-container input[name^="monthly_payment_"]').length > 0;
+
 		  function renderExistingTermsOrAutoGenerate() {
 		    if (startDateInput && startDateInput.value) {
 		      periodInputSection.style.display = 'block';
 		      if (endDateInput) endDateInput.min = startDateInput.value;
 		    }
 
-		    // 1) DB terms가 있을 때: 그걸로 렌더
-		    if (window.EXISTING_TERMS && window.EXISTING_TERMS.length > 0) {
-		      formsContainer.innerHTML = '';
-		      if (!startDateInput.value) startDateInput.value = window.EXISTING_TERMS[0].start;
-		      if (!endDateInput.value)   endDateInput.value   = window.EXISTING_TERMS[window.EXISTING_TERMS.length - 1].end;
-
-		      window.EXISTING_TERMS.forEach(function(t, idx){
-		        var start = new Date(t.start + 'T00:00:00');
-		        var end   = new Date(t.end   + 'T00:00:00');
-
-		        // null/빈문자 처리: 없으면 0, 있으면 콤마포맷
-		        var hasValue = (t.companyPayment !== null && t.companyPayment !== undefined && t.companyPayment !== '');
-		        var payVal   = hasValue ? withCommas(String(t.companyPayment)) : '0';
-
-		        var row = document.createElement('div');
-		        row.className = 'dynamic-form-row';
-		        row.innerHTML =
-		          '<div class="date-range-display"><div>' + formatDate(start) + ' ~ ' + formatDate(end) + '</div></div>' +
-		          '<div class="payment-input-field" style="margin-left:auto;">' +
-		            '<input type="text" name="monthly_payment_' + (idx+1) + '" value="' + payVal + '" autocomplete="off">' +
-		          '</div>';
-		        formsContainer.appendChild(row);
-		      });
-
+		    // 서버가 이미 렌더했으면 아무 것도 안 함
+		    if (alreadyRendered) {
 		      if (noPaymentWrapper) noPaymentWrapper.style.display = 'flex';
-		      var allZero = window.EXISTING_TERMS.every(function(t){ return Number(t.companyPayment || 0) === 0; });
-		      if (noPaymentChk) noPaymentChk.checked = allZero;
-		      applyNoPaymentState();
-		      return; // DB로 렌더했으니 자동생성 안 함
+		      applyNoPaymentState(true); 
+		      return;
 		    }
 
-		    // 2) DB terms가 없고, 날짜가 이미 채워져 있으면 자동생성
+		    // 서버 데이터 없고, 사용자가 날짜를 미리 갖고 있으면 자동 생성
 		    if (startDateInput.value && endDateInput.value) {
 		      generateBtn.click();
 		    }
 		  }
 		  renderExistingTermsOrAutoGenerate();
-		}); // DOMContentLoaded 끝
+		});
+		
+		$(function () {
+			  const $sel = $('#bankCode');
+			  const selected = String($sel.data('selected') || '');
+
+			  $.getJSON('${pageContext.request.contextPath}/codes/banks', function (list) {
+			    // placeholder(빈 값) 제외하고 기존 옵션 제거
+			    $sel.find('option:not([value=""])').remove();
+
+			    // 옵션 채우기
+			    list.forEach(function (it) {
+			      $sel.append(new Option(it.name, String(it.code)));
+			    });
+
+			    // 기존 저장값 선택
+			    if (selected) {
+			      $sel.val(selected);
+			    } else {
+			      // 기존값 없으면 placeholder 유지
+			      $sel.prop('selectedIndex', 0);
+			    }
+			  }).fail(function (xhr, status, err) {
+			    console.error('은행코드 목록 로딩 실패:', status, err);
+			    // 필요하면 사용자 안내:
+			    // alert('은행 목록을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.');
+			  });
+			});
 		</script>
 
 

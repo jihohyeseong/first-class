@@ -662,5 +662,14 @@ textarea.form-control {
 	});
 </script>
 
+<!-- 플래시 메시지(한 번만 표시됨) -->
+<div id="flash-error"   style="display:none;"><c:out value="${error}"/></div>
+
+<script>
+  (function () {
+    var err = document.getElementById('flash-error')?.textContent.trim();
+    if (err) alert(err);
+  })();
+</script>
 </body>
 </html>
