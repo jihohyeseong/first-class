@@ -298,95 +298,93 @@
 		const formatCurrency = function(number) {
 			return isNaN(number) ? '0' : Math.round(number).toLocaleString('ko-KR');
 		};
-		
-		function getRawLeaveMonths(start, end) {
-			const startDate = new Date(start);
-			const endDate = new Date(end);
-			let months = (endDate.getFullYear() - startDate.getFullYear()) * 12 - startDate.getMonth() + endDate.getMonth();
-			if (endDate.getDate() >= startDate.getDate()) months++;
-			return months;
+
+		// [추가] 새로운 함수들
+		function splitPeriodsAndCalc(startDate, endDate, regularWage) {
+		    const result = [];
+		    let periodStart = new Date(startDate);
+		    const finalEnd = new Date(endDate);
+		    let monthIdx = 1;
+
+		    while (periodStart <= finalEnd) {
+		        let periodEnd = new Date(periodStart);
+		        periodEnd.setMonth(periodEnd.getMonth() + 1);
+		        periodEnd.setDate(periodEnd.getDate() - 1);
+
+		        if (periodEnd > finalEnd) {
+		            periodEnd = new Date(finalEnd);
+		        }
+
+		        const isLast = (periodEnd.getTime() === finalEnd.getTime());
+		        const govBase = computeGovBase(regularWage, monthIdx);
+		        const govPayment = calcGovPayment(govBase, 0, periodStart, periodEnd, isLast);
+
+		        result.push({
+		            month: monthIdx,
+		            startDate: new Date(periodStart),
+		            endDate: new Date(periodEnd),
+		            govPayment: govPayment
+		        });
+
+		        periodStart = new Date(periodEnd);
+		        periodStart.setDate(periodStart.getDate() + 1);
+		        monthIdx++;
+		    }
+
+		    return result;
 		}
 
-		function getLeaveMonths(start, end) {
-			const rawMonths = getRawLeaveMonths(start, end);
-			return Math.max(0, Math.min(rawMonths, 12));
-		}
-		
-		function calculateMonthlyBenefit(salary, month) {
-			let rate, cap;
-			if (month >= 1 && month <= 3) {
-				rate = 1.0; cap = 2500000;
-			} else if (month >= 4 && month <= 6) {
-				rate = 1.0; cap = 2000000;
-			} else {
-				rate = 0.8; cap = 1600000;
-			}
-			return Math.min(salary * rate, cap);
-		}
-		
-		function addRowToTable(month, pay) {
-			const residualPay = 0;
-			const row = resultTbody.insertRow();
-			
-			row.insertCell().textContent = month + '개월';
-			const payCell = row.insertCell();
-			payCell.innerHTML = 
-				formatCurrency(pay) + '원 ' +
-				'<br><span style="font-size: 0.8em; color: var(--gray-color);">(' + formatCurrency(residualPay) + '원)</span>';
+		function computeGovBase(regularWage, monthIdx) {
+		    if (monthIdx <= 3) return Math.min(regularWage, 2500000);
+		    if (monthIdx <= 6) return Math.min(regularWage, 2000000);
+		    const eighty = Math.round(regularWage * 0.8);
+		    return Math.min(eighty, 1600000);
 		}
 
+		function calcGovPayment(base, companyPayment, startDate, endDate, isLast) {
+		    if (!isLast) return Math.max(0, base - companyPayment);
+
+		    const daysInTerm = Math.floor((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
+		    const daysInEndMonth = new Date(endDate.getFullYear(), endDate.getMonth() + 1, 0).getDate();
+		    const ratio = Math.max(0.0, Math.min(1.0, daysInTerm / daysInEndMonth));
+		    const prorated = Math.round(base * ratio);
+		    return Math.max(0, prorated - companyPayment);
+		}
+
+		// [수정] calculateLeaveBenefit 함수 전체 교체
 		function calculateLeaveBenefit() {
-			const salary = parseInt(salaryInput.value.replace(/,/g, ''), 10);
-			
-			if (!startDateInput.value || !endDateInput.value || !salaryInput.value) {
-				alert("휴직 시작일, 종료일, 통상임금을 모두 입력해주세요.");
-				return;
-			}
-			if (new Date(startDateInput.value) >= new Date(endDateInput.value)) {
-				alert("휴직 종료일은 시작일보다 이후여야 합니다.");
-				return;
-			}
-			if (isNaN(salary) || salary <= 0) {
-				alert("통상임금은 유효한 숫자만 입력해주세요.");
-				return;
-			}
+		    const salary = parseInt(salaryInput.value.replace(/,/g, ''), 10);
+		    
+		    if (!startDateInput.value || !endDateInput.value || !salaryInput.value) {
+		        alert("휴직 시작일, 종료일, 통상임금을 모두 입력해주세요.");
+		        return;
+		    }
+		    if (new Date(startDateInput.value) >= new Date(endDateInput.value)) {
+		        alert("휴직 종료일은 시작일보다 이후여야 합니다.");
+		        return;
+		    }
+		    if (isNaN(salary) || salary <= 0) {
+		        alert("통상임금은 유효한 숫자만 입력해주세요.");
+		        return;
+		    }
 
-			const rawMonths = getRawLeaveMonths(startDateInput.value, endDateInput.value);
-			if (rawMonths > 12) {
-				alert("휴직 기간은 최대 12개월까지 선택할 수 있습니다.");
-				return;
-			}
+		    const terms = splitPeriodsAndCalc(startDateInput.value, endDateInput.value, salary);
 
-			const leaveMonths = getLeaveMonths(startDateInput.value, endDateInput.value);
-			
-			resultTbody.innerHTML = "";
-			let total = 0;
+		    resultTbody.innerHTML = "";
+		    let total = 0;
 
-			const endDate = new Date(endDateInput.value);
-			const daysInLastMonth = new Date(endDate.getFullYear(), endDate.getMonth() + 1, 0).getDate();
-			const lastMonthDays = endDate.getDate();
+		    terms.forEach(term => {
+		        total += term.govPayment;
+		        const row = resultTbody.insertRow();
+		        row.insertCell().textContent = term.month + '개월';
+		        row.insertCell().textContent = formatCurrency(term.govPayment) + '원';
+		    });
 
-			for (let month = 1; month <= leaveMonths; month++) {
-				let monthlyPay = calculateMonthlyBenefit(salary, month);
-				
-				if (month === leaveMonths && lastMonthDays < daysInLastMonth) {
-					monthlyPay = monthlyPay * (lastMonthDays / daysInLastMonth);
-				}
-				
-				total += monthlyPay;
-				addRowToTable(month, monthlyPay);
-			}
-
-			const totalResidualPay = 0;
-			totalAmount.innerHTML = 
-				formatCurrency(total) + '원 ' +
-				'<br><span style="font-size: 0.8em; color: var(--gray-color);">(' + formatCurrency(totalResidualPay) + '원)</span>';
-			
-			// [수정됨] 클래스를 추가하여 애니메이션 트리거
-			calculatorContainer.classList.add('results-shown');
-
-			resultPlaceholder.style.display = 'none';
-			resultSection.style.display = 'block';
+		    totalAmount.textContent = formatCurrency(total) + '원';
+		    
+		    calculatorContainer.classList.add('results-shown');
+		    resultPlaceholder.style.display = 'none';
+		    resultSection.style.display = 'block';
 		}
 		
 		function resetForm() {
