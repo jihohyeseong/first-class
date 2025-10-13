@@ -12,4 +12,5 @@ public class AdminJudgeDTO {
 	private String paymentResult;
 	private String rejectionReasonCode;
 	private String rejectComment;
+	private String statusCode;
 }

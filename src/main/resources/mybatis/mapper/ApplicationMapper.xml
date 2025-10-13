@@ -134,7 +134,8 @@
 			payment_result = #{paymentResult},
 			rejection_reason_code = #{rejectionReasonCode},
 			reject_comment = #{rejectComment},
-			examine_dt = sysdate
+			examine_dt = sysdate,
+			status_code = #{statusCode}
 		WHERE application_number = #{applicationNumber}
 	</update>
 

@@ -358,6 +358,7 @@ public class ApplicationService {
 			return false;
 		adminJudgeDTO.setProcessorId(userId);
 		adminJudgeDTO.setPaymentResult("N");
+		adminJudgeDTO.setStatusCode("ST_40");
 		
 		return applicationDAO.updateApplicationJudge(adminJudgeDTO) > 0 ? true : false;
 	}
@@ -367,6 +368,7 @@ public class ApplicationService {
 		// 이미 처리된 건인지 조건 추가하기
 		adminJudgeDTO.setProcessorId(userId);
 		adminJudgeDTO.setPaymentResult("Y");
+		adminJudgeDTO.setStatusCode("ST_40");
 		
 		return applicationDAO.updateApplicationJudge(adminJudgeDTO) > 0 ? true : false;
 	}
