@@ -152,7 +152,9 @@
 <body>
 <script src="//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
 <div id="toast" class="toast"></div>
+
 <c:if test="${not empty error}">
   <div class="notice-box" style="margin-bottom:16px;">
     <span class="notice-icon">⚠️</span>
@@ -162,6 +164,8 @@
 <c:if test="${not empty message}">
   <div class="info-box"><p>${fn:escapeXml(message)}</p></div>
 </c:if>
+
+
  <header class="header">
         <a href="${pageContext.request.contextPath}/main" class="logo"><img src="${pageContext.request.contextPath}/resources/images/logo.png" alt="Logo" width="80" height="80"></a>
         <nav>
@@ -180,18 +184,6 @@
         </nav>
     </header>
 
-<c:if test="${not empty error}">
-  <div class="notice-box" style="margin-bottom:16px;">
-    <span class="notice-icon">⚠️</span>
-    <div><h3>오류</h3><p>${fn:escapeXml(error)}</p></div>
-  </div>
-</c:if>
-
-<c:if test="${not empty message}">
-  <div class="info-box" style="margin-bottom:16px;">
-    <p>${fn:escapeXml(message)}</p>
-  </div>
-</c:if>
 	<main class="main-container">
 	<h1>육아휴직 급여 신청서 수정</h1>
 
@@ -260,8 +252,13 @@
 			<div class="form-group">
 				<label class="field-title">사업장 등록번호</label>
 				<div class="input-field">
-					<input type="text" name="businessRegiNumber"
-						value="${app.businessRegiNumber}" placeholder="'-' 없이 숫자만 입력하세요">
+					<input type="text" id="businessRegiNumber"
+						name="businessRegiNumber" inputmode="numeric" autocomplete="off"
+						value="${app.businessRegiNumber}" placeholder="'-' 없이 숫자 10자리"
+						pattern="^\d{3}-?\d{2}-?\d{5}$"
+						title="사업자등록번호(예: 123-45-67890 또는 1234567890)" />
+
+
 				</div>
 			</div>
 
@@ -289,7 +286,6 @@
 			<p style="color: #888; margin-top: -15px; margin-bottom: 20px;">
 				※ 사업주로부터 부여받은 총 휴직 기간 중 급여를 지급받으려는 기간을 입력해 주세요.</p>
 
-			<%-- (1) terms 기반 start/end fallback --%>
 			<c:if test="${empty app.startDate and not empty terms}">
 				<c:set var="startFromTerms" value="${terms[0].startMonthDate}" />
 			</c:if>
@@ -298,7 +294,6 @@
 					value="${terms[fn:length(terms)-1].endMonthDate}" />
 			</c:if>
 
-			<%-- (1-1) input value에 넣을 문자열 미리 계산 --%>
 			<c:set var="startDateVal" value="" />
 			<c:set var="endDateVal" value="" />
 
@@ -375,7 +370,6 @@
 								</div>
 							</div>
 							<div class="payment-input-field" style="margin-left: auto;">
-								<!-- value는 숫자 원본(콤마 없이). 표시는 JS에서 콤마 처리 가능 -->
 								<input type="text" name="monthly_payment_${st.index + 1}"
 									value="<c:out value='${t.companyPayment}'/>" autocomplete="off">
 							</div>
@@ -406,7 +400,6 @@
 		<div class="form-section">
 			<h2>자녀 정보</h2>
 
-			<!-- 서버로 제출될 "단 하나"의 필드 -->
 			<c:set var="isBorn"
 				value="${not empty app.childName or not empty app.childResiRegiNumber}" />
 
@@ -484,8 +477,11 @@
 			<div class="form-group">
 				<label class="field-title">계좌번호</label>
 				<div class="input-field">
-					<input type="text" name="accountNumber"
-						value="${app.accountNumber}" placeholder="'-' 없이 숫자만 입력하세요">
+
+					<input type="text" id="accountNumber" name="accountNumber"
+						inputmode="numeric" autocomplete="off" value="${app.accountNumber}" 
+						placeholder="'-' 없이 숫자만" />
+
 
 				</div>
 			</div>
@@ -567,7 +563,7 @@
 				class="btn submit-button"
 				style="background: #6c757d; border-color: #6c757d;">임시저장</button>
 			<button type="submit" name="action" value="submit"
-				class="btn submit-button">신청서 제출하기</button>
+				class="btn submit-button" disabled>신청서 제출하기</button>
 			<button type="button" class="btn btn-secondary"
 				style="margin-left: 10px;"
 				onclick="if(confirm('정말 삭제하시겠습니까? 삭제 시 단위기간도 함께 삭제됩니다.')) document.getElementById('deleteForm').submit();">
@@ -597,7 +593,7 @@
 	    }<c:if test="${!st.last}">,</c:if>
 	  </c:forEach>
 	  ];
-	  
+	    
 	  document.addEventListener('DOMContentLoaded', function () {
 		  // ===== DOM 참조 =====
 		  var startDateInput     = document.getElementById('start-date');
@@ -607,6 +603,40 @@
 		  var formsContainer     = document.getElementById('dynamic-forms-container');
 		  var noPaymentChk       = document.getElementById('no-payment');
 		  var noPaymentWrapper   = document.getElementById('no-payment-wrapper');
+		  
+			// 공통 바인딩: 숫자만 + 길이 제한
+
+		  function onlyDigits(s){ return (s||'').replace(/[^\d]/g,''); }
+
+		  // ===== 계좌번호: 숫자만 + 최대 14자리 =====
+		  const accEl = document.getElementById('accountNumber');
+		  if (accEl) {
+		    accEl.addEventListener('input', function(){
+		      this.value = onlyDigits(this.value).slice(0, 14);
+		    });
+		  }
+
+		  // ===== 사업자등록번호: 보기용 3-2-5 마스킹 + 최대 10자리 =====
+		  const brnEl = document.getElementById('businessRegiNumber');
+		  if (brnEl) {
+		    brnEl.addEventListener('input', function(){
+		      const raw = onlyDigits(this.value).slice(0, 10);
+		      let pretty = raw;
+		      if (raw.length > 5)      pretty = raw.slice(0,3) + '-' + raw.slice(3,5) + '-' + raw.slice(5);
+		      else if (raw.length > 3) pretty = raw.slice(0,3) + '-' + raw.slice(3);
+		      this.value = pretty;
+		    });
+		  }
+
+		  // ===== 제출 직전: 하이픈 제거해서 숫자만 서버로 =====
+		  const form = document.querySelector('form[action$="/apply"], form[action$="/apply/edit"]');
+		  if (form) {
+		    form.addEventListener('submit', function(){
+		      if (brnEl) brnEl.value = onlyDigits(brnEl.value); // 10자리 숫자만 전송
+		      if (accEl) accEl.value = onlyDigits(accEl.value); // 숫자만 전송
+		    });
+		  }
+		  
 
 		  // ===== 유틸 =====
 		  function formatDate(date) {
@@ -673,7 +703,7 @@
 			  var mc = new Date(startDate.getFullYear(), startDate.getMonth(), 1);
 			  var endMonth = new Date(endDate.getFullYear(), endDate.getMonth(), 1);
 			  while (mc <= endMonth) { monthCount++; mc.setMonth(mc.getMonth() + 1); }
-			  if (monthCount > 12) { alert('최대 12개월까지만 신청 가능합니다. 종료일을 조정해주세요.'); return; }
+			  if (monthCount > 13) { alert('최대 12개월까지만 신청 가능합니다. 종료일을 조정해주세요.'); return; }
 
 			  // UI 초기화
 			  formsContainer.innerHTML = '';
@@ -750,7 +780,7 @@
 		    setHiddenFrom(birth);
 		  }
 
-		  function setBornRequired(on) {
+/*  		  function setBornRequired(on) {
 		    const name = document.getElementById('child-name');
 		    if (name)  name.required  = on;
 		    if (rrnA)  rrnA.required  = on;
@@ -759,7 +789,12 @@
 		  }
 		  function setExpectedRequired(on) { if (exp) exp.required = on; }
 		  function clearBorn()     { const name = document.getElementById('child-name'); if (name) name.value=''; if (rrnA) rrnA.value=''; if (rrnB) rrnB.value=''; if (birth) birth.value=''; }
-		  function clearExpected() { if (exp) exp.value=''; }
+		  function clearExpected() { if (exp) exp.value=''; }  */
+		  
+		  function setBornRequired(on) {}
+		  function setExpectedRequired(on) {}
+		  function clearBorn() {}
+		  function clearExpected() {}
 
 		  function updateView() {
 		    const checked = document.querySelector('input[name="birthType"]:checked');
@@ -793,13 +828,6 @@
 		  radios.forEach(r => r.addEventListener('change', updateView));
 		  updateView();
 
-		  // ===== 숫자 유틸/바인딩 =====
-		  function onlyDigits(str)  { return (str || '').replace(/[^\d]/g, ''); }
-		  function withCommas(s) {
-		    if (!s) return '';
-		    s = s.replace(/^0+(?=\d)/, '');
-		    return s.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-		  }
 		  function formatWithCaret(el) {
 		    const start = el.selectionStart, old = el.value;
 		    const digitsBefore = onlyDigits(old.slice(0, start)).length;
@@ -908,6 +936,12 @@
 		    const unitCount     = countUnits(startDate, endDate);
 		    const payInputs     = Array.from(document.querySelectorAll('input[name^="monthly_payment_"]'));
 
+		    const bizDigits = onlyDigits(businessRegi);
+		    if (bizDigits.length !== 10) return false;
+
+		    const accDigits = onlyDigits(accountNumber);
+		    if (accDigits.length < 10) return false;
+		    
 		    if (!startDate || !endDate) return false;
 		    if (new Date(startDate) > new Date(endDate)) return false;
 
@@ -947,13 +981,14 @@
 
 		  // ===== 제출 버튼 활성화/제출 훅 =====
 		  (function wireSubmitControl(){
-		    const form = document.querySelector('form[action$="/apply/update"]');
+			const form = document.querySelector('form[action$="/apply/edit"]');
 		    if (!form) return;
 		    const agreeChk  = document.getElementById('agree-notice');
 		    const submitBtn = document.querySelector('button[name="action"][value="submit"]');
 		    const draftBtn  = document.querySelector('button[name="action"][value="register"]');
 
 		    if (draftBtn) draftBtn.disabled = false;
+		    if (submitBtn) submitBtn.disabled = true;
 
 		    function refreshSubmitState() {
 		      const ok = isAllFilled();
@@ -980,6 +1015,13 @@
 
 		  // ===== 기존 단위기간 렌더 또는 자동생성 =====
 		  const alreadyRendered = document.querySelectorAll('#dynamic-forms-container input[name^="monthly_payment_"]').length > 0;
+		  const termsExist = Array.isArray(window.EXISTING_TERMS) && window.EXISTING_TERMS.length > 0;
+		  
+		   if (alreadyRendered && generateBtn) {
+			     generateBtn.disabled = true;
+			     generateBtn.title = '이미 서버에서 단위기간이 생성되어 있습니다.';
+			     generateBtn.addEventListener('click', function(e){ e.preventDefault(); /* toast 등 */ }, { once:true });
+			   }
 
 		  function renderExistingTermsOrAutoGenerate() {
 		    if (startDateInput && startDateInput.value) {
@@ -988,19 +1030,61 @@
 		    }
 
 		    // 서버가 이미 렌더했으면 아무 것도 안 함
-		    if (alreadyRendered) {
+		    if (alreadyRendered || termsExist) {
 		      if (noPaymentWrapper) noPaymentWrapper.style.display = 'flex';
 		      applyNoPaymentState(true); 
 		      return;
 		    }
-
-		    // 서버 데이터 없고, 사용자가 날짜를 미리 갖고 있으면 자동 생성
-		    if (startDateInput.value && endDateInput.value) {
-		      generateBtn.click();
-		    }
 		  }
 		  renderExistingTermsOrAutoGenerate();
+		  
+		  if (alreadyRendered && Array.isArray(window.EXISTING_TERMS)) {
+			  window.EXISTING_TERMS.forEach(function(term, index) {
+			    const input = document.querySelector('input[name="monthly_payment_' + (index+1) + '"]');
+			    if (!input) return;
+			    // 서버가 value를 이미 넣었으므로 "덮어쓰기" 말고 포맷만 적용
+			    input.value = withCommas(onlyDigits(input.value || String(term.companyPayment || '')));
+			  });
+			}
+		  
+		  document.addEventListener('DOMContentLoaded', function () {
+			  const form = document.querySelector('form[action$="/apply/edit"]');
+			  const submitBtn = document.querySelector('button[name="action"][value="submit"]');
+			  const agreeChk = document.getElementById('agree-notice');
+
+			  function refreshSubmitState() {
+			    const ok = isAllFilled();
+			    const agree = !!(agreeChk && agreeChk.checked);
+			    if (submitBtn) submitBtn.disabled = !(ok && agree);
+			  }
+
+			  // 입력이 바뀔 때마다 즉시 검증
+			  form.addEventListener('input', refreshSubmitState);
+			  form.addEventListener('change', refreshSubmitState);
+			  if (agreeChk) agreeChk.addEventListener('change', refreshSubmitState);
+
+			  // 최초 로드시 1회 검사
+			  refreshSubmitState();
+			});
+		  
+		// 날짜 입력 보이기/초기화
+		  startDateInput.addEventListener('change', function () {
+		    if (startDateInput.value) {
+		      periodInputSection.style.display = 'block';
+		      if (endDateInput) endDateInput.min = startDateInput.value;
+		      formsContainer.innerHTML = '';
+		      if (noPaymentWrapper) noPaymentWrapper.style.display = 'none';
+		    } else {
+		      periodInputSection.style.display = 'none';
+		    }
+		  });
+
+		  endDateInput.addEventListener('change', function () {
+		    formsContainer.innerHTML = '';
+		    if (noPaymentWrapper) noPaymentWrapper.style.display = 'none';
+		  });
 		});
+
 		
 		$(function () {
 			  const $sel = $('#bankCode');
@@ -1015,19 +1099,30 @@
 			      $sel.append(new Option(it.name, String(it.code)));
 			    });
 
-			    // 기존 저장값 선택
 			    if (selected) {
 			      $sel.val(selected);
 			    } else {
-			      // 기존값 없으면 placeholder 유지
 			      $sel.prop('selectedIndex', 0);
 			    }
 			  }).fail(function (xhr, status, err) {
 			    console.error('은행코드 목록 로딩 실패:', status, err);
-			    // 필요하면 사용자 안내:
-			    // alert('은행 목록을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.');
 			  });
 			});
+		
+		// ===== 다음 주소 API =====
+		function execDaumPostcode(prefix) {
+		  new daum.Postcode({
+		    oncomplete: function(data) {
+		      var addr = (data.userSelectedType === 'R') ? data.roadAddress : data.jibunAddress;
+		      var $zip    = document.getElementById(prefix + '-postcode');
+		      var $base   = document.getElementById(prefix + '-base');
+		      var $detail = document.getElementById(prefix + '-detail');
+		      if ($zip)    $zip.value = data.zonecode;
+		      if ($base)   $base.value = addr;
+		      if ($detail) $detail.focus();
+		    }
+		  }).open();
+		}
 		</script>
 
 

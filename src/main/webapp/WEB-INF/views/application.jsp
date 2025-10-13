@@ -153,15 +153,6 @@
 <script src="//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <div id="toast" class="toast"></div>
-<c:if test="${not empty error}">
-  <div class="notice-box" style="margin-bottom:16px;">
-    <span class="notice-icon">⚠️</span>
-    <div><h3>오류</h3><p>${fn:escapeXml(error)}</p></div>
-  </div>
-</c:if>
-<c:if test="${not empty message}">
-  <div class="info-box"><p>${fn:escapeXml(message)}</p></div>
-</c:if>
  <header class="header">
         <a href="${pageContext.request.contextPath}/main" class="logo"><img src="${pageContext.request.contextPath}/resources/images/logo.png" alt="Logo" width="80" height="80"></a>
         <nav>
@@ -225,30 +216,43 @@
       </div>
     </div>
 
-    <div class="form-group">
-      <label class="field-title">사업장 이름</label>
-      <div class="input-field">
-        <input type="text" name="businessName" placeholder="사업장 이름을 입력하세요" >
-      </div>
-    </div>
-    <div class="form-group">
-      <label class="field-title">사업장 등록번호</label>
-      <div class="input-field">
-        <input type="text" name="businessRegiNumber" placeholder="'-' 없이 숫자만 입력하세요" >
-      </div>
-    </div>
-    <div class="form-group">
-      <label class="field-title">사업장 주소</label>
-      <div class="input-field">
-        <div class="addr-row">
-          <input type="text" id="biz-postcode" name="businessZipNumber" placeholder="우편번호" value="${applicationDTO.businessZipNumber}" readonly>
-          <button type="button" class="btn btn-secondary btn-sm" onclick="execDaumPostcode('biz')">주소 검색</button>
-        </div>
-        <input type="text" id="biz-base" name="businessAddrBase" placeholder="기본주소" value="${applicationDTO.businessAddrBase}" readonly style="margin-top: 8px;">
-        <input type="text" id="biz-detail" name="businessAddrDetail" placeholder="상세주소" value="${applicationDTO.businessAddrDetail}" style="margin-top: 8px;">
-      </div>
-    </div>
-  </div>
+			<div class="form-group">
+				<label class="field-title">사업장 이름</label>
+				<div class="input-field">
+					<input type="text" name="businessName" placeholder="사업장 이름을 입력하세요">
+				</div>
+			</div>
+			<div class="form-group">
+				<label class="field-title">사업장 등록번호</label>
+				<div class="input-field">
+				<input type="text" id="businessRegiNumber"
+						name="businessRegiNumber" inputmode="numeric" autocomplete="off"
+						placeholder="'-' 없이 숫자 10자리"
+						pattern="^\d{3}-?\d{2}-?\d{5}$" />
+					<!-- <input type="text" id="businessRegiNumber"
+						name="businessRegiNumber" inputmode="numeric" autocomplete="off"
+						placeholder="'-' 없이 숫자 10자리" pattern="\d{10}" title="숫자 10자리"/> -->
+				</div>
+			</div>
+			<div class="form-group">
+				<label class="field-title">사업장 주소</label>
+				<div class="input-field">
+					<div class="addr-row">
+						<input type="text" id="biz-postcode" name="businessZipNumber"
+							placeholder="우편번호" value="${applicationDTO.businessZipNumber}"
+							readonly>
+						<button type="button" class="btn btn-secondary btn-sm"
+							onclick="execDaumPostcode('biz')">주소 검색</button>
+					</div>
+					<input type="text" id="biz-base" name="businessAddrBase"
+						placeholder="기본주소" value="${applicationDTO.businessAddrBase}"
+						readonly style="margin-top: 8px;"> <input type="text"
+						id="biz-detail" name="businessAddrDetail" placeholder="상세주소"
+						value="${applicationDTO.businessAddrDetail}"
+						style="margin-top: 8px;">
+				</div>
+			</div>
+		</div>
 
   <!-- ===== 급여 신청 기간 ===== -->
 		<div class="form-section">
@@ -274,7 +278,7 @@
 						<button type="button" id="generate-forms-btn"
 							class="btn btn-primary">기간 생성</button>
 
-						<!-- 회사지급 없음 체크 → name 추가! -->
+						<!-- 회사지급 없음 체크 시 -->
 						<label id="no-payment-wrapper"
 							style="display: none; align-items: center; gap: 6px; margin-left: 8px;">
 							<input type="checkbox" id="no-payment" name="noPayment" /> 사업장
@@ -283,8 +287,6 @@
 					</div>
 				</div>
 			</div>
-
-			<!-- JS가 monthly_payment_1..N 입력을 생성 -->
 			<div id="dynamic-forms-container" class="dynamic-form-container"></div>
 		</div>
 
@@ -372,8 +374,8 @@
 			<div class="form-group">
 				<label class="field-title">계좌번호</label>
 				<div class="input-field">
-					<input type="text" name="accountNumber"
-						placeholder="'-' 없이 숫자만 입력하세요" >
+					<input type="text" id="accountNumber" name="accountNumber"
+						inputmode="numeric" autocomplete="off" placeholder="'-' 없이 숫자만" />
 				</div>
 			</div>
 			<!-- 접수센터선택은 아직 아무것도 안됨 선택하는척 하는곳 -->
@@ -457,6 +459,41 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
+	
+	// 공통 바인딩: 숫자만 + 길이 제한
+	  function bindNumericLimit(id, maxLen){
+	    const el = document.getElementById(id);
+	    if (!el) return;
+	    el.addEventListener('input', function () {
+	      this.value = (this.value || '').replace(/\D/g,'').slice(0, maxLen);
+	    });
+	  }
+
+	  // 사용
+	  bindNumericLimit('businessRegiNumber', 10);
+	  bindNumericLimit('accountNumber', 14);
+	  
+	// 보기용 하이픈(3-2-5) — 입력 제어 후에 적용
+	  const biz = document.getElementById('businessRegiNumber');
+	  if (biz) {
+	    biz.addEventListener('input', function () {
+	      const raw = this.value.replace(/\D/g,'').slice(0,10);
+	      // 3-2-5 포맷
+	      let pretty = raw;
+	      if (raw.length > 5)        pretty = raw.slice(0,3)+'-'+raw.slice(3,5)+'-'+raw.slice(5);
+	      else if (raw.length > 3)   pretty = raw.slice(0,3)+'-'+raw.slice(3);
+	      this.value = pretty;
+	    });
+	  }
+
+	  // 제출 직전에 하이픈 제거(숫자만)
+	  document.querySelector('form').addEventListener('submit', function(){
+	    const biz = document.getElementById('businessRegiNumber');
+	    if (biz) biz.value = biz.value.replace(/\D/g,''); // 10자리 숫자만 전송
+	  });
+
+
+
   // ===== DOM 참조 =====
   var startDateInput = document.getElementById('start-date');
   var endDateInput = document.getElementById('end-date');
@@ -720,6 +757,31 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 });
 
+//===== 제출 버튼 활성화 조건: 필수칸 모두 입력 && 안내 체크박스 체크 =====
+const form = document.querySelector('form[action$="/apply"]');
+const submitBtn = document.querySelector('button[name="action"][value="submit"]');
+const agreeChk = document.getElementById('agree-notice');
+
+// 초기 상태: 비활성화
+if (submitBtn) submitBtn.disabled = true;
+
+function toggleSubmitEnabled() {
+  if (!form || !submitBtn || !agreeChk) return;
+  const valid = form.checkValidity();
+  submitBtn.disabled = !(agreeChk.checked && valid);
+}
+
+// 폼 내용이 바뀌거나 체크박스 상태가 바뀔 때마다 검사
+if (form) {
+  form.addEventListener('input',  toggleSubmitEnabled);
+  form.addEventListener('change', toggleSubmitEnabled);
+}
+if (agreeChk) {
+  agreeChk.addEventListener('change', toggleSubmitEnabled);
+}
+
+toggleSubmitEnabled();
+
 // ===== 다음 주소 API =====
 function execDaumPostcode(prefix) {
   new daum.Postcode({
@@ -836,6 +898,17 @@ document.addEventListener('focusin', function(e) {
     }
   }
 });
+
+// ===== 제출 직전: 콤마 제거해서 숫자만 서버로 전송 =====
+(function attachStripOnSubmit(){
+  const form = document.querySelector('form[action$="/apply"]');
+  if (!form) return;
+  form.addEventListener('submit', function () {
+    if (wageEl) wageEl.value = onlyDigits(wageEl.value);
+    const payInputs = form.querySelectorAll('input[name^="monthly_payment_"]');
+    payInputs.forEach(inp => { inp.value = onlyDigits(inp.value); });
+  });
+})();
 
 function showToast(msg, type='warn', ms=2200) {
 	  const el = document.getElementById('toast');

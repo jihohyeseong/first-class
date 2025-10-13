@@ -193,8 +193,8 @@ public class ApplicationController {
         }
 
         // 제출은 동의 필수
-        form.setBusinessAgree(ynRequired(request.getParameter("businessAgree")));
-        form.setGovInfoAgree(ynRequired(request.getParameter("govInfoAgree")));
+/*        form.setBusinessAgree(ynRequired(request.getParameter("businessAgree")));
+        form.setGovInfoAgree(ynRequired(request.getParameter("govInfoAgree")));*/
 
         // 자녀 출생/예정 날짜 보정
         if (form.getChildBirthDate() == null) {
@@ -266,10 +266,13 @@ public class ApplicationController {
         if (user != null && user.getRegistrationNumber() != null) {
             user.setRegistrationNumber(maskRrn(user.getRegistrationNumber()));
         }
+        
+        List<TermAmountDTO> terms = applicationService.findTerms(appNo);
 
         model.addAttribute("app", app);
         model.addAttribute("userDTO", user);
         model.addAttribute("isAdmin", isAdmin);
+        model.addAttribute("terms", terms);
         return "applicationEdit";
     }
 
@@ -278,14 +281,17 @@ public class ApplicationController {
             @ModelAttribute ApplicationDTO form,
             BindingResult binding,
             HttpServletRequest request,
+            @RequestParam(name="action", required=false) String action,
             @RequestParam(name="noPayment", defaultValue="false") boolean noPayment,
             @RequestParam(name="recomputeTerms", defaultValue="true") boolean recomputeTerms,
             RedirectAttributes ra
     ) {
         UserDTO login = currentUserOrNull();
-        if (login == null) { ra.addFlashAttribute("error","로그인이 필요합니다."); return "redirect:/login"; }
+        if (login == null) {
+            ra.addFlashAttribute("error","로그인이 필요합니다.");
+            return "redirect:/login";
+        }
 
-        // 동의값(넘어오면 반영)
         String bizAgree = request.getParameter("businessAgree");
         if (bizAgree != null) form.setBusinessAgree(yn(bizAgree));
         String govAgree = request.getParameter("govInfoAgree");
@@ -294,15 +300,34 @@ public class ApplicationController {
         List<Long> monthlyCompanyPay = collectMonthlyCompanyPays(request);
 
         try {
-            long appNo = applicationService.updateApplication(form, monthlyCompanyPay, noPayment, recomputeTerms);
-            ra.addFlashAttribute("message", "수정 완료");
-            return "redirect:/apply/detail?appNo=" + appNo;
+            long appNo;
+
+            if ("register".equals(action)) {
+                // 🟢 임시저장
+                appNo = applicationService.updateApplication(form, monthlyCompanyPay, noPayment, recomputeTerms);
+                ra.addFlashAttribute("message", "임시저장 완료");
+                return "redirect:/apply/detail?appNo=" + appNo;
+
+            } else if ("submit".equals(action)) {
+                appNo = applicationService.submitApplication(form, monthlyCompanyPay, noPayment, recomputeTerms);
+                ra.addFlashAttribute("appNo", appNo);
+                ra.addFlashAttribute("message", "제출이 완료되었습니다.");
+                return "redirect:/apply/complete?appNo=" + appNo;
+
+            } else {
+                appNo = applicationService.updateApplication(form, monthlyCompanyPay, noPayment, recomputeTerms);
+                ra.addFlashAttribute("message", "수정 완료");
+                return "redirect:/apply/detail?appNo=" + appNo;
+            }
+
         } catch (Exception e) {
             log.error("수정 오류", e);
             ra.addFlashAttribute("error", "수정 중 오류: " + e.getMessage());
             return "redirect:/apply/edit?appNo=" + form.getApplicationNumber();
         }
     }
+
+
 
     @PostMapping("/apply/delete")
     public String delete(@RequestParam long appNo, RedirectAttributes ra) {
