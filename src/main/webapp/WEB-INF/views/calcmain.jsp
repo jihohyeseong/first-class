@@ -3,6 +3,7 @@
 <%-- JSTL 태그는 사용하지 않으므로 주석 처리 상태 유지 --%>
 <%-- <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %> --%>
 <%-- <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %> --%>
+<%@ taglib prefix="sec" uri="http://www.springframework.org/security/tags" %>
 
 <!DOCTYPE html>
 <html lang="ko">
@@ -14,131 +15,231 @@
 	href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap"
 	rel="stylesheet">
 <style>
+	:root {
+            --primary-color: #3f58d4;
+            --primary-light-color: #f0f2ff;
+            --white-color: #ffffff;
+            --light-gray-color: #f8f9fa;
+            --gray-color: #868e96;
+            --dark-gray-color: #343a40;
+            --border-color: #dee2e6;
+            --status-submitted: #007bff;
+            --status-processing: #ffc107;
+            --status-approved: #28a745;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.05);
+            --shadow-md: 0 4px 8px rgba(0,0,0,0.07);
+        }
 
-body {
-	font-family: 'Noto Sans KR', sans-serif;
-	background-color: #f8f9fa;
-	padding: 20px;
-}
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { height: 100%; }
+        body {
+		    display: flex;
+		    flex-direction: column;
+		    min-height: 100vh;
+		    font-family: 'Noto Sans KR', sans-serif;
+		    background-color: #f8f9fa; /* 또는 var(--light-gray-color); */
+		    color: var(--dark-gray-color);
+		   
+		}
 
-.container {
-	max-width: 800px;
-	margin: auto;
-	background: #fff;
-	padding: 30px;
-	border-radius: 8px;
-	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
+        a { text-decoration: none; color: inherit; }
 
-h3 {
-	border-bottom: 2px solid #3f58d4;
-	padding-bottom: 10px;
-	margin-bottom: 20px;
-	color: #3f58d4;
-}
+        .btn {
+            display: inline-block;
+            padding: 10px 20px;
+            font-size: 15px;
+            font-weight: 500;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            text-align: center;
+        }
+        .btn-primary { background-color: var(--primary-color); color: var(--white-color); border-color: var(--primary-color); }
+        .btn-primary:hover { background-color: #364ab1; box-shadow: var(--shadow-md); transform: translateY(-2px); }
+        .btn-logout { background-color: var(--dark-gray-color); color: var(--white-color); border: none; }
+        .btn-logout:hover { background-color: #555; }
+        .btn-secondary { background-color: var(--white-color); color: var(--gray-color); border-color: var(--border-color); }
+        .btn-secondary:hover { background-color: var(--light-gray-color); color: var(--dark-gray-color); border-color: #ccc; }
 
-.input-group {
-	margin-bottom: 15px;
-	display: flex;
-	align-items: center;
-}
-
-.input-group label {
-	width: 120px;
-	font-weight: 500;
-	color: #495057;
-}
-
-.input-group input[type="date"], .input-group input[type="text"] {
-	padding: 8px;
-	border: 1px solid #ced4da;
-	border-radius: 4px;
-	flex-grow: 1;
-}
-
-.input-group span {
-	margin: 0 10px;
-	color: #6c757d;
-}
-
-.button-group {
-	text-align: right;
-	margin-top: 20px;
-}
-
-.button-group button {
-	padding: 10px 20px;
-	border: none;
-	border-radius: 4px;
-	cursor: pointer;
-	font-weight: 700;
-	margin-left: 10px;
-	transition: background-color 0.2s;
-}
-
-#calculate-btn {
-	background-color: #3f58d4;
-	color: white;
-}
-
-#calculate-btn:hover {
-	background-color: #3549b8;
-}
-
-#reset-btn {
-	background-color: #f1f3f5;
-	color: #495057;
-}
-
-#reset-btn:hover {
-	background-color: #e2e6ea;
-}
-
-#result-table {
-	width: 100%;
-	border-collapse: collapse;
-	margin-top: 30px;
-}
-
-#result-table caption {
-	font-size: 1.2rem;
-	font-weight: 700;
-	text-align: left;
-	margin-bottom: 15px;
-	color: #3f58d4;
-}
-
-#result-table th, #result-table td {
-	border: 1px solid #dee2e6;
-	padding: 12px;
-	text-align: center;
-}
-
-#result-table thead th {
-	background-color: #e9ecef;
-	font-weight: 700;
-}
-
-#result-table tbody td:nth-child(1) {
-	font-weight: 500;
-	background-color: #f8f9fa;
-}
-
-#result-table tfoot td {
-	font-weight: 700;
-	background-color: #dee2e6;
-}
-
-.note {
-	color: red;
-	margin-bottom: 10px;
-	font-size: 0.9rem;
-}
+        .header {
+            background-color: var(--white-color);
+            padding: 15px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+            box-shadow: var(--shadow-sm);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        .header .logo img { vertical-align: middle; }
+        .header nav { display: flex; align-items: center; gap: 15px; }
+        .header .welcome-msg { font-size: 16px; color: var(--dark-gray-color); }
+		
+		.header-nav {
+		    position: absolute;
+		    left: 50%;
+		    transform: translateX(-50%);
+		    display: flex;
+		    list-style: none;
+		    margin: 0;
+		    padding: 0;
+		}
+	
+		.header-nav .nav-link {
+		    display: block;
+		    padding: 0.5rem 1rem;
+		    border-radius: 0.5rem;
+		    font-weight: 500;
+		    color: #495057;
+		    transition: all 0.3s ease-in-out;
+		}
+		.header-nav .nav-link:hover {
+		    color: #3f58d4;
+		    transform: translateY(-3px);
+		    box-shadow: 0 4px 10px rgba(63, 88, 212, 0.3);
+		}
+		.header {position:relative;}
+	
+	.container {
+		max-width: 800px;
+		margin: auto;
+		background: #fff;
+		padding: 30px;
+		border-radius: 8px;
+		box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+	}
+	
+	h3 {
+		border-bottom: 2px solid #3f58d4;
+		padding-bottom: 10px;
+		margin-bottom: 20px;
+		color: #3f58d4;
+	}
+	
+	.input-group {
+		margin-bottom: 15px;
+		display: flex;
+		align-items: center;
+	}
+	
+	.input-group label {
+		width: 120px;
+		font-weight: 500;
+		color: #495057;
+	}
+	
+	.input-group input[type="date"], .input-group input[type="text"] {
+		padding: 8px;
+		border: 1px solid #ced4da;
+		border-radius: 4px;
+		flex-grow: 1;
+	}
+	
+	.input-group span {
+		margin: 0 10px;
+		color: #6c757d;
+	} 
+	
+	.button-group {
+		text-align: right;
+		margin-top: 20px;
+	} 
+	
+	.button-group button {
+		padding: 10px 20px;
+		border: none;
+		border-radius: 4px;
+		cursor: pointer;
+		font-weight: 700;
+		margin-left: 10px;
+		transition: background-color 0.2s;
+	}
+	
+	#calculate-btn {
+		background-color: #3f58d4;
+		color: white;
+	}
+	
+	#calculate-btn:hover {
+		background-color: #3549b8;
+	}
+	
+	#reset-btn {
+		background-color: #f1f3f5;
+		color: #495057;
+	}
+	
+	#reset-btn:hover {
+		background-color: #e2e6ea;
+	}
+	
+	#result-table {
+		width: 100%;
+		border-collapse: collapse;
+		margin-top: 30px;
+	}
+	
+	#result-table caption {
+		font-size: 1.2rem;
+		font-weight: 700;
+		text-align: left;
+		margin-bottom: 15px;
+		color: #3f58d4;
+	}
+	
+	#result-table th, #result-table td {
+		border: 1px solid #dee2e6;
+		padding: 12px;
+		text-align: center;
+	}
+	
+	#result-table thead th {
+		background-color: #e9ecef;
+		font-weight: 700;
+	}
+	
+	#result-table tbody td:nth-child(1) {
+		font-weight: 500;
+		background-color: #f8f9fa;
+	}
+	
+	#result-table tfoot td {
+		font-weight: 700;
+		background-color: #dee2e6;
+	}
+	
+	.note {
+		color: red;
+		margin-bottom: 10px;
+		font-size: 0.9rem;
+	}
 </style>
 </head>
 <body>
-	
-	<hr>
+	<header class="header">
+        <a href="${pageContext.request.contextPath}/main" class="logo"><img src="${pageContext.request.contextPath}/resources/images/logo.png" alt="Logo" width="80" height="80"></a>
+        <nav>
+        	<ul class="header-nav">
+           		<li><a class="nav-link active" href="${pageContext.request.contextPath}/calc">모의 계산하기</a></li>
+				<li><a class="nav-link active" href="${pageContext.request.contextPath}/mypage">마이페이지</a></li>
+            </ul>
+            <sec:authorize access="isAnonymous()">
+                <a href="${pageContext.request.contextPath}/login" class="btn btn-primary">로그인</a>
+            </sec:authorize>
+            <sec:authorize access="isAuthenticated()">
+                <span class="welcome-msg">
+                    <sec:authentication property="principal.username"/>님, 환영합니다.
+                </span>
+                <form id="logout-form" action="${pageContext.request.contextPath}/logout" method="post" style="display: none;">
+                    <sec:csrfInput/>
+                </form>
+                <a href="#" onclick="document.getElementById('logout-form').submit(); return false;" class="btn btn-logout">로그아웃</a>
+            </sec:authorize>
+        </nav>
+    </header>
 	<div class="container">
 		<h3>미리 알아보는 나의 육아휴직급여 모의계산</h3>
 		<p>“육아휴직급여에 관한 급여모의계산은 고용보험에 가입해 있는 피보험자가 육아휴직급여를 받게될 경우 받게 될 <br>
