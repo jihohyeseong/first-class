@@ -283,19 +283,19 @@
 		const totalAmount = document.getElementById("totalAmount");
 		
 		salaryInput.addEventListener('input', function(e) {
-			let value = e.target.value.replace(/[^\d]/g, '');
-			e.target.value = value ? parseInt(value, 10).toLocaleString('ko-KR') : '';
+			let value = e.target.value.replace(/[^\d]/g, ''); // 숫자 외에 제거
+			e.target.value = value ? parseInt(value, 10).toLocaleString('ko-KR') : ''; // 1,000,000처럼 천 단위 콤마(,) 형식으로 변환
 		});
 		
 		const formatCurrency = function(number) {
 			if (isNaN(number)) return '0';
-			const flooredToTen = Math.floor(number / 10) * 10;
+			const flooredToTen = Math.floor(number / 10) * 10; // 10원 단위로 버림 처리
 			return flooredToTen.toLocaleString('ko-KR');
 		};
 
 		const formatDate = function(date) {
 			const y = date.getFullYear();
-			const m = String(date.getMonth() + 1).padStart(2, '0');
+			const m = String(date.getMonth() + 1).padStart(2, '0'); // 두 자리로 맞추기 위해 앞에 0을 채워줌
 			const d = String(date.getDate()).padStart(2, '0');
 			return y + '.' + m + '.' + d;
 		};
@@ -323,23 +323,21 @@
 			nextPeriodStart.setDate(nextPeriodStart.getDate() - 1);
 			return nextPeriodStart;
 		}
-		
-		/**
-		 * [수정됨] 기간 분할 및 급여 계산 메인 함수
-		 */
+
+		// 기간 분할 및 급여 계산 메인 함수
 		function splitPeriodsAndCalc(startDateStr, endDateStr, regularWage) {
 			const results = [];
-			const originalStartDate = new Date(startDateStr);
-			let currentPeriodStart = new Date(originalStartDate);
-			const finalEndDate = new Date(endDateStr);
+			const originalStartDate = new Date(startDateStr); // 육아휴직 시작일
+			let currentPeriodStart = new Date(originalStartDate); // 단위기간 시작일
+			const finalEndDate = new Date(endDateStr); // 육아휴직 종료일
 			let monthIdx = 1;
 
 			while (currentPeriodStart <= finalEndDate && monthIdx <= 12) {
 				// 헬퍼 함수를 이용해 현재 개월차의 이론적인 종료일을 계산
-				const theoreticalEndDate = getPeriodEndDate(originalStartDate, monthIdx);
+				const theoreticalEndDate = getPeriodEndDate(originalStartDate, monthIdx); // 단위기간 예정 종료일
 
 				// 실제 종료일은 이론적 종료일과 전체 휴직 종료일 중 더 빠른 날짜
-				let actualPeriodEnd = new Date(theoreticalEndDate);
+				let actualPeriodEnd = new Date(theoreticalEndDate); // 단위기간 실제 종료일
 				if (actualPeriodEnd > finalEndDate) {
 					actualPeriodEnd = new Date(finalEndDate);
 				}
@@ -349,14 +347,14 @@
 					break;
 				}
 
-				const govBase = computeGovBase(regularWage, monthIdx);
-				const govPayment = calcGovPayment(govBase, currentPeriodStart, actualPeriodEnd, theoreticalEndDate);
+				const govBase = computeGovBase(regularWage, monthIdx); // 받을 최대 금액
+				const govPayment = calcGovPayment(govBase, currentPeriodStart, actualPeriodEnd, theoreticalEndDate); // 실제 받을 금액
 
 				results.push({
-					month: monthIdx,
-					startDate: new Date(currentPeriodStart),
-					endDate: new Date(actualPeriodEnd),
-					govPayment: govPayment
+					month: monthIdx, // n개월차
+					startDate: new Date(currentPeriodStart), // 시작일
+					endDate: new Date(actualPeriodEnd), // 종료일
+					govPayment: govPayment // 실제 지급액
 				});
 
 				// 다음 개월차의 시작일은 현재 종료일 + 1일
@@ -369,29 +367,30 @@
 		}
 
 		function computeGovBase(regularWage, monthIdx) {
-		    if (monthIdx <= 3) return Math.min(regularWage, 2500000);
-		    if (monthIdx <= 6) return Math.min(regularWage, 2000000);
+		    if (monthIdx <= 3) return Math.min(regularWage, 2500000); // 3개월까지 최대 현재임금 or 250만중 작은값
+		    if (monthIdx <= 6) return Math.min(regularWage, 2000000); // 6개월까지 최대 현재임금 or 200만중 작은값
 		    const eighty = Math.round(regularWage * 0.8);
-		    return Math.min(eighty, 1600000);
+		    return Math.min(eighty, 1600000); // 그 이후 최대 현재임금의 80% or 160만중 작은 값
 		}
 		
 		function calcGovPayment(base, startDate, endDate, theoreticalFullEndDate) {
 			const getDaysBetween = (d1, d2) => Math.round((d2.getTime() - d1.getTime()) / (1000 * 60 * 60 * 24)) + 1;
 			
-			const daysInTerm = getDaysBetween(startDate, endDate);
+			const daysInTerm = getDaysBetween(startDate, endDate); // 실제 현재 단위기간중 육아휴직 기간
 			
 			// 이론적인 한달 시작일은 현재 기간의 시작일
 			let theoreticalFullStartDate = new Date(startDate);
-			const daysInFullMonth = getDaysBetween(theoreticalFullStartDate, theoreticalFullEndDate);
+			const daysInFullMonth = getDaysBetween(theoreticalFullStartDate, theoreticalFullEndDate); // 단위기간 한달 꽉 채웠을때
 		
 			if (daysInTerm >= daysInFullMonth) {
 				return base;
 			}
 			
-			const ratio = daysInTerm / daysInFullMonth;
+			const ratio = daysInTerm / daysInFullMonth; // 전체 단위기간 중 실제 육아휴직 비율
 			return Math.floor(base * ratio);
 		}
 
+		// 1년 초과하는지 체크하는 함수
 		function getRawLeaveMonths(start, end) {
 			const startDate = new Date(start);
 			const endDate = new Date(end);
