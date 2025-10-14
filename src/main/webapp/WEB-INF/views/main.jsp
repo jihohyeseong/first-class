@@ -1,6 +1,6 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
-<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
-<%@ taglib prefix="sec" uri="http://www.springframework.org/security/tags" %>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%@ taglib prefix="sec" uri="http://www.springframework.org/security/tags"%>
 
 <!DOCTYPE html>
 <html lang="ko">
@@ -12,21 +12,17 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
     
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
     <style>
         /* ========== Global & Layout Styles ========== */
         :root {
-            --primary-color: #3f58d4; /* '등록' 상태에 사용할 파란색 */
-            --primary-light-color: #f0f2ff;
+            --primary-color: #3f58d4; /* 모든 단계에서 사용할 통일된 파란색 */
             --white-color: #ffffff;
             --light-gray-color: #f9fafb;
             --gray-color: #6b7280;
             --dark-gray-color: #1f2937;
             --border-color: #e5e7eb;
-            --status-saved: #6c757d;
-            --status-processing: #ffc107; /* '심사중' 상태에 사용할 노란색 */
-            --status-approved: #28a745;   /* '처리완료' 상태에 사용할 초록색 */
-            --status-rejected: #dc3545;
-            --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
             --shadow-lg: 0 10px 30px rgba(0, 0, 0, 0.1);
         }
 
@@ -34,25 +30,15 @@
         html { height: 100%; }
         
         body {
-            display: flex;
-            flex-direction: column;
-            min-height: 100vh;
-            font-family: 'Noto Sans KR', sans-serif;
-            background-color: #f3f5f9;
-            color: var(--dark-gray-color);
-            position: relative;
-            overflow-x: hidden;
+            display: flex; flex-direction: column; min-height: 100vh;
+            font-family: 'Noto Sans KR', sans-serif; background-color: #f3f5f9;
+            color: var(--dark-gray-color); position: relative; overflow-x: hidden;
         }
         
         body::before, body::after {
-            content: '';
-            position: absolute;
-            z-index: 0;
-            border-radius: 50%;
-            filter: blur(120px);
-            opacity: 0.2;
+            content: ''; position: absolute; z-index: 0; border-radius: 50%;
+            filter: blur(120px); opacity: 0.2;
         }
-        
         body::before { width: 450px; height: 450px; background: #a9c0ff; top: -150px; left: -150px; }
         body::after { width: 500px; height: 500px; background: #fbc2eb; bottom: -200px; right: -150px; }
 
@@ -60,121 +46,86 @@
 
         /* ========== Main Content Styles ========== */
         .main-container {
-            flex-grow: 1;
-            display: flex;
-            flex-direction: column;
-            width: 100%;
-            max-width: 1100px;
-            margin: 60px auto;
-            padding: 0 20px;
-            position: relative;
-            z-index: 1;
+            flex-grow: 1; display: flex; flex-direction: column;
+            width: 100%; max-width: 1100px; margin: 60px auto; padding: 0 20px;
+            position: relative; z-index: 1;
         }
 
         .content-wrapper {
-            flex-grow: 1;
-            display: flex;
-            flex-direction: column;
-            background-color: var(--white-color);
-            border-radius: 20px;
-            padding: 40px;
+            flex-grow: 1; display: flex; flex-direction: column;
+            background-color: var(--white-color); border-radius: 20px; padding: 40px;
             box-shadow: var(--shadow-lg);
         }
 
         .content-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 30px;
-            padding-bottom: 25px;
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 40px; padding-bottom: 25px;
             border-bottom: 1px solid var(--border-color);
         }
-        .content-header h2 { font-size: 24px; font-weight: 700; color: var(--dark-gray-color);}
+        .content-header h2 { font-size: 24px; font-weight: 700; }
         
-        /* ========== Empty State ========== */
         .empty-state-box {
-            flex-grow: 1;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            background-color: var(--light-gray-color);
-            border: 1px dashed var(--border-color);
-            border-radius: 12px;
-            text-align: center;
-        }
-        .empty-state-box .icon { font-size: 52px; margin-bottom: 20px; line-height: 1; }
-        .empty-state-box h3 { font-size: 24px; color: var(--dark-gray-color); margin-bottom: 15px; font-weight: 700; }
-        .empty-state-box p { font-size: 16px; line-height: 1.6; margin-bottom: 30px; color: var(--gray-color); }
-        
-        /* ========== Card Layout ========== */
-        .application-cards-container {
-            display: flex;
-            flex-direction: column;
-            gap: 25px;
+            flex-grow: 1; display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
+            background-color: var(--light-gray-color); border: 1px dashed var(--border-color);
+            border-radius: 12px; text-align: center;
         }
         
+        /* ========== Segmented Card Design ========== */
+        .card-list {
+            display: flex; flex-direction: column; gap: 30px;
+        }
+
         .application-card {
-            background-color: var(--white-color);
-            border: 1px solid var(--border-color);
-            border-top: 4px solid var(--primary-color);
-            border-radius: 16px;
+            background-color: var(--white-color); border: 1px solid var(--border-color);
+            border-radius: 16px; overflow: hidden;
             transition: all 0.2s ease-in-out;
-            overflow: hidden;
-            box-shadow: var(--shadow-sm);
         }
         .application-card:hover {
-            transform: translateY(-5px);
+            transform: translateY(-5px); box-shadow: 0 4px 12px rgba(0,0,0,0.08);
             border-color: var(--primary-color);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
         }
         
-        .card-body {
-            padding: 30px 25px;
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 25px 20px;
-        }
-        .info-item {
-            display: flex;
-            flex-direction: column;
-            align-items: flex-start;
-        }
-        .info-item .label { font-size: 14px; color: var(--gray-color); margin-bottom: 8px; }
-        .info-item .value { font-size: 18px; font-weight: 500; color: var(--dark-gray-color); }
-        
-        .card-footer {
+        .card-header {
+            display: flex; justify-content: space-between; align-items: center;
             padding: 20px 25px;
+        }
+        .card-title { font-size: 18px; font-weight: 700; }
+
+        .card-body { padding: 0 25px 25px 25px; }
+
+        .segmented-progress {
+            display: flex; border: 1px solid var(--border-color);
+            border-radius: 12px; overflow: hidden;
+        }
+
+        .step {
+            flex: 1; display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            padding: 15px 10px; text-align: center;
             background-color: var(--light-gray-color);
-            text-align: right;
-            border-top: 1px solid var(--border-color);
+            color: var(--gray-color);
+            border-right: 1px solid var(--border-color);
+            transition: all 0.3s ease;
+        }
+        .step:last-child { border-right: none; }
+        
+        .step i { font-size: 18px; margin-bottom: 8px; }
+        .step .step-label { font-size: 13px; font-weight: 500; }
+
+        /* [수정] 모든 상태 색상을 파란색으로 통일 */
+        .step.completed {
+            color: var(--primary-color);
         }
         
-        /* ========== Status Badge Styles [수정] ========== */
-        .status {
-            display: inline-block;
-            padding: 5px 12px;
-            border-radius: 15px;
-            font-size: 13px;
-            font-weight: 700;
-            min-width: 80px;
-            text-align: center;
-            background-color: var(--border-color);
-            color: var(--dark-gray-color);
+        .step.active {
+            background-color: var(--primary-color);
+            color: var(--white-color);
         }
-        /* [추가] 등록 상태 (파란색) */
-        .status.registered { background-color: var(--primary-color); color: var(--white-color); }
-        .status.processing { background-color: var(--status-processing); color: var(--dark-gray-color); }
-        .status.approved { background-color: var(--status-approved); color: var(--white-color); }
-        /* 기타 상태들 */
-        .status.saved { background-color: var(--status-saved); color: var(--white-color); }
-        .status.rejected { background-color: var(--status-rejected); color: var(--white-color); }
-
+        
         .footer {
-            text-align: center;
-            padding: 20px 0;
-            position: relative;
-            z-index: 1;
+            text-align: center; padding: 20px 0;
+            position: relative; z-index: 1;
         }
     </style>
 </head>
@@ -194,48 +145,53 @@
             <c:choose>
                 <c:when test="${empty applicationList}">
                     <div class="empty-state-box">
-                        <div class="icon">📄</div>
                         <h3>아직 신청 내역이 없으시네요.</h3>
                         <p>소중한 자녀를 위한 첫걸음, 지금 바로 시작해보세요.</p>
                     </div>
                 </c:when>
                 <c:otherwise>
-                    <div class="application-cards-container">
+                    <div class="card-list">
                         <c:forEach var="app" items="${applicationList}">
                             
-                            <%-- [수정] 상태값에 따라 CSS 클래스를 동적으로 부여 --%>
-                            <c:set var="statusClass" value=""/>
-                            <c:if test="${app.statusName == '등록'}"><c:set var="statusClass" value="registered"/></c:if>
-                            <c:if test="${app.statusName == '심사중'}"><c:set var="statusClass" value="processing"/></c:if>
-                            <c:if test="${app.statusName == '처리완료'}"><c:set var="statusClass" value="approved"/></c:if>
-                            
-                            <%-- 기타 다른 상태값도 처리 (예시) --%>
-                            <c:if test="${app.statusName == '임시저장'}"><c:set var="statusClass" value="saved"/></c:if>
-                            <c:if test="${app.statusName == '부지급결정'}"><c:set var="statusClass" value="rejected"/></c:if>
+                            <c:set var="currentStep" value="0"/>
+                            <c:if test="${app.statusName == '등록'}"><c:set var="currentStep" value="1"/></c:if>
+                            <c:if test="${app.statusName == '제출'}"><c:set var="currentStep" value="2"/></c:if>
+                            <c:if test="${app.statusName == '심사중'}"><c:set var="currentStep" value="3"/></c:if>
+                            <c:if test="${app.statusName == '처리완료'}"><c:set var="currentStep" value="4"/></c:if>
                             
                             <div class="application-card">
-                                <div class="card-body">
-                                    <div class="info-item">
-                                        <span class="label">신청번호</span>
-                                        <span class="value">${app.applicationNumber}</span>
+                                <div class="card-header">
+                                    <div>
+                                        <div class="card-title">신청번호: ${app.applicationNumber}</div>
+                                        <div class="meta-info" style="font-size:14px; color: var(--gray-color);">
+                                            신청일: ${not empty app.submittedDate ? app.submittedDate : '-'}
+                                        </div>
                                     </div>
-                                    <div class="info-item">
-                                        <span class="label">민원유형</span>
-                                        <span class="value">육아휴직 급여 신청</span>
-                                    </div>
-                                    <div class="info-item">
-                                        <span class="label">신청일</span>
-                                        <span class="value">
-                                            ${not empty app.submittedDate ? app.submittedDate : '-'}
-                                        </span>
-                                    </div>
-                                    <div class="info-item">
-                                        <span class="label">상태</span>
-                                        <span class="status ${statusClass}">${app.statusName}</span>
-                                    </div>
-                                </div>
-                                <div class="card-footer">
                                     <a href="${pageContext.request.contextPath}/apply/detail?appNo=${app.applicationNumber}" class="btn btn-secondary">상세보기</a>
+                                </div>
+                                <div class="card-body">
+                                    <div class="segmented-progress">
+                                        
+                                        <div class="step ${currentStep >= 1 ? 'completed' : ''} ${currentStep == 1 ? 'active' : ''}">
+                                            <i class="fa-solid fa-floppy-disk"></i>
+                                            <span class="step-label">등록(임시저장)</span>
+                                        </div>
+
+                                        <div class="step ${currentStep >= 2 ? 'completed' : ''} ${currentStep == 2 ? 'active' : ''}">
+                                            <i class="fa-solid fa-paper-plane"></i>
+                                            <span class="step-label">제출</span>
+                                        </div>
+
+                                        <div class="step ${currentStep >= 3 ? 'completed' : ''} ${currentStep == 3 ? 'active' : ''}">
+                                            <i class="fa-solid fa-hourglass-half"></i>
+                                            <span class="step-label">심사중</span>
+                                        </div>
+
+                                        <div class="step ${currentStep >= 4 ? 'completed' : ''} ${currentStep == 4 ? 'active' : ''}">
+                                            <i class="fa-solid fa-check-circle"></i>
+                                            <span class="step-label">처리완료</span>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </c:forEach>
