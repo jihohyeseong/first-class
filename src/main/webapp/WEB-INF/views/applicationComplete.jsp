@@ -25,22 +25,22 @@
 }
 
 /* 기본 스타일 */
-*{margin:0;padding:0;box-sizing:border-box}
-html{height:100%}
-body{
-  display:flex;flex-direction:column;min-height:100vh;
-  font-family:'Noto Sans KR',sans-serif;background-color:var(--light-gray-color);
-  color:var(--dark-gray-color);
-}
-a{text-decoration:none;color:inherit}
-
-.header,.footer{
-  background-color:var(--white-color);padding:15px 40px;border-bottom:1px solid var(--border-color);box-shadow:var(--shadow-sm);
-}
-.footer{border-top:1px solid var(--border-color);border-bottom:none;text-align:center;padding:20px 0;margin-top:auto}
-.header{display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:10}
-.header nav{display:flex;align-items:center;gap:15px}
-.header .welcome-msg{font-size:16px}
+ * { margin: 0; padding: 0; box-sizing: border-box; }
+   html { height: 100%; }
+   body {
+      display: flex; flex-direction: column; min-height: 100vh;
+      font-family: 'Noto Sans KR', sans-serif; background-color: var(--light-gray-color);
+      color: var(--dark-gray-color);
+   }
+   a { text-decoration: none; color: inherit; }
+   
+   .header, .footer {
+      background-color: var(--white-color); padding: 15px 40px; border-bottom: 1px solid var(--border-color); box-shadow: var(--shadow-sm);
+   }
+   .footer { border-top: 1px solid var(--border-color); border-bottom: none; text-align: center; padding: 20px 0; }
+   .header { display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 10; }
+   .header nav { display: flex; align-items: center; gap: 15px; }
+   .header .welcome-msg { font-size: 16px; }
 
 .main-container{
   flex-grow:1;width:100%;max-width:850px;margin:40px auto;padding:40px;
@@ -99,37 +99,64 @@ h2.section-title{
   border-radius:4px;cursor:pointer;transition:all .2s;
 }
 .detail-btn:hover{background-color:var(--primary-color);color:var(--white-color)}
+
+
+/* ✅ 성공 아이콘*/
+.completion-icon {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background-color: var(--success-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 30px;
+  animation: pop-in 0.5s ease-out forwards;
+  margin: 0 auto 30px;
+}
+
+.completion-icon::after {
+  content: '';
+  width: 20px;
+  height: 40px;
+  border: solid var(--white-color);
+  border-width: 0 8px 8px 0;
+  transform: rotate(45deg);
+}
+
+/* ✅ 팝인 애니메이션 (가입완료 페이지와 동일) */
+@keyframes pop-in {
+  0%   { transform: scale(0);   opacity: 0; }
+  80%  { transform: scale(1.1); opacity: 1; }
+  100% { transform: scale(1);   opacity: 1; }
+}
+
+.main-container .button-container{
+  display: flex;
+  justify-content: center !important;
+  align-items: center;
+  gap: 16px;
+  width: 100%; 
+  margin-top: 50px;
+  flex-wrap: wrap;
+}
+
+.main-container .button-container .btn{
+  padding: 12px 30px;
+  font-size: 1.1em;
+}
+
 </style>
 </head>
 <body>
-     <header class="header">
-        <a href="${pageContext.request.contextPath}/main" class="logo"><img src="${pageContext.request.contextPath}/resources/images/logo.png" alt="Logo" width="80" height="80"></a>
-        <nav>
-            <sec:authorize access="isAnonymous()">
-                <a href="${pageContext.request.contextPath}/login" class="btn btn-primary">로그인</a>
-            </sec:authorize>
-            <sec:authorize access="isAuthenticated()">
-                <span class="welcome-msg">
-                    <sec:authentication property="principal.username"/>님, 환영합니다.
-                </span>
-                <form id="logout-form" action="${pageContext.request.contextPath}/logout" method="post" style="display: none;">
-                    <sec:csrfInput/>
-                </form>
-                <a href="#" onclick="document.getElementById('logout-form').submit(); return false;" class="btn btn-logout">로그아웃</a>
-            </sec:authorize>
-        </nav>
-    </header>
+     <%@ include file="header.jsp" %>
 
-    <main class="main-container">
-        
-                <div class="success-icon-container">
-            <div class="success-circle">
-                <span class="success-icon">✓</span>
-            </div>
-        </div>
-        <div class="complete-message">
-            신청이 정상적으로 완료되었습니다.
-        </div>
+   
+	<main class="main-container">                
+	<div class="completion-icon"></div>
+	       
+	<div class="complete-message">            신청이 정상적으로 완료되었습니다.    
+		   </div>
 
 	<div class="info-table-container">
 		<h2 class="section-title">접수정보</h2>
@@ -143,7 +170,8 @@ h2.section-title{
 				</tr>
 				<tr>
 					<th class="data-title">신청일</th>
-					<td><fmt:formatDate value="${app.submittedDt}" pattern="yyyy-MM-dd"/></td>
+					<td><fmt:formatDate value="${app.submittedDt}"
+							pattern="yyyy-MM-dd" /></td>
 					<th class="data-title">신청인</th>
 					<td><sec:authentication property="principal.username" /></td>
 				</tr>
@@ -173,15 +201,17 @@ h2.section-title{
 			</tbody>
 		</table>
 	</div>
-	        
-                <div class="button-container" style="margin-top: 50px;">
-                        <a href="/firstclass/main" class="btn btn-primary" style="padding: 12px 30px; font-size: 1.1em;">확인 및 메인으로 이동</a>
-            <a href="${pageContext.request.contextPath}/apply/detail?appNo=${app.applicationNumber}" class="btn btn-secondary" style="padding: 12px 30px; font-size: 1.1em; margin-left: 15px;">신청 내용 상세 보기</a>
-        </div>
-    </main>
+	                   
+	<div class="button-container">
+		<a href="/firstclass/main" class="btn btn-primary">확인 및 메인으로 이동</a> 
+		<a href="${pageContext.request.contextPath}/apply/detail?appNo=${app.applicationNumber}"
+			class="btn btn-secondary">신청 내용 상세 보기</a>
+	</div>
+	    </main>
 
-    <footer class="footer">
-        <p>&copy; 2025 육아휴직 서비스. All Rights Reserved.</p>
-    </footer>
+	   
+	<footer class="footer">
+		<p>&copy; 2025 육아휴직 서비스. All Rights Reserved.</p>
+	</footer>
 </body>
 </html>

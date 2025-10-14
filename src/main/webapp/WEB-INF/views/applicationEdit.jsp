@@ -153,36 +153,7 @@
 <script src="//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 
-<div id="toast" class="toast"></div>
-
-<c:if test="${not empty error}">
-  <div class="notice-box" style="margin-bottom:16px;">
-    <span class="notice-icon">⚠️</span>
-    <div><h3>오류</h3><p>${fn:escapeXml(error)}</p></div>
-  </div>
-</c:if>
-<c:if test="${not empty message}">
-  <div class="info-box"><p>${fn:escapeXml(message)}</p></div>
-</c:if>
-
-
- <header class="header">
-        <a href="${pageContext.request.contextPath}/main" class="logo"><img src="${pageContext.request.contextPath}/resources/images/logo.png" alt="Logo" width="80" height="80"></a>
-        <nav>
-            <sec:authorize access="isAnonymous()">
-                <a href="${pageContext.request.contextPath}/login" class="btn btn-primary">로그인</a>
-            </sec:authorize>
-            <sec:authorize access="isAuthenticated()">
-                <span class="welcome-msg">
-                    <sec:authentication property="principal.username"/>님, 환영합니다.
-                </span>
-                <form id="logout-form" action="${pageContext.request.contextPath}/logout" method="post" style="display: none;">
-                    <sec:csrfInput/>
-                </form>
-                <a href="#" onclick="document.getElementById('logout-form').submit(); return false;" class="btn btn-logout">로그아웃</a>
-            </sec:authorize>
-        </nav>
-    </header>
+<%@ include file="header.jsp" %>
 
 	<main class="main-container">
 	<h1>육아휴직 급여 신청서 수정</h1>
@@ -627,85 +598,103 @@
 		  var noPaymentChk       = document.getElementById('no-payment');
 		  var noPaymentWrapper   = document.getElementById('no-payment-wrapper');
 		  
+		// 공통 유틸
 		  function withCommas(s){ return String(s).replace(/\B(?=(\d{3})+(?!\d))/g, ','); }
 		  function onlyDigits(s){ return (s||'').replace(/[^\d]/g,''); }
 
-		  // 자리수 제한 + 세 자리 콤마 + 붙여넣기/드롭 처리
+		  // 자리수 제한 + 콤마 표시 헬퍼 (이미 위에 있던 'maxDigits' 버전만 남기세요)
 		  function allowDigitsOnlyAndCommasDisplay(el, maxDigits) {
 		    function formatWithCaret(el) {
 		      const start = el.selectionStart, old = el.value;
 		      const digitsBefore = onlyDigits(old.slice(0, start)).length;
-
 		      let raw = onlyDigits(old);
 		      if (maxDigits) raw = raw.slice(0, maxDigits);
-
-		      const pretty = withCommas(raw);
-		      el.value = pretty;
-
-		      let curDigits = 0, newPos = 0;
-		      for (let i = 0; i < el.value.length; i++) {
-		        if (/\d/.test(el.value[i])) curDigits++;
-		        if (curDigits >= digitsBefore) { newPos = i + 1; break; }
+		      el.value = withCommas(raw);
+		      let cur=0, pos=0;
+		      for (let i=0;i<el.value.length;i++){
+		        if (/\d/.test(el.value[i])) cur++;
+		        if (cur>=digitsBefore){ pos=i+1; break; }
 		      }
-		      el.setSelectionRange(newPos, newPos);
+		      el.setSelectionRange(pos,pos);
 		    }
-
-		    el.addEventListener('keydown', function(e) {
-		      const k = e.key, ctrl = e.ctrlKey || e.metaKey;
-		      const editKeys = ['Backspace','Delete','ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Home','End','Tab'];
+		    el.addEventListener('keydown', e=>{
+		      const k=e.key, ctrl=e.ctrlKey||e.metaKey;
+		      const edit=['Backspace','Delete','ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Home','End','Tab'];
 		      if (ctrl && ['a','c','v','x','z','y'].includes(k.toLowerCase())) return;
-		      if (editKeys.includes(k)) return;
+		      if (edit.includes(k)) return;
 		      if (/^\d$/.test(k)) return;
 		      e.preventDefault();
 		    });
-
-		    el.addEventListener('paste', function(e) {
+		    el.addEventListener('paste', e=>{
 		      e.preventDefault();
-		      const text = (e.clipboardData || window.clipboardData).getData('text') || '';
-		      let digits = onlyDigits(text);
-		      if (maxDigits) digits = digits.slice(0, maxDigits);
-		      const start = el.selectionStart, end = el.selectionEnd, v = onlyDigits(el.value);
-		      const merged = (v.slice(0, start) + digits + v.slice(end)).slice(0, maxDigits || Infinity);
+		      let t=(e.clipboardData||window.clipboardData).getData('text')||'';
+		      let d=onlyDigits(t);
+		      if (maxDigits) d=d.slice(0,maxDigits);
+		      const s=el.selectionStart, en=el.selectionEnd, v=onlyDigits(el.value);
+		      const merged=(v.slice(0,s)+d+v.slice(en)).slice(0, maxDigits||Infinity);
 		      el.value = withCommas(merged);
 		      el.setSelectionRange(el.value.length, el.value.length);
 		    });
-
-		    el.addEventListener('drop', e => e.preventDefault());
-
-		    el.addEventListener('input', function(e) {
-		      if (e.isComposing) return;
-		      formatWithCaret(el);
+		    el.addEventListener('drop', e=>e.preventDefault());
+		    el.addEventListener('input', e=>{ if(!e.isComposing) formatWithCaret(el); });
+		    el.addEventListener('blur', ()=>{
+		      let raw=onlyDigits(el.value);
+		      if (maxDigits) raw=raw.slice(0,maxDigits);
+		      el.value=withCommas(raw);
 		    });
-
-		    el.addEventListener('blur', function() {
-		      let raw = onlyDigits(el.value);
-		      if (maxDigits) raw = raw.slice(0, maxDigits);
-		      el.value = withCommas(raw);
-		    });
-
-		    // 초기값도 정리
-		    if (el.value) {
-		      let raw = onlyDigits(el.value);
-		      if (maxDigits) raw = raw.slice(0, maxDigits);
-		      el.value = withCommas(raw);
+		    if (el.value){
+		      let raw=onlyDigits(el.value);
+		      if (maxDigits) raw=raw.slice(0,maxDigits);
+		      el.value=withCommas(raw);
 		    }
 		  }
 
-		  // ===== 통상임금(월): 숫자만 + 최대 19자리 =====
+		  /* ====== 여기부터 필드 바인딩 ====== */
+
+		  // 통상임금: 숫자 + 최대 19자리 + 콤마
 		  const wageEl = document.getElementById('regularWage');
-		  if (wageEl) {
-		    allowDigitsOnlyAndCommasDisplay(wageEl, 19);
+		  if (wageEl) allowDigitsOnlyAndCommasDisplay(wageEl, 19);
+
+		  // 계좌번호: 숫자만 최대 14자리
+		  const accEl = document.getElementById('accountNumber');
+		  if (accEl) {
+		    accEl.addEventListener('input', function(){
+		      this.value = onlyDigits(this.value).slice(0, 14);
+		    });
 		  }
 
-		  // ===== 제출 직전: 하이픈 제거해서 숫자만 서버로 =====
+		  // 사업자등록번호: 숫자만 최대 10자리 + 즉시 하이픈(3-2-5)
+		  const brnEl = document.getElementById('businessRegiNumber');
+		  if (brnEl) {
+		    brnEl.addEventListener('input', function(){
+		      const raw = onlyDigits(this.value).slice(0, 10);
+		      let pretty = raw;
+		      if (raw.length > 5)      pretty = raw.slice(0,3) + '-' + raw.slice(3,5) + '-' + raw.slice(5);
+		      else if (raw.length > 3) pretty = raw.slice(0,3) + '-' + raw.slice(3);
+		      this.value = pretty;
+		    });
+		  }
+
+		  // 주당 소정근로시간: 숫자만 최대 5자리
+		  const weeklyEl = document.getElementById('weeklyHours');
+		  if (weeklyEl) {
+		    weeklyEl.addEventListener('input', function(){
+		      this.value = onlyDigits(this.value).slice(0, 5);
+		    });
+		  }
+
+		  /* ====== 제출 직전 정리 ====== */
 		  const form = document.querySelector('form[action$="/apply"], form[action$="/apply/edit"]');
 		  if (form) {
 		    form.addEventListener('submit', function(){
-		      if (brnEl) brnEl.value = onlyDigits(brnEl.value); // 10자리 숫자만 전송
-		      if (accEl) accEl.value = onlyDigits(accEl.value); // 숫자만 전송
+		      // BRN/계좌는 서버로 숫자만
+		      if (brnEl) brnEl.value = onlyDigits(brnEl.value).slice(0,10);
+		      if (accEl) accEl.value = onlyDigits(accEl.value).slice(0,14);
+		      if (wageEl) wageEl.value = onlyDigits(wageEl.value).slice(0,19);
+		      if (weeklyEl) weeklyEl.value = onlyDigits(weeklyEl.value).slice(0,5);
 		    });
 		  }
-		
+
 		  
 
 		  // ===== 유틸 =====
@@ -809,9 +798,9 @@
 			    noPaymentWrapper.style.display = 'flex';
 			  }
 			  if (noPaymentChk) {
-			    noPaymentChk.checked = false;      // 자동 체크하지 않음
+			    noPaymentChk.checked = false;
 			  }
-			  applyNoPaymentState(true);           // 초기 호출: 값은 덮지 않음
+			  applyNoPaymentState(true);
 			});
 
 
@@ -832,7 +821,7 @@
 		  
 		  if (rrnHidden) {
 			  rrnHidden.value = (typeof ORIGINAL_RRN === 'string' ? ORIGINAL_RRN : '') || '';
-			  rrnHidden.name  = 'childResiRegiNumber';   // 기본적으로 서버에 항상 보냄
+			  rrnHidden.name  = 'childResiRegiNumber';
 			  }
 
 		  if (exp) {
@@ -860,17 +849,6 @@
 			  if (rrnA.value.length === 6 && rrnB) rrnB.focus();
 			  setHiddenFrom(birth);
 			}
-
-/*  		  function setBornRequired(on) {
-		    const name = document.getElementById('child-name');
-		    if (name)  name.required  = on;
-		    if (rrnA)  rrnA.required  = on;
-		    if (rrnB)  rrnB.required  = on;
-		    if (birth) birth.required = on;
-		  }
-		  function setExpectedRequired(on) { if (exp) exp.required = on; }
-		  function clearBorn()     { const name = document.getElementById('child-name'); if (name) name.value=''; if (rrnA) rrnA.value=''; if (rrnB) rrnB.value=''; if (birth) birth.value=''; }
-		  function clearExpected() { if (exp) exp.value=''; }  */
 		  
 		  function setBornRequired(on) {}
 		  function setExpectedRequired(on) {}
@@ -896,7 +874,6 @@
 		      setExpectedRequired(false);
 		      clearExpected();
 		      setHiddenFrom(birth);
-		      // ✅ 최초 로드 때는 자동 채우기 금지
 		      if (!FIRST_LOAD) fillRrnFromBirth();
 		    } else {
 		      bornWrap.style.display = 'none';
@@ -908,7 +885,6 @@
 		    }
 		  }
 
-		  // updateView() 호출 직후에만 FIRST_LOAD 해제
 		  updateView();
 		  FIRST_LOAD = false;
 
@@ -930,43 +906,6 @@
 		    }
 		    el.setSelectionRange(newPos, newPos);
 		  }
-		  function allowDigitsOnlyAndCommasDisplay(el) {
-		    el.addEventListener('keydown', function(e) {
-		      const k = e.key, ctrl = e.ctrlKey || e.metaKey;
-		      const editKeys = ['Backspace','Delete','ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Home','End','Tab'];
-		      if (ctrl && ['a','c','v','x','z','y'].includes(k.toLowerCase())) return;
-		      if (editKeys.includes(k)) return;
-		      if (/^\d$/.test(k)) return;
-		      e.preventDefault();
-		    });
-		    el.addEventListener('paste', function(e) {
-		      e.preventDefault();
-		      const text = (e.clipboardData || window.clipboardData).getData('text') || '';
-		      const digits = onlyDigits(text);
-		      if (!digits) return;
-		      const start = el.selectionStart, end = el.selectionEnd, v = el.value;
-		      el.value = v.slice(0, start) + digits + v.slice(end);
-		      formatWithCaret(el);
-		    });
-		    el.addEventListener('drop', function(e) { e.preventDefault(); });
-		    el.addEventListener('input', function(e) {
-		      if (e.isComposing) return;
-		      if (/[^\d,]/.test(this.value)) this.value = withCommas(onlyDigits(this.value));
-		      formatWithCaret(this);
-		    });
-		    el.addEventListener('blur', function() { this.value = withCommas(onlyDigits(this.value)); });
-		    if (el.value) el.value = withCommas(onlyDigits(el.value));
-		  }
-
-		  const wageEl = document.getElementById('regularWage');
-		  if (wageEl) allowDigitsOnlyAndCommasDisplay(wageEl);
-		  document.addEventListener('focusin', function(e) {
-		    const t = e.target;
-		    if (t && t.tagName === 'INPUT' && /^monthly_payment_\d+$/.test(t.name) && !t._digitsOnlyBound) {
-		      allowDigitsOnlyAndCommasDisplay(t);
-		      t._digitsOnlyBound = true;
-		    }
-		  });
 
 		  // ===== 검증 =====
 		  function countUnits(startStr, endStr) {

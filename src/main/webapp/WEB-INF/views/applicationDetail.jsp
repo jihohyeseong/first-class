@@ -161,23 +161,7 @@ textarea.form-control { resize: vertical; }
 </style>
 </head>
 <body>
-	<header class="header">
-		<a href="${pageContext.request.contextPath}${isAdmin ? '/admin/applications' : '/main'}" class="logo"><img src="${pageContext.request.contextPath}/resources/images/logo.png" alt="Logo" width="80" height="80"></a>
-		<nav>
-			<sec:authorize access="isAnonymous()">
-				<a href="${pageContext.request.contextPath}/login" class="btn btn-primary">로그인</a>
-			</sec:authorize>
-			<sec:authorize access="isAuthenticated()">
-				<span class="welcome-msg">
-					<sec:authentication property="principal.username"/>님, 환영합니다.
-				</span>
-				<form id="logout-form" action="${pageContext.request.contextPath}/logout" method="post" style="display: none;">
-					<sec:csrfInput/>
-				</form>
-				<a href="#" onclick="document.getElementById('logout-form').submit(); return false;" class="btn btn-logout">로그아웃</a>
-			</sec:authorize>
-		</nav>
-	</header>
+	<%@ include file="header.jsp" %>
 
 	<main class="main-container">
 	<h1>육아휴직 급여 신청서 상세 보기</h1>

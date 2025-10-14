@@ -2,7 +2,6 @@
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="sec" uri="http://www.springframework.org/security/tags" %>
 <%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
-
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -138,24 +137,8 @@
 <body>
 <script src="//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-<div id="toast" class="toast"></div>
- <header class="header">
-        <a href="${pageContext.request.contextPath}/main" class="logo"><img src="${pageContext.request.contextPath}/resources/images/logo.png" alt="Logo" width="80" height="80"></a>
-        <nav>
-            <sec:authorize access="isAnonymous()">
-                <a href="${pageContext.request.contextPath}/login" class="btn btn-primary">로그인</a>
-            </sec:authorize>
-            <sec:authorize access="isAuthenticated()">
-                <span class="welcome-msg">
-                    <sec:authentication property="principal.username"/>님, 환영합니다.
-                </span>
-                <form id="logout-form" action="${pageContext.request.contextPath}/logout" method="post" style="display: none;">
-                    <sec:csrfInput/>
-                </form>
-                <a href="#" onclick="document.getElementById('logout-form').submit(); return false;" class="btn btn-logout">로그아웃</a>
-            </sec:authorize>
-        </nav>
-    </header>
+
+     <%@ include file="header.jsp" %>
 
 
    <main class="main-container">
@@ -293,7 +276,7 @@
 		<div class="form-group">
 			<label class="field-title">주당 소정근로시간</label>
 			<div class="input-field">
-				<input type="number" name="weeklyHours" placeholder="숫자만 입력하세요">
+				<input type="number" id="weeklyHours" name="weeklyHours" placeholder="숫자만 입력하세요">
 				<c:if test="${not empty errors.weeklyHours}">
 					<p class="message error">${errors.weeklyHours}</p>
 				</c:if>
@@ -457,37 +440,101 @@
 <script>
 document.addEventListener('DOMContentLoaded', function () {
 	
-	// 공통 바인딩: 숫자만 + 길이 제한
-	  function bindNumericLimit(id, maxLen){
-	    const el = document.getElementById(id);
-	    if (!el) return;
-	    el.addEventListener('input', function () {
-	      this.value = (this.value || '').replace(/\D/g,'').slice(0, maxLen);
+	// 공통 유틸
+	  function withCommas(s){ return String(s).replace(/\B(?=(\d{3})+(?!\d))/g, ','); }
+	  function onlyDigits(s){ return (s||'').replace(/[^\d]/g,''); }
+
+	  // 자리수 제한 + 콤마 표시 헬퍼
+	  function allowDigitsOnlyAndCommasDisplay(el, maxDigits) {
+	    function formatWithCaret(el) {
+	      const start = el.selectionStart, old = el.value;
+	      const digitsBefore = onlyDigits(old.slice(0, start)).length;
+	      let raw = onlyDigits(old);
+	      if (maxDigits) raw = raw.slice(0, maxDigits);
+	      el.value = withCommas(raw);
+	      let cur=0, pos=0;
+	      for (let i=0;i<el.value.length;i++){
+	        if (/\d/.test(el.value[i])) cur++;
+	        if (cur>=digitsBefore){ pos=i+1; break; }
+	      }
+	      el.setSelectionRange(pos,pos);
+	    }
+	    el.addEventListener('keydown', e=>{
+	      const k=e.key, ctrl=e.ctrlKey||e.metaKey;
+	      const edit=['Backspace','Delete','ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Home','End','Tab'];
+	      if (ctrl && ['a','c','v','x','z','y'].includes(k.toLowerCase())) return;
+	      if (edit.includes(k)) return;
+	      if (/^\d$/.test(k)) return;
+	      e.preventDefault();
+	    });
+	    el.addEventListener('paste', e=>{
+	      e.preventDefault();
+	      let t=(e.clipboardData||window.clipboardData).getData('text')||'';
+	      let d=onlyDigits(t);
+	      if (maxDigits) d=d.slice(0,maxDigits);
+	      const s=el.selectionStart, en=el.selectionEnd, v=onlyDigits(el.value);
+	      const merged=(v.slice(0,s)+d+v.slice(en)).slice(0, maxDigits||Infinity);
+	      el.value = withCommas(merged);
+	      el.setSelectionRange(el.value.length, el.value.length);
+	    });
+	    el.addEventListener('drop', e=>e.preventDefault());
+	    el.addEventListener('input', e=>{ if(!e.isComposing) formatWithCaret(el); });
+	    el.addEventListener('blur', ()=>{
+	      let raw=onlyDigits(el.value);
+	      if (maxDigits) raw=raw.slice(0,maxDigits);
+	      el.value=withCommas(raw);
+	    });
+	    if (el.value){
+	      let raw=onlyDigits(el.value);
+	      if (maxDigits) raw=raw.slice(0,maxDigits);
+	      el.value=withCommas(raw);
+	    }
+	  }
+
+	  /* ====== 여기부터 필드 바인딩 ====== */
+
+	  // 통상임금: 숫자 + 최대 19자리 + 콤마
+	  const wageEl = document.getElementById('regularWage');
+	  if (wageEl) allowDigitsOnlyAndCommasDisplay(wageEl, 19);
+
+	  // 계좌번호: 숫자만 최대 14자리
+	  const accEl = document.getElementById('accountNumber');
+	  if (accEl) {
+	    accEl.addEventListener('input', function(){
+	      this.value = onlyDigits(this.value).slice(0, 14);
 	    });
 	  }
 
-	  // 사용
-	  bindNumericLimit('businessRegiNumber', 10);
-	  bindNumericLimit('accountNumber', 14);
-	  
-	// 보기용 하이픈(3-2-5) — 입력 제어 후에 적용
-	  const biz = document.getElementById('businessRegiNumber');
-	  if (biz) {
-	    biz.addEventListener('input', function () {
-	      const raw = this.value.replace(/\D/g,'').slice(0,10);
-	      // 3-2-5 포맷
+	  // 사업자등록번호: 숫자만 최대 10자리 + 즉시 하이픈(3-2-5)
+	  const brnEl = document.getElementById('businessRegiNumber');
+	  if (brnEl) {
+	    brnEl.addEventListener('input', function(){
+	      const raw = onlyDigits(this.value).slice(0, 10);
 	      let pretty = raw;
-	      if (raw.length > 5)        pretty = raw.slice(0,3)+'-'+raw.slice(3,5)+'-'+raw.slice(5);
-	      else if (raw.length > 3)   pretty = raw.slice(0,3)+'-'+raw.slice(3);
+	      if (raw.length > 5)      pretty = raw.slice(0,3) + '-' + raw.slice(3,5) + '-' + raw.slice(5);
+	      else if (raw.length > 3) pretty = raw.slice(0,3) + '-' + raw.slice(3);
 	      this.value = pretty;
 	    });
 	  }
 
-	  // 제출 직전에 하이픈 제거(숫자만)
-	  document.querySelector('form').addEventListener('submit', function(){
-	    const biz = document.getElementById('businessRegiNumber');
-	    if (biz) biz.value = biz.value.replace(/\D/g,''); // 10자리 숫자만 전송
-	  });
+	  // 주당 소정근로시간: 숫자만 최대 5자리
+	  const weeklyEl = document.getElementById('weeklyHours');
+	  if (weeklyEl) {
+	    weeklyEl.addEventListener('input', function(){
+	      this.value = onlyDigits(this.value).slice(0, 5);
+	    });
+	  }
+
+	  /* ====== 제출 직전 정리 ====== */
+	  const form = document.querySelector('form[action$="/apply"], form[action$="/apply/edit"]');
+	  if (form) {
+	    form.addEventListener('submit', function(){
+	      if (brnEl) brnEl.value = onlyDigits(brnEl.value).slice(0,10);
+	      if (accEl) accEl.value = onlyDigits(accEl.value).slice(0,14);
+	      if (wageEl) wageEl.value = onlyDigits(wageEl.value).slice(0,19);
+	      if (weeklyEl) weeklyEl.value = onlyDigits(weeklyEl.value).slice(0,5);
+	    });
+	  }
 
 
 
@@ -676,23 +723,6 @@ document.addEventListener('DOMContentLoaded', function () {
     // 출생일 hidden 미러링(기존 로직 유지)
     setHiddenFrom(birth);
   }
-
-/*   function setBornRequired(on) {
-    const name = document.getElementById('child-name');
-    if (name)  name.required  = on;
-    if (rrnA)  rrnA.required  = on;
-    if (rrnB)  rrnB.required  = on;
-    if (birth) birth.required = on;
-  }
-  function setExpectedRequired(on) { if (exp) exp.required = on; }
-  function clearBorn() {
-    const name = document.getElementById('child-name');
-    if (name)  name.value = '';
-    if (rrnA)  rrnA.value = '';
-    if (rrnB)  rrnB.value = '';
-    if (birth) birth.value = '';
-  }
-  function clearExpected() { if (exp) exp.value = ''; } */
   
   function setBornRequired(on) {}
   function setExpectedRequired(on) {}
@@ -741,23 +771,6 @@ document.addEventListener('DOMContentLoaded', function () {
   radios.forEach(r => r.addEventListener('change', updateView));
   updateView();
 
-  // 제출 직전 동기화
-  const form = document.querySelector('form[action$="/apply"]');
-  if (form) {
-    form.addEventListener('submit', function () {
-      const checked = document.querySelector('input[name="birthType"]:checked');
-
-      if (checked && checked.value === 'born') {
-        setHiddenFrom(birth);
-        // 주민번호: 앞6 + 뒤7 → hidden에 하이픈 없이 13자리
-        if (rrnHidden) rrnHidden.value = (rrnA?.value || '') + (rrnB?.value || '');
-      }
-      if (checked && checked.value === 'expected') {
-        setHiddenFrom(exp);
-        if (rrnHidden) rrnHidden.value = '';
-      }
-    });
-  }
 });
 
 //===== 제출 버튼 활성화 조건: 필수칸 모두 입력 && 안내 체크박스 체크 =====
@@ -837,70 +850,6 @@ function formatWithCaret(el) {
   }
   el.setSelectionRange(newPos, newPos);
 }
-
-// ===== 숫자만 허용(키/붙여넣기/드롭) + 실시간 콤마 =====
-function allowDigitsOnlyAndCommasDisplay(el) {
-  // 키 입력: 숫자/편집키만 허용
-  el.addEventListener('keydown', function(e) {
-    const k = e.key;
-    const ctrl = e.ctrlKey || e.metaKey;
-    const editKeys = ['Backspace','Delete','ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Home','End','Tab'];
-    if (ctrl && ['a','c','v','x','z','y'].includes(k.toLowerCase())) return; // 단축키 허용
-    if (editKeys.includes(k)) return;
-    if (/^\d$/.test(k)) return; // 숫자만
-    // 그 외는 차단
-    e.preventDefault();
-  });
-
-  // 붙여넣기/드롭: 숫자만 남김
-  el.addEventListener('paste', function(e) {
-    e.preventDefault();
-    const text = (e.clipboardData || window.clipboardData).getData('text') || '';
-    const digits = onlyDigits(text);
-    if (!digits) return;
-    const start = el.selectionStart, end = el.selectionEnd;
-    const v = el.value;
-    el.value = v.slice(0, start) + digits + v.slice(end);
-    formatWithCaret(el);
-  });
-  el.addEventListener('drop', function(e) {
-    e.preventDefault();
-  });
-
-  // 입력 시 포맷(IME 조합 중엔 패스)
-  el.addEventListener('input', function(e) {
-    if (e.isComposing) return;
-    // 혹시 남은 비숫자 제거
-    if (/[^\d,]/.test(this.value)) this.value = withCommas(onlyDigits(this.value));
-    formatWithCaret(this);
-  });
-
-  // blur 시 최종 포맷
-  el.addEventListener('blur', function() {
-    this.value = withCommas(onlyDigits(this.value));
-  });
-
-  // 초기값 포맷
-  if (el.value) el.value = withCommas(onlyDigits(el.value));
-}
-
-// ===== 대상 필드 연결 =====
-
-// 1) 통상임금
-const wageEl = document.getElementById('regularWage');
-if (wageEl) allowDigitsOnlyAndCommasDisplay(wageEl);
-
-// 2) 동적으로 생성되는 monthly_payment_* (이벤트 위임)
-document.addEventListener('focusin', function(e) {
-  const t = e.target;
-  if (t && t.tagName === 'INPUT' && /^monthly_payment_\d+$/.test(t.name)) {
-    // 중복 바인딩 방지
-    if (!t._digitsOnlyBound) {
-      allowDigitsOnlyAndCommasDisplay(t);
-      t._digitsOnlyBound = true;
-    }
-  }
-});
 
 // ===== 제출 직전: 콤마 제거해서 숫자만 서버로 전송 =====
 (function attachStripOnSubmit(){
@@ -1018,9 +967,6 @@ function isAllFilled() {
   if (!birthType) return false;
   if (birthType === 'born') {
     if (!birthDate) return false;
-    // 자녀 이름/주민번호는 정책에 따라 필수 여부 결정(필요시 아래 두 줄도 강제)
-    // if (!childName) return false;
-    // if (!(rrnA && rrnA.length===6 && rrnB && rrnB.length===7)) return false;
   } else {
     if (!expectedDate) return false;
   }
@@ -1030,17 +976,15 @@ function isAllFilled() {
   if (!govAgree) return false;
 
   // 6) 단위기간/회사지급액 입력 확인
-  //  - 기간 생성 버튼으로 payInputs가 unitCount만큼 있어야 함
   if (unitCount === 0) return false;
   if (!noPayment) {
     if (payInputs.length !== unitCount) return false;
     for (const inp of payInputs) {
       const v = onlyDigits(inp.value || '');
-      if (!v) return false;                 // 비어있으면 실패
-      if (Number(v) < 0) return false;      // 음수 방지
+      if (!v) return false;
+      if (Number(v) < 0) return false;
     }
   }
-  // noPayment 체크 시엔 0으로 처리되므로 통과
 
   return true;
 }
