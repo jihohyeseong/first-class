@@ -391,7 +391,9 @@ textarea.form-control { resize: vertical; }
 							<th>출산예정일</th>
 							<td colspan="3"><c:choose>
 									<c:when test="${empty app.childBirthDate}">
-										<c:if test="${isAdmin}"><span class="highlight-warning">미입력</span></c:if>
+										<c:if test="${isAdmin}">
+											<span class="highlight-warning">미입력</span>
+										</c:if>
 										<c:if test="${!isAdmin}">미입력</c:if>
 									</c:when>
 
@@ -416,13 +418,8 @@ textarea.form-control { resize: vertical; }
 								</c:if> <c:if test="${!isAdmin or not empty app.childBirthDate}">
 									<fmt:formatDate value="${app.childBirthDate}"
 										pattern="yyyy.MM.dd" />
-								</c:if> <%-- <c:choose>
-									<c:when test="${empty app.childBirthDate}">미입력</c:when>
-									<c:otherwise>
-										<fmt:formatDate value="${app.childBirthDate}"
-											pattern="yyyy.MM.dd" />
-									</c:otherwise>
-								</c:choose> --%></td>
+								</c:if> 
+								</td>
 						</tr>
 						<tr>
 							<th>주민등록번호</th>
@@ -432,15 +429,7 @@ textarea.form-control { resize: vertical; }
 								</c:if> <c:if test="${!isAdmin or not empty app.childResiRegiNumber}">
 									<c:out
 										value="${fn:substring(app.childResiRegiNumber, 0, 6)}-${fn:substring(app.childResiRegiNumber, 6, 7)}" />******</c:if>
-
-
-								<%-- <c:choose>
-									<c:when test="${not empty app.childResiRegiNumber}">
-										<c:out
-											value="${fn:substring(app.childResiRegiNumber, 0, 6)}-${fn:substring(app.childResiRegiNumber, 6, 7)}" />******
-									</c:when>
-									<c:otherwise>미입력</c:otherwise>
-								</c:choose> --%></td>
+							</td>
 						</tr>
 					</c:otherwise>
 				</c:choose>

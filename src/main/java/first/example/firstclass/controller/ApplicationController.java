@@ -5,6 +5,7 @@ import java.sql.Date;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -12,6 +13,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.validation.Valid;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -20,6 +22,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
+import org.springframework.validation.FieldError;
 import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.InitBinder;
@@ -151,6 +154,7 @@ public class ApplicationController {
 
     @PostMapping("/apply")
     public String submit(
+    		@Valid
             @ModelAttribute ApplicationDTO form,
             BindingResult binding,
             HttpServletRequest request,
@@ -165,6 +169,16 @@ public class ApplicationController {
             return "redirect:/login";
         }
         form.setUserId(loginUser.getId());
+        
+        if (binding.hasErrors()) {
+            Map<String, String> errors = new LinkedHashMap<>();
+            for (FieldError fe : binding.getFieldErrors()) {
+                errors.putIfAbsent(fe.getField(), fe.getDefaultMessage());
+            }
+            ra.addFlashAttribute("form", form);
+            ra.addFlashAttribute("errors", errors);
+            return "redirect:/apply";
+        }
 
         // 액션 분기
         String act = (action == null) ? "register" : action.toLowerCase();
@@ -284,6 +298,7 @@ public class ApplicationController {
 
     @PostMapping("/apply/edit")
     public String update(
+    		@Valid
             @ModelAttribute ApplicationDTO form,
             BindingResult binding,
             HttpServletRequest request,
@@ -296,6 +311,16 @@ public class ApplicationController {
         if (login == null) {
             ra.addFlashAttribute("error","로그인이 필요합니다.");
             return "redirect:/login";
+        }
+        
+        if (binding.hasErrors()) {
+            Map<String, String> errors = new LinkedHashMap<>();
+            for (FieldError fe : binding.getFieldErrors()) {
+                errors.putIfAbsent(fe.getField(), fe.getDefaultMessage());
+            }
+            ra.addFlashAttribute("form", form);
+            ra.addFlashAttribute("errors", errors);
+            return "redirect:/apply";
         }
 
         String bizAgree = request.getParameter("businessAgree");

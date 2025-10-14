@@ -132,21 +132,7 @@
   	opacity: .6; cursor: not-allowed;
 	}
 	
-	/* toast */
-	.toast {
-	  position: fixed; left: 50%; bottom: 40px; transform: translateX(-50%);
-	  min-width: 260px; max-width: 90vw;
-	  background: rgba(33, 37, 41, .95); color: #fff;
-	  padding: 12px 16px; border-radius: 10px;
-	  box-shadow: 0 6px 16px rgba(0,0,0,.2);
-	  opacity: 0; pointer-events: none; transition: opacity .2s ease, transform .2s ease;
-	  z-index: 9999; font-size: 14px;
-	}
-	.toast.show { opacity: 1; transform: translateX(-50%) translateY(-6px); }
-	.toast.success { background: #28a745; }
-	.toast.warn    { background: #dc3545; }
-	.toast > strong { font-weight: 700; margin-right: 6px; }
-	
+	.error {color: red; font-size: 14px;}
 </style>
 </head>
 <body>
@@ -220,15 +206,17 @@
 				<label class="field-title">사업장 이름</label>
 				<div class="input-field">
 					<input type="text" name="businessName" placeholder="사업장 이름을 입력하세요">
+					<c:if test="${not empty errors.businessName}">
+						<p class="message error">${errors.businessName}</p>
+					</c:if>
 				</div>
 			</div>
 			<div class="form-group">
 				<label class="field-title">사업장 등록번호</label>
 				<div class="input-field">
-				<input type="text" id="businessRegiNumber"
+					<input type="text" id="businessRegiNumber"
 						name="businessRegiNumber" inputmode="numeric" autocomplete="off"
-						placeholder="'-' 없이 숫자 10자리"
-						pattern="^\d{3}-?\d{2}-?\d{5}$" />
+						placeholder="'-' 없이 숫자 10자리" pattern="^\d{3}-?\d{2}-?\d{5}$" />
 					<!-- <input type="text" id="businessRegiNumber"
 						name="businessRegiNumber" inputmode="numeric" autocomplete="off"
 						placeholder="'-' 없이 숫자 10자리" pattern="\d{10}" title="숫자 10자리"/> -->
@@ -246,10 +234,11 @@
 					</div>
 					<input type="text" id="biz-base" name="businessAddrBase"
 						placeholder="기본주소" value="${applicationDTO.businessAddrBase}"
-						readonly style="margin-top: 8px;"> <input type="text"
-						id="biz-detail" name="businessAddrDetail" placeholder="상세주소"
-						value="${applicationDTO.businessAddrDetail}"
-						style="margin-top: 8px;">
+						readonly style="margin-top: 8px;"> 
+					<input type="text" id="biz-detail" name="businessAddrDetail" placeholder="상세주소">
+					<c:if test="${not empty errors.businessAddrDetail}">
+						<p class="message error">${errors.businessAddrDetail}</p>
+					</c:if>
 				</div>
 			</div>
 		</div>
@@ -296,12 +285,18 @@
 			<div class="input-field">
 				<input type="text" id="regularWage" name="regularWage"
 					placeholder="숫자만 입력하세요" autocomplete="off">
+				<c:if test="${not empty errors.regularWage}">
+					<p class="message error">${errors.regularWage}</p>
+				</c:if>
 			</div>
 		</div>
 		<div class="form-group">
 			<label class="field-title">주당 소정근로시간</label>
 			<div class="input-field">
 				<input type="number" name="weeklyHours" placeholder="숫자만 입력하세요">
+				<c:if test="${not empty errors.weeklyHours}">
+					<p class="message error">${errors.weeklyHours}</p>
+				</c:if>
 			</div>
 		</div>
 
@@ -322,8 +317,10 @@
 				<div class="form-group">
 					<label class="field-title" for="child-name">자녀 이름</label>
 					<div class="input-field">
-						<input type="text" id="child-name" name="childName"
-							placeholder="자녀의 이름을 입력하세요">
+						<input type="text" name="childName" placeholder="자녀의 이름을 입력하세요">
+						<c:if test="${not empty errors.childName}">
+							<p class="message error">${errors.childName}</p>
+						</c:if>
 					</div>
 				</div>
 				<div class="form-group">
@@ -445,7 +442,7 @@
 			</div>
 		</div>
 
-		<!-- ===== 제출/임시저장 버튼 (action 값으로 구분) ===== -->
+		<!-- ===== 제출/임시저장 버튼 ===== -->
   <div class="submit-button-container" style="display:flex; gap:10px; justify-content:center;">
     <button type="submit" name="action" value="register" class="btn submit-button" style="background:#6c757d; border-color:#6c757d;">임시저장</button>
     <button type="submit" name="action" value="submit"   class="btn submit-button">신청서 제출하기</button>
@@ -680,7 +677,7 @@ document.addEventListener('DOMContentLoaded', function () {
     setHiddenFrom(birth);
   }
 
-  function setBornRequired(on) {
+/*   function setBornRequired(on) {
     const name = document.getElementById('child-name');
     if (name)  name.required  = on;
     if (rrnA)  rrnA.required  = on;
@@ -695,7 +692,13 @@ document.addEventListener('DOMContentLoaded', function () {
     if (rrnB)  rrnB.value = '';
     if (birth) birth.value = '';
   }
-  function clearExpected() { if (exp) exp.value = ''; }
+  function clearExpected() { if (exp) exp.value = ''; } */
+  
+  function setBornRequired(on) {}
+  function setExpectedRequired(on) {}
+  function clearBorn() {}
+  function clearExpected() {}
+
 
   function updateView() {
     const checked = document.querySelector('input[name="birthType"]:checked');

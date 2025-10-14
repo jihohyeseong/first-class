@@ -244,8 +244,11 @@
 			<div class="form-group">
 				<label class="field-title">사업장 이름</label>
 				<div class="input-field">
-					<input type="text" name="businessName" value="${app.businessName}"
-						placeholder="사업장 이름을 입력하세요">
+					<input type="text" name="businessName" value="${form.businessName}" 
+					placeholder="사업장 이름을 입력하세요">
+					<c:if test="${not empty errors.businessName}">
+						<p class="message error">${errors.businessName}</p>
+					</c:if>
 				</div>
 			</div>
 
@@ -273,9 +276,14 @@
 					</div>
 					<input type="text" id="biz-base" name="businessAddrBase"
 						placeholder="기본주소" value="${app.businessAddrBase}" readonly
-						style="margin-top: 8px;"> <input type="text"
-						id="biz-detail" name="businessAddrDetail" placeholder="상세주소"
-						value="${app.businessAddrDetail}" style="margin-top: 8px;">
+						style="margin-top: 8px;"> 
+					<input type="text" id="biz-detail" name="businessAddrDetail"
+						placeholder="상세주소" value="${app.businessAddrDetail}"
+						style="margin-top: 8px;">
+					<c:if test="${not empty errors.businessAddrDetail}">
+						<p class="message error">${errors.businessAddrDetail}</p>
+					</c:if>
+
 				</div>
 			</div>
 		</div>
@@ -386,13 +394,20 @@
 				<input type="text" id="regularWage" name="regularWage"
 					value="${app.regularWage}" placeholder="숫자만 입력하세요"
 					autocomplete="off">
+				<c:if test="${not empty errors.regularWage}">
+					<p class="message error">${errors.regularWage}</p>
+				</c:if>
 			</div>
 		</div>
 		<div class="form-group">
 			<label class="field-title">주당 소정근로시간</label>
 			<div class="input-field">
-				<input type="number" name="weeklyHours" value="${app.weeklyHours}"
-					placeholder="숫자만 입력하세요">
+				<input type="text" id="weeklyHours" name="weeklyHours"
+					value="${app.weeklyHours}" inputmode="numeric" autocomplete="off"
+					placeholder="숫자만 (최대 5자리)">
+				<c:if test="${not empty errors.weeklyHours}">
+					<p class="message error">${errors.weeklyHours}</p>
+				</c:if>
 			</div>
 		</div>
 
@@ -417,6 +432,9 @@
 					<div class="input-field">
 						<input type="text" id="child-name" name="childName"
 							value="${app.childName}" placeholder="자녀의 이름을 입력하세요">
+						<c:if test="${not empty errors.childName}">
+							<p class="message error">${errors.childName}</p>
+						</c:if>
 					</div>
 				</div>
 
@@ -435,9 +453,10 @@
 							style="display: flex; align-items: center; gap: 10px;">
 							<input type="text" id="child-rrn-a" maxlength="6"
 								placeholder="생년월일 6자리"
-								value="<c:out value='${fn:substring(app.childResiRegiNumber,0,6)}'/>">
-							<span class="hyphen">-</span> <input type="password"
-								id="child-rrn-b" maxlength="7" placeholder="뒤 7자리">
+								value="${fn:substring(app.childResiRegiNumber,0,6)}">
+							<span class="hyphen">-</span> 
+							<input type="password" id="child-rrn-b" maxlength="7" 
+							value="${fn:substring(app.childResiRegiNumber,6,13)}" placeholder="뒤 7자리">
 						</div>
 						<input type="hidden" name="childResiRegiNumber"
 							id="child-rrn-hidden">
@@ -582,7 +601,9 @@
 	<footer class="footer">
 		<p>&copy; 2025 육아휴직 서비스. All Rights Reserved.</p>
 	</footer>
-	
+	<script>
+  const ORIGINAL_RRN = "${fn:escapeXml(app.childResiRegiNumber)}";
+</script>
 	<script>
 	  window.EXISTING_TERMS = [
 	  <c:forEach var="t" items="${terms}" varStatus="st">
@@ -595,6 +616,8 @@
 	  ];
 	    
 	  document.addEventListener('DOMContentLoaded', function () {
+
+		  var FIRST_LOAD = true;
 		  // ===== DOM 참조 =====
 		  var startDateInput     = document.getElementById('start-date');
 		  var endDateInput       = document.getElementById('end-date');
@@ -604,28 +627,74 @@
 		  var noPaymentChk       = document.getElementById('no-payment');
 		  var noPaymentWrapper   = document.getElementById('no-payment-wrapper');
 		  
-			// 공통 바인딩: 숫자만 + 길이 제한
-
+		  function withCommas(s){ return String(s).replace(/\B(?=(\d{3})+(?!\d))/g, ','); }
 		  function onlyDigits(s){ return (s||'').replace(/[^\d]/g,''); }
 
-		  // ===== 계좌번호: 숫자만 + 최대 14자리 =====
-		  const accEl = document.getElementById('accountNumber');
-		  if (accEl) {
-		    accEl.addEventListener('input', function(){
-		      this.value = onlyDigits(this.value).slice(0, 14);
+		  // 자리수 제한 + 세 자리 콤마 + 붙여넣기/드롭 처리
+		  function allowDigitsOnlyAndCommasDisplay(el, maxDigits) {
+		    function formatWithCaret(el) {
+		      const start = el.selectionStart, old = el.value;
+		      const digitsBefore = onlyDigits(old.slice(0, start)).length;
+
+		      let raw = onlyDigits(old);
+		      if (maxDigits) raw = raw.slice(0, maxDigits);
+
+		      const pretty = withCommas(raw);
+		      el.value = pretty;
+
+		      let curDigits = 0, newPos = 0;
+		      for (let i = 0; i < el.value.length; i++) {
+		        if (/\d/.test(el.value[i])) curDigits++;
+		        if (curDigits >= digitsBefore) { newPos = i + 1; break; }
+		      }
+		      el.setSelectionRange(newPos, newPos);
+		    }
+
+		    el.addEventListener('keydown', function(e) {
+		      const k = e.key, ctrl = e.ctrlKey || e.metaKey;
+		      const editKeys = ['Backspace','Delete','ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Home','End','Tab'];
+		      if (ctrl && ['a','c','v','x','z','y'].includes(k.toLowerCase())) return;
+		      if (editKeys.includes(k)) return;
+		      if (/^\d$/.test(k)) return;
+		      e.preventDefault();
 		    });
+
+		    el.addEventListener('paste', function(e) {
+		      e.preventDefault();
+		      const text = (e.clipboardData || window.clipboardData).getData('text') || '';
+		      let digits = onlyDigits(text);
+		      if (maxDigits) digits = digits.slice(0, maxDigits);
+		      const start = el.selectionStart, end = el.selectionEnd, v = onlyDigits(el.value);
+		      const merged = (v.slice(0, start) + digits + v.slice(end)).slice(0, maxDigits || Infinity);
+		      el.value = withCommas(merged);
+		      el.setSelectionRange(el.value.length, el.value.length);
+		    });
+
+		    el.addEventListener('drop', e => e.preventDefault());
+
+		    el.addEventListener('input', function(e) {
+		      if (e.isComposing) return;
+		      formatWithCaret(el);
+		    });
+
+		    el.addEventListener('blur', function() {
+		      let raw = onlyDigits(el.value);
+		      if (maxDigits) raw = raw.slice(0, maxDigits);
+		      el.value = withCommas(raw);
+		    });
+
+		    // 초기값도 정리
+		    if (el.value) {
+		      let raw = onlyDigits(el.value);
+		      if (maxDigits) raw = raw.slice(0, maxDigits);
+		      el.value = withCommas(raw);
+		    }
 		  }
 
-		  // ===== 사업자등록번호: 보기용 3-2-5 마스킹 + 최대 10자리 =====
-		  const brnEl = document.getElementById('businessRegiNumber');
-		  if (brnEl) {
-		    brnEl.addEventListener('input', function(){
-		      const raw = onlyDigits(this.value).slice(0, 10);
-		      let pretty = raw;
-		      if (raw.length > 5)      pretty = raw.slice(0,3) + '-' + raw.slice(3,5) + '-' + raw.slice(5);
-		      else if (raw.length > 3) pretty = raw.slice(0,3) + '-' + raw.slice(3);
-		      this.value = pretty;
-		    });
+		  // ===== 통상임금(월): 숫자만 + 최대 19자리 =====
+		  const wageEl = document.getElementById('regularWage');
+		  if (wageEl) {
+		    allowDigitsOnlyAndCommasDisplay(wageEl, 19);
 		  }
 
 		  // ===== 제출 직전: 하이픈 제거해서 숫자만 서버로 =====
@@ -636,6 +705,7 @@
 		      if (accEl) accEl.value = onlyDigits(accEl.value); // 숫자만 전송
 		    });
 		  }
+		
 		  
 
 		  // ===== 유틸 =====
@@ -759,6 +829,11 @@
 		  const rrnA = document.getElementById('child-rrn-a');
 		  const rrnB = document.getElementById('child-rrn-b');
 		  const rrnHidden = document.getElementById('child-rrn-hidden');
+		  
+		  if (rrnHidden) {
+			  rrnHidden.value = (typeof ORIGINAL_RRN === 'string' ? ORIGINAL_RRN : '') || '';
+			  rrnHidden.name  = 'childResiRegiNumber';   // 기본적으로 서버에 항상 보냄
+			  }
 
 		  if (exp) {
 		    const today = new Date(); today.setHours(0,0,0,0);
@@ -770,15 +845,21 @@
 		  function setHiddenFrom(el) { if (hidden && el) hidden.value = el.value || ''; }
 
 		  function fillRrnFromBirth() {
-		    if (!birth || !rrnA) return;
-		    if (!rBorn || !rBorn.checked) return;
-		    if (!birth.value) { rrnA.value = ''; return; }
-		    var parts = birth.value.split('-');
-		    if (parts.length !== 3) return;
-		    rrnA.value = (parts[0].slice(-2) + parts[1] + parts[2]).slice(0,6);
-		    if (rrnA.value.length === 6 && rrnB) rrnB.focus();
-		    setHiddenFrom(birth);
-		  }
+			  if (!birth || !rrnA) return;
+			  if (!rBorn || !rBorn.checked) return;
+			  if (!birth.value) { return; }
+
+			  if ((rrnA.value && rrnA.value.trim() !== '') || (rrnB && rrnB.value && rrnB.value.trim() !== '')) {
+			    setHiddenFrom(birth);
+			    return;
+			  }
+
+			  var parts = birth.value.split('-');
+			  if (parts.length !== 3) return;
+			  rrnA.value = (parts[0].slice(-2) + parts[1] + parts[2]).slice(0,6);
+			  if (rrnA.value.length === 6 && rrnB) rrnB.focus();
+			  setHiddenFrom(birth);
+			}
 
 /*  		  function setBornRequired(on) {
 		    const name = document.getElementById('child-name');
@@ -796,6 +877,8 @@
 		  function clearBorn() {}
 		  function clearExpected() {}
 
+
+		  // 기존 updateView 수정
 		  function updateView() {
 		    const checked = document.querySelector('input[name="birthType"]:checked');
 		    if (!checked) {
@@ -813,7 +896,8 @@
 		      setExpectedRequired(false);
 		      clearExpected();
 		      setHiddenFrom(birth);
-		      fillRrnFromBirth();
+		      // ✅ 최초 로드 때는 자동 채우기 금지
+		      if (!FIRST_LOAD) fillRrnFromBirth();
 		    } else {
 		      bornWrap.style.display = 'none';
 		      expWrap.style.display  = '';
@@ -823,10 +907,16 @@
 		      setHiddenFrom(exp);
 		    }
 		  }
+
+		  // updateView() 호출 직후에만 FIRST_LOAD 해제
+		  updateView();
+		  FIRST_LOAD = false;
+
+		  // 출생일이 바뀔 때만 자동 채움
 		  if (birth) birth.addEventListener('change', fillRrnFromBirth);
+
 		  if (exp)   exp.addEventListener('change', function(){ if (rExp && rExp.checked) setHiddenFrom(exp); });
 		  radios.forEach(r => r.addEventListener('change', updateView));
-		  updateView();
 
 		  function formatWithCaret(el) {
 		    const start = el.selectionStart, old = el.value;
@@ -1001,6 +1091,36 @@
 
 		    form.addEventListener('submit', function(e) {
 		      const action = (e.submitter && e.submitter.name === 'action') ? e.submitter.value : null;
+		      
+		      const rrnA = document.getElementById('child-rrn-a');
+		      const rrnB = document.getElementById('child-rrn-b');
+		      const rrnHidden = document.getElementById('child-rrn-hidden');
+		      const rBorn = document.getElementById('bt-born');
+		      const onlyDigits = s => (s||'').replace(/[^\d]/g,'');
+
+		      if (rrnHidden) {
+		    	  if (rBorn && rBorn.checked) {
+		    	  const a = onlyDigits(rrnA ? rrnA.value : '');
+		    	  const b = onlyDigits(rrnB ? rrnB.value : '');
+		    	  if (a.length === 6 && b.length === 7) {
+		    	    rrnHidden.value = a + b;                 // 새 값으로 교체
+		    	    rrnHidden.name  = 'childResiRegiNumber';
+		    	  } else if (ORIGINAL_RRN) {
+		    	    rrnHidden.value = ORIGINAL_RRN;          // 불완전하면 원본 유지
+		    	    rrnHidden.name  = 'childResiRegiNumber';
+		    	  } else {
+		    	    rrnHidden.removeAttribute('name');       // 정말 아무 값도 없을 때만 제외
+		    	  }
+		    	  } else {
+		    	  if (ORIGINAL_RRN) {
+		    	     rrnHidden.value = ORIGINAL_RRN;
+		    	     rrnHidden.name  = 'childResiRegiNumber';
+		    	  } else {
+		    	     rrnHidden.removeAttribute('name');
+		    	  }
+		    	  }
+		    	  }
+		      
 		      if (action !== 'register') {
 		        if (!isAllFilled()) { e.preventDefault(); alert('모든 값을 입력해야 제출할 수 있습니다.'); return; }
 		        if (!(agreeChk && agreeChk.checked)) { e.preventDefault(); alert('안내사항에 동의해야 제출할 수 있습니다.'); return; }
@@ -1124,6 +1244,30 @@
 		  }).open();
 		}
 		</script>
+		<script>
+	  // apply/edit 폼에서 Enter로 자동 제출되는 걸 막기
+	  (function preventEnterSubmit() {
+	    const form = document.querySelector('form[action$="/apply/edit"]');
+	    if (!form) return;
+	
+	    form.addEventListener('keydown', function (e) {
+	      if (e.key !== 'Enter') return;
+	
+	      const el   = e.target;
+	      const tag  = el.tagName.toLowerCase();
+	      const type = (el.type || '').toLowerCase();
+	
+	      const isTextArea = tag === 'textarea';
+	      const isButton   = tag === 'button' || (tag === 'input' && (type === 'submit' || type === 'button'));
+	      const allowAttr  = el.closest('[data-allow-enter="true"]');
+	
+	      // 버튼이나 textarea, 또는 명시적으로 허용한 영역이 아니면 Enter 제출 막기
+	      if (!isTextArea && !isButton && !allowAttr) {
+	        e.preventDefault();
+	      }
+	    });
+	  })();
+	</script>
 
 
 </body>
