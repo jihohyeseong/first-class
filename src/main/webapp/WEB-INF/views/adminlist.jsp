@@ -391,10 +391,10 @@
             <div class="table-wrapper">
                 <div class="table-header">
                     <h4>모든 육아휴직 신청</h4>
-                    <button class="table-btn btn-refresh"><i class="bi bi-arrow-clockwise"></i></button>
+                    <button class="table-btn btn-refresh" id="btnReset"><i class="bi bi-arrow-clockwise"></i></button>
                 </div>
 
-                <form action="${pageContext.request.contextPath}/admin/applications" method="get" class="table-filters">
+                <form id="searchForm" action="${pageContext.request.contextPath}/admin/applications" method="get" class="table-filters">
                     
                     <div class="search-box">
                         <input type="text" name="keyword" placeholder="직원 이름 또는 신청번호로 검색..." value="${keyword}">
@@ -482,6 +482,16 @@
 	    const current = "${status}";
 	    if (current) select.value = current; 
 	});
+	document.getElementById('btnReset').addEventListener("click", () => {
+		const form = document.getElementById("searchForm");
+		
+		// 입력 초기화
+	    form.querySelector('input[name="keyword"]').value = '';
+	    form.querySelector('select[name="status"]').value = '';
+	    // 전체 목록으로 다시 요청
+	    form.submit();
+		
+	})
 </script>
 </body>
 </html>
