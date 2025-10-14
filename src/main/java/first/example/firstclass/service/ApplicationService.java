@@ -458,4 +458,16 @@ public class ApplicationService {
 	public int submitAndReturnCount(long appNo) {
 	    return applicationDAO.updateSubmittedNow(appNo);
 	}
+	
+	@Transactional
+	public long submitApplication(ApplicationDTO dto,
+	                              List<Long> monthlyCompanyPay,
+	                              boolean noCompanyPay,
+	                              boolean recomputeTerms) {
+	    long appNo = updateApplication(dto, monthlyCompanyPay, noCompanyPay, recomputeTerms);
+	    applicationDAO.updateSubmittedNow(appNo);
+
+	    return appNo;
+	}
+
 }

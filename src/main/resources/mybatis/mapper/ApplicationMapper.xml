@@ -61,11 +61,13 @@
 	    A.child_name, A.child_resi_regi_number, A.child_birth_date,
 	    A.business_regi_number, A.business_name,
 	    A.business_zip_number, A.business_addr_base, A.business_addr_detail,
-	    A.payment, A.business_agree, A.gov_info_agree,
-	    A.submitted_dt
+	    A.payment, A.business_agree, A.gov_info_agree, A.payment_result,
+	    A.submitted_dt, A.rejection_reason_code, A.reject_comment, A.examine_dt,
+	    R.name AS rejectionReasonName
 	  FROM TB_PARENTAL_LEAVE_APPLICATION A
-	  LEFT JOIN TB_CODE C ON C.code = A.status_code  -- 🔸 그룹 조건 제거
-	  LEFT JOIN TB_CODE B ON B.code = A.bank_code    -- 🔸 그룹 조건 제거
+	  LEFT JOIN TB_CODE C ON C.code = A.status_code
+	  LEFT JOIN TB_CODE B ON B.code = A.bank_code 
+	  LEFT JOIN TB_CODE R ON R.code = A.rejection_reason_code
 	  WHERE A.application_number = #{appNo}
 	</select>
 	  

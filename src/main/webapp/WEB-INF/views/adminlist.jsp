@@ -395,6 +395,7 @@
                 </div>
 
                 <form action="${pageContext.request.contextPath}/admin/applications" method="get" class="table-filters">
+                    
                     <div class="search-box">
                         <input type="text" name="keyword" placeholder="직원 이름 또는 신청번호로 검색..." value="${keyword}">
                         <button type="submit" style="background:none; border:none; position:absolute; right:10px; top:50%; transform:translateY(-50%); cursor:pointer;">
@@ -402,10 +403,11 @@
                         </button>
                     </div>
                     <%-- 처리 상태 필터 --%>
-                    <select name="status" onchange="this.form.submit()">
+                    <select name="status" id="statusSelect" onchange="this.form.submit()">
                         <option value="">모든 상태</option>
-                        <option value="ST_20" ${status == 'ST_20' ? 'selected' : ''}>대기</option>
-                        <option value="ST_40" ${status == 'ST_40' ? 'selected' : ''}>처리완료</option>
+                        <option value="PENDING" ${status == 'PENDING' ? 'selected' : ''}>대기</option>
+    					<option value="APPROVED" ${status == 'APPROVED' ? 'selected' : ''}>승인</option>
+    					<option value="REJECTED" ${status == 'REJECTED' ? 'selected' : ''}>반려</option>
                     </select>
                     
                 </form>
@@ -474,5 +476,12 @@
             </div>
         </main>
     </div>
+<script>
+	document.addEventListener("DOMContentLoaded", () => { 
+	    const select = document.getElementById("statusSelect");
+	    const current = "${status}";
+	    if (current) select.value = current; 
+	});
+</script>
 </body>
 </html>

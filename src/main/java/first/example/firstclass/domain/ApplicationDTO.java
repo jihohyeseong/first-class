@@ -37,4 +37,9 @@ public class ApplicationDTO {
     private Date childBirthDate;
     
     private Timestamp submittedDt;
+    private String paymentResult;
+    private String rejectionReasonCode;
+    private String rejectComment;
+    private Date examineDt;
+    private String rejectionReasonName;
 }
