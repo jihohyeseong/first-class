@@ -490,4 +490,10 @@ public class ApplicationService {
 		return applicationDAO.existsByApplicationNumber(applicationNumber) > 0 ? true : false;
 	}
 
+	// 심사중으로 변경
+	public void updateStatusCode(Long appNo) {
+		
+		applicationDAO.updateStatusCode(appNo);
+	}
+
 }

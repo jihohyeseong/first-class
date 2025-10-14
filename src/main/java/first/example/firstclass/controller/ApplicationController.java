@@ -110,6 +110,10 @@ public class ApplicationController {
 
         // 3) 권한 체크 (신청자 본인 or 관리자)
         boolean isAdmin = hasRole("ROLE_ADMIN");
+        
+        if(app.getStatusCode().equals("ST_20") && isAdmin)
+        	applicationService.updateStatusCode(appNo);
+        
         if (!app.getUserId().equals(loginUser.getId()) && !isAdmin) {
             redirectAttributes.addFlashAttribute("error", "해당 신청 정보를 조회할 권한이 없습니다.");
             return "redirect:/main";
