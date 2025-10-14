@@ -335,9 +335,7 @@
         <header class="header">
 	        <a href="#" class="logo"><img src="${pageContext.request.contextPath}/resources/images/logo.png" alt="Logo" width="80" height="80"></a>
 	        <nav>
-	        	<ul class="header-nav">
-	        		<li><a class="nav-link active" href="${pageContext.request.contextPath}/calc">육아휴직 신청현황</a></li>
-	            </ul>
+	        	
 				<sec:authorize access="isAnonymous()">
                     <a href="${pageContext.request.contextPath}/login" class="btn btn-primary">로그인</a>
                 </sec:authorize>

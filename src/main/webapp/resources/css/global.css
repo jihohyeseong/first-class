@@ -1,0 +1,33 @@
+/* /resources/css/global.css */
+
+/* 전역 배경 및 기본 폰트 스타일 */
+body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    font-family: 'Noto Sans KR', sans-serif;
+    background-color: #f3f5f9;
+    color: #1f2937;
+    position: relative;
+    overflow-x: hidden;
+}
+
+/* 배경 오로라/빛번짐 효과 */
+body::before,
+body::after {
+    content: '';
+    position: absolute;
+    z-index: 0;
+    border-radius: 50%;
+    filter: blur(120px);
+    opacity: 0.15; /* [수정] 전체적인 빛 효과를 더 연하게 */
+}
+
+/* 왼쪽 상단 빛 (기존과 동일) */
+body::before {
+    width: 450px;
+    height: 450px;
+    background: #a9c0ff;
+    top: -150px;
+    left: -150px;
+}

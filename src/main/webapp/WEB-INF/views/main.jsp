@@ -13,7 +13,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-
+	<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/global.css">
     <style>
         /* ========== Global & Layout Styles ========== */
         :root {
@@ -34,13 +34,6 @@
             font-family: 'Noto Sans KR', sans-serif; background-color: #f3f5f9;
             color: var(--dark-gray-color); position: relative; overflow-x: hidden;
         }
-        
-        body::before, body::after {
-            content: ''; position: absolute; z-index: 0; border-radius: 50%;
-            filter: blur(120px); opacity: 0.2;
-        }
-        body::before { width: 450px; height: 450px; background: #a9c0ff; top: -150px; left: -150px; }
-        body::after { width: 500px; height: 500px; background: #fbc2eb; bottom: -200px; right: -150px; }
 
         a { text-decoration: none; color: inherit; }
 
