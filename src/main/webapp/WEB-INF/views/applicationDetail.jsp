@@ -721,9 +721,6 @@ textarea.form-control { resize: vertical; }
 	                type: 'POST',
 	                contentType: 'application/json',
 	                data: JSON.stringify(requestData),
-					beforeSend: function(xhr) {
-						xhr.setRequestHeader("${_csrf.headerName}", "${_csrf.token}");
-					},
 	                success: function(data) {
 	                    alert(data.message || '처리가 완료되었습니다.');
 	                    if (data.redirectUrl) {
@@ -783,9 +780,6 @@ textarea.form-control { resize: vertical; }
 	            type: 'POST',
 	            contentType: 'application/json',
 	            data: JSON.stringify(requestData),
-				beforeSend: function(xhr) {
-					xhr.setRequestHeader("${_csrf.headerName}", "${_csrf.token}");
-				},
 	            success: function(response) {
 					alert(response.message || '부지급 처리가 완료되었습니다.');
 					if (response.redirectUrl) {

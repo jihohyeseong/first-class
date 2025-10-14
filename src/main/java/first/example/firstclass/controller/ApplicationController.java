@@ -448,6 +448,7 @@ public class ApplicationController {
     public ResponseEntity<Map<String, Object>> adminReject(@RequestBody AdminJudgeDTO adminJudgeDTO){
     	
     	Map<String, Object> response = new HashMap<>();
+    	System.out.println(adminJudgeDTO.getApplicationNumber());
     	UserDTO userDTO = currentUserOrNull();
         if (userDTO == null) {
         	response.put("success", false);
