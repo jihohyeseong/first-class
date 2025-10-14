@@ -178,5 +178,18 @@
 	  WHERE application_number = #{applicationNumber}
 	</update>
 		
-
+	<select id="existsByApplicationNumber" parameterType="long" resultType="int">
+		SELECT
+	        CASE
+	            WHEN payment_result IS NOT NULL THEN 1
+	            ELSE 0
+	        END
+	    FROM TB_PARENTAL_LEAVE_APPLICATION
+	    WHERE application_number = #{applicationNumber}
+	</select>
+	<update id="updateStatusCode" parameterType="long">
+		UPDATE TB_PARENTAL_LEAVE_APPLICATION
+		SET status_code = 'ST_30'
+		WHERE application_number = #{appNo}
+	</update>
 </mapper>

@@ -462,7 +462,6 @@ public class ApplicationService {
 
 	public boolean adminApprove(AdminJudgeDTO adminJudgeDTO, Long userId) {
 		
-		// 이미 처리된 건인지 조건 추가하기
 		adminJudgeDTO.setProcessorId(userId);
 		adminJudgeDTO.setPaymentResult("Y");
 		adminJudgeDTO.setStatusCode("ST_40");
@@ -484,6 +483,17 @@ public class ApplicationService {
 	    applicationDAO.updateSubmittedNow(appNo);
 
 	    return appNo;
+	}
+
+	public boolean adminChecked(Long applicationNumber) {
+		
+		return applicationDAO.existsByApplicationNumber(applicationNumber) > 0 ? true : false;
+	}
+
+	// 심사중으로 변경
+	public void updateStatusCode(Long appNo) {
+		
+		applicationDAO.updateStatusCode(appNo);
 	}
 
 }
