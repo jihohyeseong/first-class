@@ -151,6 +151,7 @@ public class ApplicationService {
         if (appNo != null) {
             // 이전 단위기간 싹 지우고
             termAmountDAO.deleteTermsByAppNo(appNo);
+           
 
             // 새 단위기간에 신청서 번호 채워서
             for (TermAmountDTO t : terms) t.setApplicationNumber(appNo);
@@ -169,7 +170,17 @@ public class ApplicationService {
         return appNo;
     }
 
-
+    private LocalDate getPeriodEndDate(LocalDate originalStart, int monthIdx) {
+    	
+    	LocalDate nextPeriodStart = originalStart.plusMonths(monthIdx);
+    	
+    	// 예) 1월 30일인데 2월 30일이 없다면
+    	if (nextPeriodStart.getDayOfMonth() != originalStart.getDayOfMonth()) {
+            nextPeriodStart = nextPeriodStart.plusMonths(1).withDayOfMonth(1); // 예) 다음 시작일은 3월 1일
+        }
+    	
+    	return nextPeriodStart.minusDays(1); // 종료일 리턴. 종료일은 다음 시작일 -1일
+    }
 
     // 단위기간 및 정부/회사 지급액 계산
     private List<TermAmountDTO> splitPeriodsAndCalc(LocalDate startDate, LocalDate endDate,
@@ -183,55 +194,60 @@ public class ApplicationService {
         }
 
         List<TermAmountDTO> result = new ArrayList<>();
-        LocalDate periodStart = startDate;
+        LocalDate currentPeriodStart = startDate; // 단위기간 시작일
         int monthIdx = 1;
 
-        while (!periodStart.isAfter(endDate)) {
-            LocalDate nextSame = periodStart.plusMonths(1);
-            boolean clamped = (nextSame.getDayOfMonth() != periodStart.getDayOfMonth());
-            LocalDate periodEnd = clamped ? nextSame : nextSame.minusDays(1);
-            if (periodEnd.isAfter(endDate)) periodEnd = endDate;
-
-            boolean isLast = periodEnd.equals(endDate);
+        while (!currentPeriodStart.isAfter(endDate) && monthIdx <= 12) {
+            LocalDate theoreticalEndDate = getPeriodEndDate(startDate, monthIdx); // 단위기간 예정 종료일
+            // 실제 종료일은 이론적 종료일과 전체 휴직 종료일 중 더 빠른 날짜
+            LocalDate actualPeriodEnd = theoreticalEndDate.isAfter(endDate) ? endDate : theoreticalEndDate;
+            
+            if(currentPeriodStart.isAfter(actualPeriodEnd))
+            	break;
 
             long companyPayment = (!noCompanyPay && monthlyCompanyPay != null && monthlyCompanyPay.size() >= monthIdx)
                     ? nz(monthlyCompanyPay.get(monthIdx - 1)) : 0L;
 
             long base = computeGovBase(regularWage, monthIdx);
-            long govPayment = calcGovPayment(base, companyPayment, periodStart, periodEnd, isLast);
-
-            LocalDate paymentDate = periodEnd.withDayOfMonth(1).plusMonths(1);
+            long govPayment = calcGovPayment(base, companyPayment, currentPeriodStart, actualPeriodEnd, theoreticalEndDate);
+            if(regularWage < companyPayment + govPayment)
+            	govPayment = regularWage - companyPayment; // 임금 초과시 정부지원금에서 감소
 
             TermAmountDTO term = new TermAmountDTO();
-            term.setStartMonthDate(Date.valueOf(periodStart));
-            term.setEndMonthDate(Date.valueOf(periodEnd));
-            term.setPaymentDate(Date.valueOf(paymentDate));
-            term.setCompanyPayment(companyPayment);
-            term.setGovPayment(govPayment);
+            term.setStartMonthDate(Date.valueOf(currentPeriodStart)); // 단위기간 시작일
+            term.setEndMonthDate(Date.valueOf(actualPeriodEnd)); // 단위기간 종료일
+            term.setPaymentDate(Date.valueOf(actualPeriodEnd.plusMonths(1).withDayOfMonth(1))); // 지급일은 다음달 1일
+            term.setCompanyPayment(companyPayment); // 회사 지급액
+            term.setGovPayment(govPayment); // 정부 지급액
             result.add(term);
 
-            periodStart = periodEnd.plusDays(1);
+            currentPeriodStart = actualPeriodEnd.plusDays(1); // 다음 개월차의 시작일은 현재 종료일 + 1일
             monthIdx++;
         }
+        
         return result;
     }
 
-    private long calcGovPayment(long base, long companyPayment, LocalDate start, LocalDate end, boolean isLast) {
-        if (!isLast) return Math.max(0L, base - companyPayment);
+    private long calcGovPayment(long base, long companyPayment, LocalDate startDate, LocalDate endDate, LocalDate theoreticalEndDate) {
 
-        YearMonth endYm = YearMonth.from(end);
-        long daysInTerm = ChronoUnit.DAYS.between(start, end) + 1;
-        long daysInEndMonth = endYm.lengthOfMonth();
-        double ratio = Math.max(0.0, Math.min(1.0, (double) daysInTerm / daysInEndMonth));
-        long prorated = Math.round(base * ratio);
-        return Math.max(0L, prorated - companyPayment);
+    	long daysInTerm = ChronoUnit.DAYS.between(startDate, endDate) + 1; // 이번 단위기간 육아휴직 일수
+    	long daysInFullMonth = ChronoUnit.DAYS.between(startDate, theoreticalEndDate) + 1; // 단위기간 한달 꽉 채웠을때 일수
+    	
+    	// 이론적으로 같거나 오차 허용 (>=)
+        if (daysInTerm >= daysInFullMonth) {
+            return base;
+        }
+        
+        double ratio = (double) daysInTerm / daysInFullMonth; // 전체 단위기간 중 실제 육아휴직 비율
+        
+        return (long) Math.floor(base * ratio / 10) * 10;
     }
 
     private long computeGovBase(long regularWage, int monthIdx) {
-        if (monthIdx <= 3) return Math.min(regularWage, 2_500_000L);
-        if (monthIdx <= 6) return Math.min(regularWage, 2_000_000L);
+        if (monthIdx <= 3) return Math.min(regularWage, 2_500_000L); // 3개월까지 최대 현재임금 or 250만중 작은값
+        if (monthIdx <= 6) return Math.min(regularWage, 2_000_000L); // 6개월까지 최대 현재임금 or 200만중 작은값
         long eighty = Math.round(regularWage * 0.8);
-        return Math.min(eighty, 1_600_000L);
+        return Math.min(eighty, 1_600_000L); // 그 이후 최대 현재임금의 80% or 160만중 작은 값
     }
     
     @Transactional
