@@ -178,5 +178,13 @@
 	  WHERE application_number = #{applicationNumber}
 	</update>
 		
-
+	<select id="existsByApplicationNumber" parameterType="long" resultType="int">
+		SELECT
+	        CASE
+	            WHEN payment_result IS NOT NULL THEN 1
+	            ELSE 0
+	        END
+	    FROM TB_PARENTAL_LEAVE_APPLICATION
+	    WHERE application_number = #{applicationNumber}
+	</select>
 </mapper>

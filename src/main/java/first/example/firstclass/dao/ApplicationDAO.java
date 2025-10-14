@@ -26,4 +26,5 @@ public interface ApplicationDAO {
 	
 	int updateApplicationSelective(ApplicationDTO dto);
     int softDeleteApplication(@Param("appNo") long appNo);
+	int existsByApplicationNumber(Long applicationNumber);
 }

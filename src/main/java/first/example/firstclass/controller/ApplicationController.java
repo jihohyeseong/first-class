@@ -27,6 +27,7 @@ import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.InitBinder;
 import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -473,7 +474,6 @@ public class ApplicationController {
     public ResponseEntity<Map<String, Object>> adminReject(@RequestBody AdminJudgeDTO adminJudgeDTO){
     	
     	Map<String, Object> response = new HashMap<>();
-    	System.out.println(adminJudgeDTO.getApplicationNumber());
     	UserDTO userDTO = currentUserOrNull();
         if (userDTO == null) {
         	response.put("success", false);
@@ -493,6 +493,23 @@ public class ApplicationController {
 		}
     	
 		return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+    
+    // 관리자가 이미 처리했는지 확인
+    @GetMapping("/admin/judge/check/{applicationNumber}")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> adminChecked(@PathVariable Long applicationNumber){
+    	
+    	Map<String, Object> response = new HashMap<>();
+    	boolean adminChecked = applicationService.adminChecked(applicationNumber);
+    	if(adminChecked) {
+    		response.put("adminChecked", true);
+    		response.put("msg", "이미 처리된 신청입니다.");
+    	}
+    	else
+    		response.put("adminChecked", false);
+    	
+    	return ResponseEntity.status(HttpStatus.OK).body(response);
     }
     
     @PostMapping("/apply/submit")
