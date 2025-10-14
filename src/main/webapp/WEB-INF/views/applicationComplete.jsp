@@ -163,7 +163,7 @@ h2.section-title{
 					<td><fmt:formatDate value="${app.submittedDt}"
 							pattern="yyyy-MM-dd" /></td>
 					<th class="data-title">신청인</th>
-					<td><sec:authentication property="principal.username" /></td>
+					<td>${userDTO.name}</td>
 				</tr>
 			</tbody>
 		</table>

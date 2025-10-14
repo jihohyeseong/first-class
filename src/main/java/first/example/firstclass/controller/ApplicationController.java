@@ -88,10 +88,16 @@ public class ApplicationController {
     }
 
     @GetMapping("/apply/complete")
-    public String complete(@RequestParam long appNo, Model model) {
+    public String complete(@RequestParam long appNo, Model model, RedirectAttributes redirectAttributes) {
+    	UserDTO loginUser = currentUserOrNull();
+        if (loginUser == null) return "redirect:/login";
+        
+        UserDTO user = applicationService.findApplicantByAppNo(appNo);
+    	
         ApplicationDTO app = applicationService.findById(appNo);
         if (app == null) return "redirect:/main";
         model.addAttribute("app", app);
+        model.addAttribute("userDTO", user);
         return "applicationComplete";
     }
 
