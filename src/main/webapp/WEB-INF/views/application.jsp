@@ -199,7 +199,7 @@
 				<div class="input-field">
 					<input type="text" id="businessRegiNumber"
 						name="businessRegiNumber" inputmode="numeric" autocomplete="off"
-						placeholder="'-' 없이 숫자 10자리" pattern="^\d{3}-?\d{2}-?\d{5}$" />
+						placeholder="'-' 없이 숫자 10자리"/>
 					<!-- <input type="text" id="businessRegiNumber"
 						name="businessRegiNumber" inputmode="numeric" autocomplete="off"
 						placeholder="'-' 없이 숫자 10자리" pattern="\d{10}" title="숫자 10자리"/> -->
@@ -300,7 +300,7 @@
 				<div class="form-group">
 					<label class="field-title" for="child-name">자녀 이름</label>
 					<div class="input-field">
-						<input type="text" name="childName" placeholder="자녀의 이름을 입력하세요">
+						<input type="text" id="child-name" name="childName" placeholder="자녀의 이름을 입력하세요">
 						<c:if test="${not empty errors.childName}">
 							<p class="message error">${errors.childName}</p>
 						</c:if>
@@ -535,6 +535,46 @@ document.addEventListener('DOMContentLoaded', function () {
 	      if (weeklyEl) weeklyEl.value = onlyDigits(weeklyEl.value).slice(0,5);
 	    });
 	  }
+	  
+	// ===== 자녀 주민등록번호: 숫자만 입력 =====
+	  const rrnAEl = document.getElementById('child-rrn-a'); // 앞 6자리 (maxlength로 길이 제한 이미 있음)
+	  const rrnBEl = document.getElementById('child-rrn-b'); // 뒤 7자리 (maxlength로 길이 제한 이미 있음)
+
+	  function bindDigitsOnly(el){
+	    if (!el) return;
+
+	    // 키 입력: 숫자/편집키만 허용
+	    el.addEventListener('keydown', (e) => {
+	      const k = e.key;
+	      const ctrl = e.ctrlKey || e.metaKey;
+	      const edit = ['Backspace','Delete','ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Home','End','Tab'];
+	      if (ctrl && ['a','c','v','x','z','y'].includes(k.toLowerCase())) return;
+	      if (edit.includes(k)) return;
+	      if (/^\d$/.test(k)) return;
+	      e.preventDefault();
+	    });
+
+	    // 붙여넣기: 숫자만 유지
+	    el.addEventListener('paste', (e) => {
+	      e.preventDefault();
+	      const t = (e.clipboardData || window.clipboardData).getData('text') || '';
+	      const digits = (t || '').replace(/[^\d]/g, '');
+	      const s = el.selectionStart, tEnd = el.selectionEnd;
+	      const cur = el.value || '';
+	      el.value = cur.slice(0, s) + digits + cur.slice(tEnd);
+	    });
+
+	    // 드래그드롭 방지
+	    el.addEventListener('drop', (e) => e.preventDefault());
+
+	    // input 시에도 혹시 모를 비숫자 제거
+	    el.addEventListener('input', () => {
+	      el.value = (el.value || '').replace(/[^\d]/g, '');
+	    });
+	  }
+
+	  bindDigitsOnly(rrnAEl);
+	  bindDigitsOnly(rrnBEl);
 
 
 
@@ -679,13 +719,13 @@ document.addEventListener('DOMContentLoaded', function () {
       applyNoPaymentState();
     }
   });
-
-  // ===== 자녀정보: 보이기/숨기기 + hidden 미러링 =====
+  
+  // ===== 자녀정보(출생/예정) hidden 동기화 =====
   const hidden   = document.getElementById('childBirthDateHidden');
   const bornWrap = document.getElementById('born-fields');
   const expWrap  = document.getElementById('expected-fields');
-  const birth    = document.getElementById('birth-date');     // 출생일 date (name 없음)
-  const exp      = document.getElementById('expected-date');  // 예정일 date (name 없음)
+  const birth    = document.getElementById('birth-date');
+  const exp      = document.getElementById('expected-date');
   const radios   = document.querySelectorAll('input[name="birthType"]');
   const rBorn    = document.getElementById('bt-born');
   const rExp     = document.getElementById('bt-expected');
@@ -694,7 +734,6 @@ document.addEventListener('DOMContentLoaded', function () {
   const rrnB = document.getElementById('child-rrn-b');
   const rrnHidden = document.getElementById('child-rrn-hidden');
 
-  // 예정일: 오늘 이후만 선택 가능
   if (exp) {
     const today = new Date(); today.setHours(0,0,0,0);
     const min = new Date(today); min.setDate(min.getDate()+1);
@@ -702,27 +741,24 @@ document.addEventListener('DOMContentLoaded', function () {
     const dd = String(min.getDate()).padStart(2,'0');
     exp.min = `${min.getFullYear()}-${mm}-${dd}`;
   }
-
   function setHiddenFrom(el) { if (hidden && el) hidden.value = el.value || ''; }
 
-  // 출생일 → 주민번호 앞 6자리 자동 채움 (YYMMDD)
   function fillRrnFromBirth() {
-    if (!birth || !rrnA) return;
-    if (!rBorn || !rBorn.checked) return;        // 출생일 모드일 때만
-    if (!birth.value) { rrnA.value = ''; return; }
+	  if (!birth || !rrnA) return;
+	  if (!rBorn || !rBorn.checked) return;
+	  if (!birth.value) { return; }
 
-    // birth.value: 'YYYY-MM-DD'
-    var parts = birth.value.split('-');          // [YYYY, MM, DD]
-    if (parts.length !== 3) return;
-    var yymmdd = parts[0].slice(-2) + parts[1] + parts[2]; // YYMMDD
-    rrnA.value = yymmdd.slice(0,6);
+	  if ((rrnA.value && rrnA.value.trim() !== '') || (rrnB && rrnB.value && rrnB.value.trim() !== '')) {
+	    setHiddenFrom(birth);
+	    return;
+	  }
 
-    // 앞 6자리 꽉 차면 뒷자리로 포커스
-    if (rrnA.value.length === 6 && rrnB) rrnB.focus();
-
-    // 출생일 hidden 미러링(기존 로직 유지)
-    setHiddenFrom(birth);
-  }
+	  var parts = birth.value.split('-');
+	  if (parts.length !== 3) return;
+	  rrnA.value = (parts[0].slice(-2) + parts[1] + parts[2]).slice(0,6);
+	  if (rrnA.value.length === 6 && rrnB) rrnB.focus();
+	  setHiddenFrom(birth);
+	}
   
   function setBornRequired(on) {}
   function setExpectedRequired(on) {}
@@ -730,6 +766,7 @@ document.addEventListener('DOMContentLoaded', function () {
   function clearExpected() {}
 
 
+  // 기존 updateView 수정
   function updateView() {
     const checked = document.querySelector('input[name="birthType"]:checked');
     if (!checked) {
@@ -747,7 +784,7 @@ document.addEventListener('DOMContentLoaded', function () {
       setExpectedRequired(false);
       clearExpected();
       setHiddenFrom(birth);
-      fillRrnFromBirth(); // ← 전환 시 출생일값을 앞6으로 즉시 반영
+      fillRrnFromBirth();
     } else {
       bornWrap.style.display = 'none';
       expWrap.style.display  = '';
@@ -758,18 +795,14 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   }
 
-  if (birth) {
-    // 출생일 바뀔 때마다 앞6 자동 채움
-    birth.addEventListener('change', fillRrnFromBirth);
-  }
-  if (exp) {
-    exp.addEventListener('change', function(){
-      if (rExp && rExp.checked) setHiddenFrom(exp);
-    });
-  }
-
-  radios.forEach(r => r.addEventListener('change', updateView));
   updateView();
+  FIRST_LOAD = false;
+
+  // 출생일이 바뀔 때만 자동 채움
+  if (birth) birth.addEventListener('change', fillRrnFromBirth);
+
+  if (exp)   exp.addEventListener('change', function(){ if (rExp && rExp.checked) setHiddenFrom(exp); });
+  radios.forEach(r => r.addEventListener('change', updateView));
 
 });
 
@@ -862,15 +895,6 @@ function formatWithCaret(el) {
   });
 })();
 
-function showToast(msg, type='warn', ms=2200) {
-	  const el = document.getElementById('toast');
-	  if (!el) return alert(msg);
-	  el.className = 'toast ' + (type || 'warn');
-	  el.textContent = msg;
-	  el.classList.add('show');
-	  clearTimeout(el._t);
-	  el._t = setTimeout(()=>el.classList.remove('show'), ms);
-	}
 	
 //====== 커스텀 검증: 모두 입력되었는지 ======
 function countUnits(startStr, endStr) {
@@ -990,58 +1014,93 @@ function isAllFilled() {
 }
 
 //===== 제출 버튼 활성화/토글 =====
-(function wireSubmitControl(){
-  const form = document.querySelector('form[action$="/apply"]');
-  if (!form) return;
-  const agreeChk  = document.getElementById('agree-notice');
-  const submitBtn = document.querySelector('button[name="action"][value="submit"]');
-  const draftBtn  = document.querySelector('button[name="action"][value="register"]');
+		  (function wireSubmitControl(){
+			const form = document.querySelector('form[action$="/apply"]');
+		    if (!form) return;
+		    const agreeChk  = document.getElementById('agree-notice');
+		    const submitBtn = document.querySelector('button[name="action"][value="submit"]');
+		    const draftBtn  = document.querySelector('button[name="action"][value="register"]');
 
-  // 임시저장: 항상 가능
-  if (draftBtn) draftBtn.disabled = false;
+		    if (draftBtn) draftBtn.disabled = false;
+		    if (submitBtn) submitBtn.disabled = true;
 
-  function refreshSubmitState() {
-    const ok    = isAllFilled();
-    const agree = !!(agreeChk && agreeChk.checked);
-    if (submitBtn) submitBtn.disabled = !(ok && agree);
-  }
+		    function refreshSubmitState() {
+		      const ok = isAllFilled();
+		      const agree = !!(agreeChk && agreeChk.checked);
+		      if (submitBtn) submitBtn.disabled = !(ok && agree);
+		    }
+		    ['input','change'].forEach(evt=> form.addEventListener(evt, refreshSubmitState));
+		    if (agreeChk) agreeChk.addEventListener('change', refreshSubmitState);
+		    refreshSubmitState();
 
-  // 폼 변화에 반응
-  ['input','change'].forEach(evt=>{
-    form.addEventListener(evt, refreshSubmitState);
-  });
-  if (agreeChk) agreeChk.addEventListener('change', refreshSubmitState);
-  refreshSubmitState();
+		    form.addEventListener('submit', function(e) {
+		      const action = (e.submitter && e.submitter.name === 'action') ? e.submitter.value : null;
+		      
+		      const rrnA = document.getElementById('child-rrn-a');
+		      const rrnB = document.getElementById('child-rrn-b');
+		      const rrnHidden = document.getElementById('child-rrn-hidden');
+		      const rBorn = document.getElementById('bt-born');
+		      const onlyDigits = s => (s||'').replace(/[^\d]/g,'');
 
-  // 제출 시 최종 가드 + 토스트 + 금액 콤마 제거
-  form.addEventListener('submit', function(e) {
-    const action = (e.submitter && e.submitter.name === 'action') ? e.submitter.value : null;
-
-    // 임시저장은 통과
-    if (action === 'register') return;
-
-    // 제출은 엄격 검증
-    if (!isAllFilled()) {
-      e.preventDefault();
-      showToast('모든 값을 입력해야 제출할 수 있습니다.', 'warn');
-      return;
-    }
-    if (!(agreeChk && agreeChk.checked)) {
-      e.preventDefault();
-      showToast('안내사항(부정수급 안내)에 동의해야 제출할 수 있습니다.', 'warn');
-      return;
-    }
-
-    // 금액 필드에서 콤마 제거(숫자만 서버로)
-    const wageEl = document.getElementById('regularWage');
-    if (wageEl) wageEl.value = onlyDigits(wageEl.value);
-    const payInputs = form.querySelectorAll('input[name^="monthly_payment_"]');
-    payInputs.forEach(inp => { inp.value = onlyDigits(inp.value); });
-  });
-})();
+		      if (rrnHidden) {
+		    	  if (rBorn && rBorn.checked) {
+		    	  const a = onlyDigits(rrnA ? rrnA.value : '');
+		    	  const b = onlyDigits(rrnB ? rrnB.value : '');
+		    	  if (a.length === 6 && b.length === 7) {
+		    	    rrnHidden.value = a + b;                 // 새 값으로 교체
+		    	    rrnHidden.name  = 'childResiRegiNumber';
+		    	  } else if (ORIGINAL_RRN) {
+		    	    rrnHidden.value = ORIGINAL_RRN;          // 불완전하면 원본 유지
+		    	    rrnHidden.name  = 'childResiRegiNumber';
+		    	  } else {
+		    	    rrnHidden.removeAttribute('name');       // 정말 아무 값도 없을 때만 제외
+		    	  }
+		    	  } else {
+		    	  if (ORIGINAL_RRN) {
+		    	     rrnHidden.value = ORIGINAL_RRN;
+		    	     rrnHidden.name  = 'childResiRegiNumber';
+		    	  } else {
+		    	     rrnHidden.removeAttribute('name');
+		    	  }
+		    	  }
+		    	  }
+		      
+		      if (action !== 'register') {
+		        if (!isAllFilled()) { e.preventDefault(); alert('모든 값을 입력해야 제출할 수 있습니다.'); return; }
+		        if (!(agreeChk && agreeChk.checked)) { e.preventDefault(); alert('안내사항에 동의해야 제출할 수 있습니다.'); return; }
+		      }
+		      // 숫자만 서버로
+		      const wageEl = document.getElementById('regularWage');
+		      if (wageEl) wageEl.value = (wageEl.value || '').replace(/[^\d]/g,'');
+		      const payInputs = form.querySelectorAll('input[name^="monthly_payment_"]');
+		      payInputs.forEach(inp => { inp.value = (inp.value || '').replace(/[^\d]/g,''); });
+		    });
+		  })();
 
 </script>
-
+	<script>
+	  (function preventEnterSubmit() {
+	    const form = document.querySelector('form[action$="/apply"]');
+	    if (!form) return;
+	
+	    form.addEventListener('keydown', function (e) {
+	      if (e.key !== 'Enter') return;
+	
+	      const el   = e.target;
+	      const tag  = el.tagName.toLowerCase();
+	      const type = (el.type || '').toLowerCase();
+	
+	      const isTextArea = tag === 'textarea';
+	      const isButton   = tag === 'button' || (tag === 'input' && (type === 'submit' || type === 'button'));
+	      const allowAttr  = el.closest('[data-allow-enter="true"]');
+	
+	      // 버튼이나 textarea, 또는 명시적으로 허용한 영역이 아니면 Enter 제출 막기
+	      if (!isTextArea && !isButton && !allowAttr) {
+	        e.preventDefault();
+	      }
+	    });
+	  })();
+	</script>
 
 </body>
 </html>

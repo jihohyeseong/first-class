@@ -61,15 +61,6 @@
 .btn-primary{background-color:var(--primary-color);color:var(--white-color);border-color:var(--primary-color)}
 .btn-primary:hover{background-color:#364ab1;box-shadow:var(--shadow-md);transform:translateY(-2px)}
 
-/* 완료 페이지 전용 */
-.success-icon-container{margin-bottom:30px}
-.success-circle{
-  display:inline-flex;justify-content:center;align-items:center;
-  width:80px;height:80px;border-radius:50%;background-color:var(--success-color);
-}
-.success-icon{color:var(--white-color);font-size:40px;font-weight:700}
-.complete-message{font-size:28px;font-weight:700;color:var(--dark-gray-color);margin-bottom:50px}
-
 .info-table-container{width:100%;text-align:left;margin:0 auto 50px}
 h2.section-title{
   font-size:20px;font-weight:700;color:var(--dark-gray-color);
@@ -101,7 +92,7 @@ h2.section-title{
 .detail-btn:hover{background-color:var(--primary-color);color:var(--white-color)}
 
 
-/* ✅ 성공 아이콘*/
+/* 성공 아이콘*/
 .completion-icon {
   width: 80px;
   height: 80px;
@@ -124,7 +115,7 @@ h2.section-title{
   transform: rotate(45deg);
 }
 
-/* ✅ 팝인 애니메이션 (가입완료 페이지와 동일) */
+/* 팝인 애니메이션 (가입완료 페이지와 동일) */
 @keyframes pop-in {
   0%   { transform: scale(0);   opacity: 0; }
   80%  { transform: scale(1.1); opacity: 1; }
@@ -155,8 +146,7 @@ h2.section-title{
 	<main class="main-container">                
 	<div class="completion-icon"></div>
 	       
-	<div class="complete-message">            신청이 정상적으로 완료되었습니다.    
-		   </div>
+	<div class="complete-message">신청이 정상적으로 완료되었습니다. </div>
 
 	<div class="info-table-container">
 		<h2 class="section-title">접수정보</h2>

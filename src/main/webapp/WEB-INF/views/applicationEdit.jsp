@@ -694,6 +694,46 @@
 		      if (weeklyEl) weeklyEl.value = onlyDigits(weeklyEl.value).slice(0,5);
 		    });
 		  }
+		  
+		// ===== 자녀 주민등록번호: 숫자만 입력 =====
+		  const rrnAEl = document.getElementById('child-rrn-a'); // 앞 6자리 (maxlength로 길이 제한 이미 있음)
+		  const rrnBEl = document.getElementById('child-rrn-b'); // 뒤 7자리 (maxlength로 길이 제한 이미 있음)
+
+		  function bindDigitsOnly(el){
+		    if (!el) return;
+
+		    // 키 입력: 숫자/편집키만 허용
+		    el.addEventListener('keydown', (e) => {
+		      const k = e.key;
+		      const ctrl = e.ctrlKey || e.metaKey;
+		      const edit = ['Backspace','Delete','ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Home','End','Tab'];
+		      if (ctrl && ['a','c','v','x','z','y'].includes(k.toLowerCase())) return;
+		      if (edit.includes(k)) return;
+		      if (/^\d$/.test(k)) return;
+		      e.preventDefault();
+		    });
+
+		    // 붙여넣기: 숫자만 유지
+		    el.addEventListener('paste', (e) => {
+		      e.preventDefault();
+		      const t = (e.clipboardData || window.clipboardData).getData('text') || '';
+		      const digits = (t || '').replace(/[^\d]/g, '');
+		      const s = el.selectionStart, tEnd = el.selectionEnd;
+		      const cur = el.value || '';
+		      el.value = cur.slice(0, s) + digits + cur.slice(tEnd);
+		    });
+
+		    // 드래그드롭 방지
+		    el.addEventListener('drop', (e) => e.preventDefault());
+
+		    // input 시에도 혹시 모를 비숫자 제거
+		    el.addEventListener('input', () => {
+		      el.value = (el.value || '').replace(/[^\d]/g, '');
+		    });
+		  }
+
+		  bindDigitsOnly(rrnAEl);
+		  bindDigitsOnly(rrnBEl);
 
 		  
 
