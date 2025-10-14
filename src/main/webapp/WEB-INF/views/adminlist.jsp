@@ -12,6 +12,7 @@
     <title>관리자 신청 목록</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <style>
         :root {
             --primary-color: #3f58d4;
@@ -243,6 +244,19 @@
         .data-table tbody tr:hover {
             background-color: #f1f3f5;
         }
+        /* 달력 버튼&조회 */
+        button {
+		  border: none; 
+		  background-color: transparent;
+		  cursor: pointer; 
+		  padding: 0;
+		  vertical-align: middle; /* 아이콘과 텍스트의 세로 정렬 */
+		}
+
+		button:hover {
+		  opacity: 0.7; 
+		  transform: scale(1.1);
+		}
 		
         /* 재사용 컴포넌트 */
         .badge {
@@ -409,6 +423,10 @@
     					<option value="APPROVED" ${status == 'APPROVED' ? 'selected' : ''}>승인</option>
     					<option value="REJECTED" ${status == 'REJECTED' ? 'selected' : ''}>반려</option>
                     </select>
+                    <%-- 날짜 필터 - hidden input으로 값 전달 --%>
+    				<c:if test="${not empty date}">
+        				<input type="hidden" name="date" value="${date}">
+    				</c:if>
                     
                 </form>
 
@@ -416,8 +434,15 @@
                     <thead>
                         <tr>
                             <th>신청 번호</th>
-                            <th>직원 이름</th>
-                            <th>신청일</th>
+                            <th>신청자 이름</th>
+                            <th>신청일
+                            	<button type="button" id="selectDate" style="background:none; border:none; cursor:pointer; margin-left:5px;">
+                                    <i class="bi bi-calendar-week"></i>
+                                </button>
+                                <c:if test="${not empty date}">
+                                    <span style="font-size:0.85em; color:#666;">(${date})</span>
+                                </c:if>
+                            </th>
                             <th>상태</th>
                             <th>검토</th>
                         </tr>
@@ -428,7 +453,7 @@
                                 <c:forEach var="app" items="${applicationList}">
                                     <tr>
                                         <td>${app.applicationNumber}</td>
-                                        <td>${app.name} (ID: ${app.userId})</td>
+                                        <td>${app.name}</td>
                                         <td>${app.submittedDate}</td>
                                         <td>
                                             <c:choose>
@@ -459,39 +484,84 @@
                 </table>
                 <div class="pagination">
 				    <c:if test="${pageDTO.startPage > 1}">
-				        <a href="${pageContext.request.contextPath}/admin/applications?page=${pageDTO.startPage - 1}&keyword=${keyword}&status=${status}">&laquo;</a>
+				        <a href="${pageContext.request.contextPath}/admin/applications?page=${pageDTO.startPage - 1}&keyword=${keyword}&status=${status}&date=${date}">&laquo;</a>
 				    </c:if>
 				
 				    <c:forEach begin="${pageDTO.paginationStart}" end="${pageDTO.paginationEnd}" var="p">
-				        <a href="${pageContext.request.contextPath}/admin/applications?page=${p}&keyword=${keyword}&status=${status}" 
+				        <a href="${pageContext.request.contextPath}/admin/applications?page=${p}&keyword=${keyword}&status=${status}&date=${date}" 
 				           class="${p == pageDTO.pageNum ? 'active' : ''}">
 				            ${p}
 				        </a>
 				    </c:forEach>
 				
 				    <c:if test="${pageDTO.endPage > pageDTO.paginationEnd}">
-				        <a href="${pageContext.request.contextPath}/admin/applications?page=${pageDTO.paginationEnd + 1}&keyword=${keyword}&status=${status}">&raquo;</a>
+				        <a href="${pageContext.request.contextPath}/admin/applications?page=${pageDTO.paginationEnd + 1}&keyword=${keyword}&status=${status}&date=${date}">&raquo;</a>
 				    </c:if>
 				</div>
             </div>
         </main>
-    </div>
+    </div> 
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script>
 	document.addEventListener("DOMContentLoaded", () => { 
 	    const select = document.getElementById("statusSelect");
-	    const current = "${status}";
+	    const current = "${status}"; 
+	    const dateBtn = document.getElementById('selectDate');
+	    const form = document.getElementById("searchForm");
+	    
 	    if (current) select.value = current; 
-	});
-	document.getElementById('btnReset').addEventListener("click", () => {
-		const form = document.getElementById("searchForm");
-		
-		// 입력 초기화
-	    form.querySelector('input[name="keyword"]').value = '';
-	    form.querySelector('select[name="status"]').value = '';
-	    // 전체 목록으로 다시 요청
-	    form.submit();
-		
-	})
+
+	 	// flatpickr 달력 초기화
+	    const fp = flatpickr(dateBtn, {
+	        dateFormat: "Y-m-d",
+	        defaultDate: "${date}" || null, // 선택된 날짜가 있으면 표시
+	        position: "below",
+	        onChange: function(selectedDates, dateStr) {
+	            if (dateStr) {
+	                // hidden input이 없으면 생성
+	                let hiddenDate = form.querySelector('input[name="date"]');
+	                if (!hiddenDate) {
+	                    hiddenDate = document.createElement('input');
+	                    hiddenDate.type = 'hidden';
+	                    hiddenDate.name = 'date';
+	                    form.appendChild(hiddenDate);
+	                }
+	                hiddenDate.value = dateStr;
+	                form.submit();
+	            }
+	        },
+	        allowInput: false
+	    });
+	 // 달력 버튼 클릭 시 달력 열기
+	    dateBtn.addEventListener("click", (e) => {
+	        e.preventDefault();
+	        e.stopPropagation(); 
+	        fp.open();
+	    });
+	     
+		document.getElementById('btnReset').addEventListener("click", () => {
+			
+			// 입력 초기화
+		    form.querySelector('input[name="keyword"]').value = '';
+		    form.querySelector('select[name="status"]').value = '';
+		 	
+		    // date hidden input 제거
+	        const hiddenDate = form.querySelector('input[name="date"]');
+	        if (hiddenDate) {
+	            hiddenDate.remove();
+	        }
+	        
+	        // 달력 초기화
+	        fp.clear();
+	        
+		    // 전체 목록으로 다시 요청
+		    form.submit();
+			
+		});
+    });
+	
 </script>
+
+<script src="my_script.js"></script>
 </body>
 </html>

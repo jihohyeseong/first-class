@@ -23,6 +23,9 @@
 	                </when>
             	</choose>
             </if>
+            <if test="date != null and date != ''">
+            	AND TO_CHAR(p.submitted_dt, 'YYYY-MM-DD') = #{date}
+            </if>
             AND p.delt_at = 'N'
             AND p.status_code != 'ST_10'
             AND p.status_code != 'ST_50'
