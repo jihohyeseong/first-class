@@ -57,7 +57,6 @@ public class ApplicationService {
         // 임시저장도 공용 insert 사용
         applicationDAO.insertApplication(dto);
 
-        // ❗ 여기서 null일 수 있음 → Long으로 안전하게 반환
         return dto.getApplicationNumber();
     }
     
@@ -149,7 +148,6 @@ public class ApplicationService {
         applicationDAO.insertApplication(dto);
         Long appNo = dto.getApplicationNumber();
 
-        // ⬇⬇⬇ 여기가 빠져 있어서 테이블이 안 만들어졌던 부분 ⬇⬇⬇
         if (appNo != null) {
             // 이전 단위기간 싹 지우고
             termAmountDAO.deleteTermsByAppNo(appNo);
@@ -172,9 +170,8 @@ public class ApplicationService {
     }
 
 
-    /* ============================================================
-       단위기간 및 정부/회사 지급액 계산
-    ============================================================ */
+
+    // 단위기간 및 정부/회사 지급액 계산
     private List<TermAmountDTO> splitPeriodsAndCalc(LocalDate startDate, LocalDate endDate,
                                                     long regularWage, List<Long> monthlyCompanyPay,
                                                     boolean noCompanyPay) {
@@ -261,9 +258,7 @@ public class ApplicationService {
         }
     }
 
-    /* ============================================================
-       조회
-    ============================================================ */
+    // 조회
     public ApplicationDTO findById(long appNo) {
         ApplicationDTO dto = applicationDAO.selectApplicationById(appNo);
         if (dto == null) return null;
@@ -290,10 +285,8 @@ public class ApplicationService {
     public List<TermAmountDTO> findTerms(long appNo) {
         return termAmountDAO.selectByApplicationNumber(appNo);
     }
-    /* ============================================================
-    신청서수정/삭제
- ============================================================ */
-    
+
+    // 신청서 수정, 삭제
     @Transactional
     public long updateApplication(ApplicationDTO dto,
                                   List<Long> monthlyCompanyPay,
@@ -414,9 +407,7 @@ public class ApplicationService {
     }
 
 
-    /* ============================================================
-       공통 유틸
-    ============================================================ */
+    // 공통 유틸
     private static long nz(Long v) { return v == null ? 0L : v; }
 
     private static LocalDate toLocal(Date d) {

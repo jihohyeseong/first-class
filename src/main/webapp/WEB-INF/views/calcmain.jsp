@@ -382,7 +382,7 @@
 			let theoreticalFullStartDate = new Date(startDate);
 			const daysInFullMonth = getDaysBetween(theoreticalFullStartDate, theoreticalFullEndDate); // 단위기간 한달 꽉 채웠을때
 		
-			if (daysInTerm >= daysInFullMonth) {
+			if (daysInTerm >= daysInFullMonth) { // 이론적으로 == 이지만 미세한 오차때문에 >=로 설정
 				return base;
 			}
 			

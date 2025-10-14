@@ -19,25 +19,25 @@
     END;
   </insert>
   
-    <select id="selectByApplicationNumber"
+	<select id="selectByApplicationNumber"
           parameterType="long"
           resultType="first.example.firstclass.domain.TermAmountDTO">
-    SELECT
-      application_number,
-      payment_date,
-      company_payment,
-      gov_payment,
-      start_month_date,
-      end_month_date
-    FROM TB_TERM_AMOUNT
-    WHERE application_number = #{appNo}
-    ORDER BY start_month_date
-  </select>
+	    SELECT
+	      application_number,
+	      payment_date,
+	      company_payment,
+	      gov_payment,
+	      start_month_date,
+	      end_month_date
+	    FROM TB_TERM_AMOUNT
+	    WHERE application_number = #{appNo}
+	    ORDER BY start_month_date
+	</select>
   
-  <delete id="deleteTermsByAppNo" parameterType="long">
-  DELETE FROM TB_TERM_AMOUNT
-  WHERE application_number = #{appNo}
-</delete>
+	<delete id="deleteTermsByAppNo" parameterType="long">
+	  DELETE FROM TB_TERM_AMOUNT
+	  WHERE application_number = #{appNo}
+	</delete>
   
 </mapper>
 
