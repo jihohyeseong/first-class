@@ -120,11 +120,17 @@ public class ApplicationController {
 
         // 5) 단위기간 조회
         List<TermAmountDTO> terms = applicationService.findTerms(appNo);
+        
+        boolean isSubmitted =
+        	    app.getSubmittedDt() != null ||
+        	    "ST_20".equals(app.getStatusCode()) || // 제출완료
+        	    "ST_30".equals(app.getStatusCode()) || // 심사중
+        	    "ST_40".equals(app.getStatusCode());   // 심사완료 등
 
         // 6) 모델 바인딩
         model.addAttribute("app", app);
         model.addAttribute("terms", terms);
-        model.addAttribute("isSubmitted", "ST_20".equals(app.getStatusCode()));
+        model.addAttribute("isSubmitted", isSubmitted);
         model.addAttribute("userDTO", user);
         model.addAttribute("isAdmin", isAdmin);
 
