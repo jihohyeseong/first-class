@@ -35,12 +35,6 @@ public class ApplicationService {
     private final TermAmountDAO termAmountDAO;
     private final AES256Util aes256Util;
 
-    /* ============================================================
-       임시저장(ST_10) — 단일 insertApplication 사용
-       - 필수값 검증 없음 (NULL 허용 스키마 + CHK 제약으로 커버)
-       - submitted_dt는 매퍼 CASE WHEN으로 NULL
-       - terms 미생성
-    ============================================================ */
     @Transactional
     public Long createDraft(ApplicationDTO dto) {
         try {
@@ -54,7 +48,6 @@ public class ApplicationService {
 
         dto.setStatusCode("ST_10");
 
-        // 임시저장도 공용 insert 사용
         applicationDAO.insertApplication(dto);
 
         return dto.getApplicationNumber();
@@ -64,7 +57,7 @@ public class ApplicationService {
     public long saveDraftAndMaybeTerms(ApplicationDTO dto,
                                        List<Long> monthlyCompanyPay,
                                        boolean noCompanyPay) {
-        // 1) 민감정보 암호화(값이 있을 때만)
+        // 자녀 주민등록번호, 계좌번호 암호화
         try {
             if (dto.getChildResiRegiNumber() != null && !dto.getChildResiRegiNumber().trim().isEmpty()) {
                 dto.setChildResiRegiNumber(aes256Util.encrypt(dto.getChildResiRegiNumber()));
@@ -74,20 +67,20 @@ public class ApplicationService {
             }
         } catch (Exception e) { e.printStackTrace(); }
 
-        // 2) 임시저장 상태
+        // 임시저장 상태로
         dto.setStatusCode("ST_10");
 
-        // 3) 부모 INSERT (하나의 insertApplication로 처리: submitted_dt는 ST_20일 때만 세팅됨)
+        // 부모 INSERT
         applicationDAO.insertApplication(dto);
         long appNo = dto.getApplicationNumber();
 
-        // 4) 계산 가능한지 체크 (모두 들어오면 계산)
+        // 계산 가능한지 체크 (모든 값 존재해야 계산)
         if (readyForCalc(dto)) {
             LocalDate start = dto.getStartDate().toLocalDate();
             LocalDate end   = dto.getEndDate().toLocalDate();
             long regularWage = dto.getRegularWage();
 
-            // 기존 term 싹 지우고 다시 넣기 (draft라도 재입력 가능)
+            // 기존 단위기간 지우고 다시 넣기
             termAmountDAO.deleteTermsByAppNo(appNo);
 
             List<TermAmountDTO> terms = splitPeriodsAndCalc(
@@ -101,7 +94,6 @@ public class ApplicationService {
             if (!terms.isEmpty()) termAmountDAO.insertBatch(terms);
 
         }
-        // 계산 불가능하면 term은 건드리지 않음(부족한 값은 NULL 그대로)
         return appNo;
     }
 
@@ -112,16 +104,11 @@ public class ApplicationService {
             && !dto.getEndDate().before(dto.getStartDate());
     }
 
-    /* ============================================================
-       제출(ST_20) — 단위기간 계산 + 총액 산출 + 단일 insertApplication
-       - 컨트롤러에서 statusCode=ST_20 세팅 후 호출한다고 가정
-       - 매퍼가 submitted_dt = SYSDATE로 자동 처리
-    ============================================================ */
     @Transactional
     public long createAllWithComputedPayment(ApplicationDTO dto,
                                              List<Long> monthlyCompanyPay,
                                              boolean noCompanyPay) {
-        // 선택 암호화
+        // 암호화
         try {
             if (notBlank(dto.getChildResiRegiNumber())) {
                 dto.setChildResiRegiNumber(aes256Util.encrypt(dto.getChildResiRegiNumber()));
@@ -139,39 +126,29 @@ public class ApplicationService {
         LocalDate end   = toLocal(dto.getEndDate());
         long regularWage = nz(dto.getRegularWage());
 
-     // (2) 단위기간/지급액 계산
+       //단위기간/지급액 계산
         List<TermAmountDTO> terms = splitPeriodsAndCalc(start, end, regularWage, monthlyCompanyPay, noCompanyPay);
         long totalGov = terms.stream().mapToLong(t -> nz(t.getGovPayment())).sum();
         dto.setPayment(totalGov);
 
-        // (3) 신청서 저장 (ST_20이면 매퍼에서 submitted_dt 자동 세팅)
+        //신청서 저장 
         applicationDAO.insertApplication(dto);
         Long appNo = dto.getApplicationNumber();
 
         if (appNo != null) {
-            // 이전 단위기간 싹 지우고
             termAmountDAO.deleteTermsByAppNo(appNo);
-           
-
-            // 새 단위기간에 신청서 번호 채워서
             for (TermAmountDTO t : terms) t.setApplicationNumber(appNo);
-
-            // 배치 저장
             if (!terms.isEmpty()) {
                 termAmountDAO.insertBatch(terms);
             }
-
-            // (옵션) 제출일시 보정 — 매퍼 CASE WHEN을 쓰지만, 보수적으로 한 번 더
             if ("ST_20".equals(dto.getStatusCode())) {
                 applicationDAO.updateSubmittedNow(appNo);
             }
         }
-
         return appNo;
     }
 
     private LocalDate getPeriodEndDate(LocalDate originalStart, int monthIdx) {
-    	
     	LocalDate nextPeriodStart = originalStart.plusMonths(monthIdx);
     	
     	// 예) 1월 30일인데 2월 30일이 없다면
@@ -256,19 +233,16 @@ public class ApplicationService {
                                       long regularWage,
                                       List<Long> monthlyCompanyPay,
                                       boolean noCompanyPay) {
-
-        // 1) 기존 단위기간 삭제
+        // 기존 단위기간 삭제
         termAmountDAO.deleteTermsByAppNo(appNo);
-
-        // 2) 새로 계산
+        //새로 계산
         List<TermAmountDTO> terms = splitPeriodsAndCalc(
                 start, end, regularWage, monthlyCompanyPay, noCompanyPay
         );
         for (TermAmountDTO t : terms) {
             t.setApplicationNumber(appNo);
         }
-
-        // 3) 배치 저장 (비어있으면 스킵)
+        // 저장 
         if (!terms.isEmpty()) {
             termAmountDAO.insertBatch(terms);
         }
@@ -308,7 +282,7 @@ public class ApplicationService {
                                   List<Long> monthlyCompanyPay,
                                   boolean noCompanyPay,
                                   boolean recomputeTerms) {
-        // 선택 암호화(값 전달된 경우만)
+        //암호화
         try {
             if (dto.getChildResiRegiNumber() != null)
                 dto.setChildResiRegiNumber(dto.getChildResiRegiNumber().trim().isEmpty()
@@ -342,14 +316,13 @@ public class ApplicationService {
     public List<String> validateForSubmit(ApplicationDTO app, List<TermAmountDTO> terms) {
         List<String> errs = new ArrayList<>();
 
-        // 도우미
         Predicate<String> blank = s -> (s == null || s.trim().isEmpty());
         BiConsumer<String,Object> req = (label, v) -> {
             if (v == null) errs.add(label);
             else if (v instanceof String && blank.test((String)v)) errs.add(label);
         };
 
-        // 1) 기본 필드
+        // 기본 필드
         req.accept("육아휴직 시작일", app.getStartDate());
         req.accept("육아휴직 종료일", app.getEndDate());
         req.accept("사업장 동의여부", app.getBusinessAgree());
@@ -364,7 +337,7 @@ public class ApplicationService {
         req.accept("계좌번호", app.getAccountNumber());
         req.accept("행정정보 공동이용 동의", app.getGovInfoAgree());
 
-        // 2) 날짜/상태 제약
+        // 날짜/상태 제약
         if (app.getStartDate() != null && app.getEndDate() != null) {
             if (app.getStartDate().after(app.getEndDate())) {
                 errs.add("기간(시작일이 종료일보다 늦음)");
@@ -378,21 +351,19 @@ public class ApplicationService {
             }
         }
 
-        // 3) 자녀 정보
-        // childBirthDate 는 무조건 필요
+        // 자녀 정보
         req.accept("자녀 출생/예정일", app.getChildBirthDate());
         boolean bornMode = !blank.test(app.getChildName()) || !blank.test(app.getChildResiRegiNumber());
         if (bornMode) {
             req.accept("자녀 이름", app.getChildName());
             req.accept("자녀 주민등록번호", app.getChildResiRegiNumber());
         }
-        // bornMode 가 아니면 출산예정일만으로 제출 가능(정책대로 유지)
 
-        // 5) 금액/시간 유효값
+        // 금액/시간 유효값
         if (app.getRegularWage() != null && app.getRegularWage() <= 0) errs.add("통상임금(월)>0");
         if (app.getWeeklyHours() != null && app.getWeeklyHours() <= 0) errs.add("주당 소정근로시간>0");
 
-        // 6) 단위기간 + 회사지급액
+        // 단위기간
         if (terms == null || terms.isEmpty()) {
             errs.add("단위기간(월별 구간 없음)");
         } else {
@@ -401,7 +372,7 @@ public class ApplicationService {
                 if (t.getStartMonthDate() == null || t.getEndMonthDate() == null) {
                     errs.add("단위기간 " + (i+1) + "의 기간");
                 }
-                // 회사지급액은 null 금지(0 허용)
+                // 회사지급액은 null 금지
                 if (t.getCompanyPayment() == null) {
                     errs.add("단위기간 " + (i+1) + "의 사업장 지급액");
                 } else if (t.getCompanyPayment() < 0) {

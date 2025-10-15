@@ -59,8 +59,10 @@ public class ApplicationController {
         // java.sql.Date
         binder.registerCustomEditor(java.sql.Date.class, new PropertyEditorSupport() {
             @Override public void setAsText(String text) {
-                if (text == null || text.trim().isEmpty()) { setValue(null); return; }
-                setValue(Date.valueOf(text.trim())); // yyyy-MM-dd 기대
+                if (text == null || text.trim().isEmpty()) {
+                	setValue(null); return; 
+                	}
+                else setValue(Date.valueOf(text.trim()));
             }
         });
         // Long
@@ -103,18 +105,18 @@ public class ApplicationController {
 
     @GetMapping("/apply/detail")
     public String detail(@RequestParam long appNo, Model model, RedirectAttributes redirectAttributes) {
-        // 1) 로그인 확인
+        //로그인 확인
         UserDTO loginUser = currentUserOrNull();
         if (loginUser == null) return "redirect:/login";
 
-        // 2) 신청서 조회
+        //신청서 조회
         ApplicationDTO app = applicationService.findById(appNo);
         if (app == null) {
-            redirectAttributes.addFlashAttribute("error", "존재하지 않는 신청입니다.");
+            redirectAttributes.addFlashAttribute("error", "존재하지 않는 신청서입니다.");
             return "redirect:/main";
         }
 
-        // 3) 권한 체크 (신청자 본인 or 관리자)
+        //관리자인지 아닌지 확인
         boolean isAdmin = hasRole("ROLE_ADMIN");
         
         if(app.getStatusCode().equals("ST_20") && isAdmin)
@@ -125,23 +127,24 @@ public class ApplicationController {
             return "redirect:/main";
         }
 
-        // 4) 신청자 정보 조회 (appNo로 조인 조회 or app.getUserId()로 조회)
+        //신청자 정보 조회
         UserDTO user = applicationService.findApplicantByAppNo(appNo);
+        
         // 마스킹은 화면에 표시할 user에 적용
         if (user != null && user.getRegistrationNumber() != null) {
             user.setRegistrationNumber(maskRrn(user.getRegistrationNumber()));
         }
 
-        // 5) 단위기간 조회
+        //단위기간 조회
         List<TermAmountDTO> terms = applicationService.findTerms(appNo);
         
         boolean isSubmitted =
         	    app.getSubmittedDt() != null ||
-        	    "ST_20".equals(app.getStatusCode()) || // 제출완료
-        	    "ST_30".equals(app.getStatusCode()) || // 심사중
-        	    "ST_40".equals(app.getStatusCode());   // 심사완료 등
-
-        // 6) 모델 바인딩
+        	    "ST_20".equals(app.getStatusCode()) ||
+        	    "ST_30".equals(app.getStatusCode()) ||
+        	    "ST_40".equals(app.getStatusCode());
+        
+        //모델 바인딩
         model.addAttribute("app", app);
         model.addAttribute("terms", terms);
         model.addAttribute("isSubmitted", isSubmitted);
@@ -150,8 +153,9 @@ public class ApplicationController {
 
         return "applicationDetail";
     }
+    
     private String maskRrn(String rrn) {
-        return (rrn != null && rrn.length() >= 8) ? rrn.substring(0, 7) + "******" : rrn;
+        return (rrn != null && rrn.length() >= 8) ? rrn.substring(0, 7): rrn;
     }
 
     @GetMapping({"/", "/main"})
@@ -173,7 +177,7 @@ public class ApplicationController {
             @RequestParam(name = "action", required = false) String action,
             RedirectAttributes ra
     ) {
-        // 로그인 사용자
+        // 로그인 확인
         UserDTO loginUser = currentUserOrNull();
         if (loginUser == null || loginUser.getId() == null) {
             ra.addFlashAttribute("error", "로그인이 필요합니다.");
@@ -195,18 +199,18 @@ public class ApplicationController {
         String act = (action == null) ? "register" : action.toLowerCase();
         boolean isSubmit = "submit".equals(act);
 
-        // 동의값: 임시저장에서는 값이 있을 때만 세팅(없으면 null 유지)
+        // ===== 임시저장 분기 =====
+        
         String bizAgreeParam = request.getParameter("businessAgree");
         if (bizAgreeParam != null) form.setBusinessAgree(yn(bizAgreeParam));
 
         String govAgreeParam = request.getParameter("govInfoAgree");
         if (govAgreeParam != null) form.setGovInfoAgree(yn(govAgreeParam));
-
-        // ===== 임시저장 분기 =====
+        
         if (!isSubmit) {
             form.setStatusCode("ST_10");
             try {
-                List<Long> monthlyCompanyPay = collectMonthlyCompanyPays(request); // <- 이 줄 추가
+                List<Long> monthlyCompanyPay = collectMonthlyCompanyPays(request);
                 long appNo = applicationService.saveDraftAndMaybeTerms(form, monthlyCompanyPay, noPayment);
                 ra.addFlashAttribute("message", "임시저장 완료 (접수번호: " + appNo + ")");
                 return "redirect:/apply/detail?appNo=" + appNo;
@@ -217,24 +221,16 @@ public class ApplicationController {
             }
         }
 
-        // ===== 제출(SUBMIT) 분기: 엄격 검증 =====
-        if (binding.hasErrors()) {
-            ra.addFlashAttribute("error", "입력값 형식 오류: " + binding.getAllErrors());
-            return "redirect:/apply";
-        }
+        // ===== 제출(SUBMIT) ====
 
-        // 제출은 동의 필수
-/*        form.setBusinessAgree(ynRequired(request.getParameter("businessAgree")));
-        form.setGovInfoAgree(ynRequired(request.getParameter("govInfoAgree")));*/
-
-        // 자녀 출생/예정 날짜 보정
+        // 자녀 출생/예정 보정
         if (form.getChildBirthDate() == null) {
             String birthStr = trimOrNull(request.getParameter("childBirthDate"));
             if (birthStr != null && !birthStr.isEmpty()) {
                 try {
                     form.setChildBirthDate(Date.valueOf(birthStr));
                 } catch (Exception e) {
-                    ra.addFlashAttribute("error", "날짜 형식이 올바르지 않습니다(예: 2025-10-23).");
+                    ra.addFlashAttribute("error", "날짜 형식이 올바르지 않습니다.");
                     return "redirect:/apply";
                 }
             }
@@ -244,7 +240,6 @@ public class ApplicationController {
             return "redirect:/apply";
         }
 
-        // 출생 vs 예정 (제출 시 엄격)
         String childName = trimToEmpty(form.getChildName());
         String childRRN  = trimToEmpty(form.getChildResiRegiNumber());
         boolean isBorn   = (!childName.isEmpty() || !childRRN.isEmpty());
@@ -345,7 +340,6 @@ public class ApplicationController {
             long appNo;
 
             if ("register".equals(action)) {
-                // 🟢 임시저장
                 appNo = applicationService.updateApplication(form, monthlyCompanyPay, noPayment, recomputeTerms);
                 ra.addFlashAttribute("message", "임시저장 완료");
                 return "redirect:/apply/detail?appNo=" + appNo;
@@ -528,7 +522,6 @@ public class ApplicationController {
 
         String redirect;
         try {
-            // 1) 로그인/권한
             UserDTO login = currentUserOrNull();
             if (login == null) {
                 ra.addFlashAttribute("error", "로그인이 필요합니다.");
@@ -561,18 +554,18 @@ public class ApplicationController {
                 return redirect;
             }
 
-            // 2) 단위기간 포함 검증
+            // 단위기간 포함 검증
             List<TermAmountDTO> terms = applicationService.findTerms(appNo);
             System.out.println("[check] terms.size=" + (terms == null ? 0 : terms.size()));
             List<String> missing = applicationService.validateForSubmit(app, terms);
             if (!missing.isEmpty()) {
-                ra.addFlashAttribute("error", "제출 불가: " + String.join(", ", missing));
+                ra.addFlashAttribute("error", "다음의 항목이 존재하지 않아 제출이 불가능합니다: " + String.join(", ", missing));
                 redirect = "redirect:/apply/detail?appNo=" + appNo;
                 System.out.println("[return] missing -> " + missing + " / " + redirect);
                 return redirect;
             }
 
-            // 3) 제출 처리 (영향 행수 확인)
+            // 제출 처리
             int updated = applicationService.submitAndReturnCount(appNo);
             System.out.println("[update] submitted rows=" + updated);
             if (updated == 0) {

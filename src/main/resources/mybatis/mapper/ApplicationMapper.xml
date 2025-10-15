@@ -41,10 +41,8 @@
 	    'N'
 	  )
 	</insert>
-	
-	
-	  
-	<!--   신청서 하나만조회 -->
+	 
+	<!--신청서 하나만조회 (상세페이지) -->
 	<select id="selectApplicationById"
 	        parameterType="long"
 	        resultType="first.example.firstclass.domain.ApplicationDTO">
@@ -56,8 +54,8 @@
 	    A.account_number,
 	    A.regular_wage, A.weekly_hours,
 	    A.status_code,
-	    C.name AS statusName,   -- 상태 라벨
-	    B.name AS bankName,     -- 은행 라벨
+	    C.name AS statusName,
+	    B.name AS bankName,
 	    A.child_name, A.child_resi_regi_number, A.child_birth_date,
 	    A.business_regi_number, A.business_name,
 	    A.business_zip_number, A.business_addr_base, A.business_addr_detail,
@@ -71,7 +69,7 @@
 	  WHERE A.application_number = #{appNo}
 	</select>
 	  
-	  <!-- 임시저장말고 제출시 코드바꾸고 제출날짜저장용 -->
+	  <!--상세페이지에서 임시저장말고 제출시 코드바꾸고 제출날짜저장용 -->
 	<update id="updateSubmittedNow">
 	  UPDATE TB_PARENTAL_LEAVE_APPLICATION
 	  SET status_code = 'ST_20',
@@ -98,6 +96,7 @@
 	  ORDER BY A.application_number DESC
 	</select>
 	
+	<!-- 은행코드와 이름만 불러오기(신청서페이지용) -->
 	<select id="selectBankCode"
 	          resultType="first.example.firstclass.domain.CodeDTO">
 	    SELECT
@@ -109,6 +108,7 @@
 	    ORDER BY name
 	  </select>
 	  
+	 
 	<select id="selectUserByAppNo"
 	        parameterType="long"
 	        resultType="first.example.firstclass.domain.UserDTO">
@@ -139,7 +139,8 @@
 			status_code = #{statusCode}
 		WHERE application_number = #{applicationNumber}
 	</update>
-
+	
+	<!-- 신청서 삭제 -->
 	<update id="softDeleteApplication" parameterType="long">
 	  UPDATE TB_PARENTAL_LEAVE_APPLICATION
 	     SET delt_at = 'Y'
@@ -151,33 +152,33 @@
         parameterType="first.example.firstclass.domain.ApplicationDTO">
 	  UPDATE TB_PARENTAL_LEAVE_APPLICATION
 	  <trim prefix="SET" suffixOverrides=",">
-	    <if test="startDate         != null">start_date            = #{startDate,      jdbcType=DATE},</if>
-	    <if test="endDate           != null">end_date              = #{endDate,        jdbcType=DATE},</if>
-	    <if test="bankCode          != null">bank_code = #{bankCode},</if>
-	    <if test="accountNumber     != null">account_number = #{accountNumber},</if>
+	    <if test="startDate         != null">start_date            = #{startDate,jdbcType=DATE},</if>
+	    <if test="endDate           != null">end_date              = #{endDate,jdbcType=DATE},</if>
+	    <if test="bankCode          != null">bank_code 			   = #{bankCode},</if>
+	    <if test="accountNumber     != null">account_number 	   = #{accountNumber},</if>
 	    <if test="regularWage       != null">regular_wage          = #{regularWage},</if>
 	    <if test="weeklyHours       != null">weekly_hours          = #{weeklyHours},</if>
 	    <if test="statusCode        != null">status_code           = #{statusCode},</if>
 	    <if test="childName         != null">child_name            = #{childName},</if>
 	    <if test="childResiRegiNumber != null">child_resi_regi_number = #{childResiRegiNumber},</if>
 	    <if test="childBirthDate    != null">child_birth_date      = #{childBirthDate, jdbcType=DATE},</if>
-	    <if test="businessRegiNumber!= null">business_regi_number = #{businessRegiNumber},</if>
-	    <if test="businessName      != null">business_name    = #{businessName},</if>
-	    <if test="businessZipNumber != null">business_zip_number = #{businessZipNumber},</if>
-	    <if test="businessAddrBase  != null">business_addr_base  = #{businessAddrBase},</if>
-	    <if test="businessAddrDetail!= null">business_addr_detail= #{businessAddrDetail},</if>
+	    <if test="businessRegiNumber!= null">business_regi_number  = #{businessRegiNumber},</if>
+	    <if test="businessName      != null">business_name		   = #{businessName},</if>
+	    <if test="businessZipNumber != null">business_zip_number   = #{businessZipNumber},</if>
+	    <if test="businessAddrBase  != null">business_addr_base    = #{businessAddrBase},</if>
+	    <if test="businessAddrDetail!= null">business_addr_detail  = #{businessAddrDetail},</if>
 	    <if test="payment           != null">payment               = #{payment},</if>
 	    <if test="businessAgree     != null">business_agree        = #{businessAgree},</if>
 	    <if test="govInfoAgree      != null">gov_info_agree        = #{govInfoAgree},</if>
-	
-	    <!-- 제출 상태로 바뀔 때만 submitted_dt 세팅 -->
+	    <!-- 제출 상태로 바뀔 때만 submitted_dt추가-->
 	    <if test="statusCode == 'ST_20'">
 	      submitted_dt = CASE WHEN submitted_dt IS NULL THEN SYSDATE ELSE submitted_dt END,
 	    </if>
 	  </trim>
 	  WHERE application_number = #{applicationNumber}
 	</update>
-		
+	
+	
 	<select id="existsByApplicationNumber" parameterType="long" resultType="int">
 		SELECT
 	        CASE
@@ -187,6 +188,8 @@
 	    FROM TB_PARENTAL_LEAVE_APPLICATION
 	    WHERE application_number = #{applicationNumber}
 	</select>
+	
+	
 	<update id="updateStatusCode" parameterType="long">
 		UPDATE TB_PARENTAL_LEAVE_APPLICATION
 		SET status_code = 'ST_30'

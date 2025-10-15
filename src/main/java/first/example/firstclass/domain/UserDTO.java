@@ -15,5 +15,5 @@ public class UserDTO {
 	private String addressDetail;
 	private String username;
 	private String phoneNumber;
-	
+
 }
