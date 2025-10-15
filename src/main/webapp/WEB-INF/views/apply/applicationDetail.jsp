@@ -159,7 +159,14 @@ textarea.form-control { resize: vertical; }
 </style>
 </head>
 <body>
-	<%@ include file="../header.jsp" %>
+	<c:choose>
+		<c:when test="${isAdmin}">
+			<jsp:include page="../adminheader.jsp" />
+		</c:when>
+		<c:otherwise>
+			<jsp:include page="../header.jsp" />
+		</c:otherwise>
+	</c:choose>
 
 	<main class="main-container">
 	<h1>육아휴직 급여 신청서 상세 보기</h1>
@@ -175,7 +182,12 @@ textarea.form-control { resize: vertical; }
 				</tr>
 				<tr>
 					<th class="data-title">신청일</th>
-					<td><c:choose><c:when test="${not empty app.submittedDt}"><fmt:formatDate value="${app.submittedDt}" pattern="yyyy-MM-dd" /></c:when><c:otherwise>미신청</c:otherwise></c:choose></td>
+					<td><c:choose>
+							<c:when test="${not empty app.submittedDt}">
+								<fmt:formatDate value="${app.submittedDt}" pattern="yyyy-MM-dd" />
+							</c:when>
+							<c:otherwise>미신청</c:otherwise>
+						</c:choose></td>
 					<th class="data-title">신청인</th>
 					<td><c:out value="${userDTO.username}" /></td>
 				</tr>
@@ -193,7 +205,10 @@ textarea.form-control { resize: vertical; }
 				</tr>
 				<tr>
 					<th>주민등록번호</th>
-					<td colspan="3"><c:set var="rrnRaw" value="${userDTO.registrationNumber}" /><c:set var="rrnDigits" value="${fn:replace(fn:replace(fn:trim(rrnRaw), '-', ''), ' ', '')}" />${fn:substring(rrnDigits,0,6)}-${fn:substring(rrnDigits,6,7)}******</td>
+					<td colspan="3"><c:set var="rrnRaw"
+							value="${userDTO.registrationNumber}" />
+						<c:set var="rrnDigits"
+							value="${fn:replace(fn:replace(fn:trim(rrnRaw), '-', ''), ' ', '')}" />${fn:substring(rrnDigits,0,6)}-${fn:substring(rrnDigits,6,7)}******</td>
 				</tr>
 				<tr>
 					<th>휴대전화번호</th>
@@ -201,7 +216,8 @@ textarea.form-control { resize: vertical; }
 				</tr>
 				<tr>
 					<th>주소</th>
-					<td colspan="3"><c:out value="(${userDTO.zipNumber}) ${userDTO.addressBase} ${userDTO.addressDetail}" /></td>
+					<td colspan="3"><c:out
+							value="(${userDTO.zipNumber}) ${userDTO.addressBase} ${userDTO.addressDetail}" /></td>
 				</tr>
 			</tbody>
 		</table>
@@ -212,20 +228,74 @@ textarea.form-control { resize: vertical; }
 		<table class="info-table table-4col">
 			<tbody>
 				<tr>
-					<th>사업장 <br>동의여부</th>
-					<td><c:choose><c:when test="${app.businessAgree == 'Y'}">예</c:when><c:when test="${app.businessAgree == 'N'}"><c:if test="${isAdmin}"><span class="highlight-warning">아니요</span></c:if><c:if test="${!isAdmin}">아니요</c:if></c:when><c:otherwise>미선택</c:otherwise></c:choose></td>
+					<th>사업장 <br>동의여부
+					</th>
+					<td><c:choose>
+							<c:when test="${app.businessAgree == 'Y'}">예</c:when>
+							<c:when test="${app.businessAgree == 'N'}">
+								<c:if test="${isAdmin}">
+									<span class="highlight-warning">아니요</span>
+								</c:if>
+								<c:if test="${!isAdmin}">아니요</c:if>
+							</c:when>
+							<c:otherwise>미선택</c:otherwise>
+						</c:choose></td>
 					<th>사업장 이름</th>
-					<td><c:if test="${isAdmin and empty app.businessName}"><span class="highlight-warning">미입력</span></c:if><c:if test="${!isAdmin or not empty app.businessName}">${app.businessName}</c:if></td>
+					<td><c:if test="${isAdmin and empty app.businessName}">
+							<span class="highlight-warning">미입력</span>
+						</c:if>
+						<c:if test="${!isAdmin or not empty app.businessName}">${app.businessName}</c:if></td>
 				</tr>
 				<tr>
-					<th>사업장 <br>등록번호</th>
-					<td><c:choose><c:when test="${empty app.businessRegiNumber}"><c:if test="${isAdmin}"><span class="highlight-warning">미입력</span></c:if><c:if test="${!isAdmin}">미입력</c:if></c:when><c:otherwise><c:set var="bizRaw" value="${app.businessRegiNumber}" /><c:set var="bizDigits" value="${fn:replace(fn:replace(fn:replace(fn:trim(bizRaw), '-', ''), ' ', ''), ',', '')}" /><c:choose><c:when test="${fn:length(bizDigits) == 10}">${fn:substring(bizDigits,0,3)}-${fn:substring(bizDigits,3,5)}-${fn:substring(bizDigits,5,10)}</c:when><c:otherwise><c:if test="${isAdmin}"><span class="highlight-warning"><c:out value="${bizRaw}" /></span></c:if><c:if test="${!isAdmin}"><c:out value="${bizRaw}" /></c:if></c:otherwise></c:choose></c:otherwise></c:choose></td>
-					<th>인사담당자 <br>연락처</th>
+					<th>사업장 <br>등록번호
+					</th>
+					<td><c:choose>
+							<c:when test="${empty app.businessRegiNumber}">
+								<c:if test="${isAdmin}">
+									<span class="highlight-warning">미입력</span>
+								</c:if>
+								<c:if test="${!isAdmin}">미입력</c:if>
+							</c:when>
+							<c:otherwise>
+								<c:set var="bizRaw" value="${app.businessRegiNumber}" />
+								<c:set var="bizDigits"
+									value="${fn:replace(fn:replace(fn:replace(fn:trim(bizRaw), '-', ''), ' ', ''), ',', '')}" />
+								<c:choose>
+									<c:when test="${fn:length(bizDigits) == 10}">${fn:substring(bizDigits,0,3)}-${fn:substring(bizDigits,3,5)}-${fn:substring(bizDigits,5,10)}</c:when>
+									<c:otherwise>
+										<c:if test="${isAdmin}">
+											<span class="highlight-warning"><c:out
+													value="${bizRaw}" /></span>
+										</c:if>
+										<c:if test="${!isAdmin}">
+											<c:out value="${bizRaw}" />
+										</c:if>
+									</c:otherwise>
+								</c:choose>
+							</c:otherwise>
+						</c:choose></td>
+					<th>인사담당자 <br>연락처
+					</th>
 					<td>02-9876-5432</td>
 				</tr>
 				<tr>
 					<th>사업장 주소</th>
-					<td colspan="3"><c:choose><c:when test="${empty app.businessZipNumber and empty app.businessAddrBase}"><c:if test="${isAdmin}"><span class="highlight-warning">미입력</span></c:if><c:if test="${!isAdmin}">미입력</c:if></c:when><c:otherwise><c:if test="${not empty app.businessZipNumber}">(${app.businessZipNumber})&nbsp;</c:if><c:out value="${app.businessAddrBase}" /><c:if test="${not empty app.businessAddrDetail}">&nbsp;<c:out value="${app.businessAddrDetail}" /></c:if></c:otherwise></c:choose></td>
+					<td colspan="3"><c:choose>
+							<c:when
+								test="${empty app.businessZipNumber and empty app.businessAddrBase}">
+								<c:if test="${isAdmin}">
+									<span class="highlight-warning">미입력</span>
+								</c:if>
+								<c:if test="${!isAdmin}">미입력</c:if>
+							</c:when>
+							<c:otherwise>
+								<c:if test="${not empty app.businessZipNumber}">(${app.businessZipNumber})&nbsp;</c:if>
+								<c:out value="${app.businessAddrBase}" />
+								<c:if test="${not empty app.businessAddrDetail}">&nbsp;<c:out
+										value="${app.businessAddrDetail}" />
+								</c:if>
+							</c:otherwise>
+						</c:choose></td>
 				</tr>
 			</tbody>
 		</table>
@@ -236,19 +306,26 @@ textarea.form-control { resize: vertical; }
 		<table class="info-table table-4col">
 			<tbody>
 				<tr>
-					<th>육아휴직 <br>시작일</th>
-					<td><c:if test="${isAdmin and empty app.startDate}"><span class="highlight-warning">미입력</span></c:if><c:if test="${!isAdmin or not empty app.startDate}">${app.startDate}</c:if></td>
+					<th>육아휴직 <br>시작일
+					</th>
+					<td><c:if test="${isAdmin and empty app.startDate}">
+							<span class="highlight-warning">미입력</span>
+						</c:if>
+						<c:if test="${!isAdmin or not empty app.startDate}">${app.startDate}</c:if></td>
 					<th>총 휴직 기간</th>
-					<td id="total-leave-period">(${empty app.startDate ? '미입력' : app.startDate} ~ ${empty app.endDate ? '미입력' : app.endDate})</td>
+					<td id="total-leave-period">(${empty app.startDate ? '미입력' : app.startDate}
+						~ ${empty app.endDate ? '미입력' : app.endDate})</td>
 				</tr>
 				<tr>
-					<th>월별 분할 <br>신청 여부</th>
+					<th>월별 분할 <br>신청 여부
+					</th>
 					<td colspan="3">아니오 (일괄 신청)</td>
 				</tr>
 			</tbody>
 		</table>
 
-		<h3 class="section-title" style="font-size: 16px; margin-top: 25px;">월별 지급 내역</h3>
+		<h3 class="section-title" style="font-size: 16px; margin-top: 25px;">월별
+			지급 내역</h3>
 		<table class="info-table table-4col">
 			<thead>
 				<tr>
@@ -263,8 +340,10 @@ textarea.form-control { resize: vertical; }
 				<c:forEach var="t" items="${terms}" varStatus="st">
 					<tr>
 						<td><c:out value="${st.index + 1}" />개월차</td>
-						<td><c:out value="${t.startMonthDate}" /> ~ <c:out value="${t.endMonthDate}" /></td>
-						<td><fmt:formatNumber value="${t.companyPayment}" type="number" /></td>
+						<td><c:out value="${t.startMonthDate}" /> ~ <c:out
+								value="${t.endMonthDate}" /></td>
+						<td><fmt:formatNumber value="${t.companyPayment}"
+								type="number" /></td>
 						<td><fmt:formatNumber value="${t.govPayment}" type="number" /></td>
 						<td><c:out value="${t.paymentDate}" /></td>
 					</tr>
@@ -272,7 +351,8 @@ textarea.form-control { resize: vertical; }
 
 				<c:if test="${empty terms}">
 					<tr>
-						<td colspan="5" style="text-align: center; color: #888;">단위기간 내역이 없습니다.</td>
+						<td colspan="5" style="text-align: center; color: #888;">단위기간
+							내역이 없습니다.</td>
 					</tr>
 				</c:if>
 			</tbody>
@@ -283,23 +363,55 @@ textarea.form-control { resize: vertical; }
 		<h2 class="section-title">자녀 정보 (육아 대상)</h2>
 		<table class="info-table table-4col">
 			<tbody>
-				<c:choose><c:when test="${empty app.childName and empty app.childResiRegiNumber}">
+				<c:choose>
+					<c:when
+						test="${empty app.childName and empty app.childResiRegiNumber}">
 						<tr>
 							<th>출산예정일</th>
-							<td colspan="3"><c:choose><c:when test="${empty app.childBirthDate}"><c:if test="${isAdmin}"><span class="highlight-warning">미입력</span></c:if><c:if test="${!isAdmin}">미입력</c:if></c:when><c:otherwise><fmt:formatDate value="${app.childBirthDate}" pattern="yyyy.MM.dd" /></c:otherwise></c:choose></td>
+							<td colspan="3"><c:choose>
+									<c:when test="${empty app.childBirthDate}">
+										<c:if test="${isAdmin}">
+											<span class="highlight-warning">미입력</span>
+										</c:if>
+										<c:if test="${!isAdmin}">미입력</c:if>
+									</c:when>
+									<c:otherwise>
+										<fmt:formatDate value="${app.childBirthDate}"
+											pattern="yyyy.MM.dd" />
+									</c:otherwise>
+								</c:choose></td>
 						</tr>
-					</c:when><c:otherwise>
+					</c:when>
+					<c:otherwise>
 						<tr>
 							<th>자녀 이름</th>
-							<td><c:if test="${isAdmin and empty app.childName}"><span class="highlight-warning">미입력</span></c:if><c:if test="${!isAdmin or not empty app.childName}"><c:out value="${app.childName}" /></c:if></td>
+							<td><c:if test="${isAdmin and empty app.childName}">
+									<span class="highlight-warning">미입력</span>
+								</c:if>
+								<c:if test="${!isAdmin or not empty app.childName}">
+									<c:out value="${app.childName}" />
+								</c:if></td>
 							<th>출산일</th>
-							<td><c:if test="${isAdmin and empty app.childBirthDate}"><span class="highlight-warning">미입력</span></c:if><c:if test="${!isAdmin or not empty app.childBirthDate}"><fmt:formatDate value="${app.childBirthDate}" pattern="yyyy.MM.dd" /></c:if></td>
+							<td><c:if test="${isAdmin and empty app.childBirthDate}">
+									<span class="highlight-warning">미입력</span>
+								</c:if>
+								<c:if test="${!isAdmin or not empty app.childBirthDate}">
+									<fmt:formatDate value="${app.childBirthDate}"
+										pattern="yyyy.MM.dd" />
+								</c:if></td>
 						</tr>
 						<tr>
 							<th>주민등록번호</th>
-							<td colspan="3"><c:if test="${isAdmin and empty app.childResiRegiNumber}"><span class="highlight-warning">미입력</span></c:if><c:if test="${!isAdmin or not empty app.childResiRegiNumber}"><c:out value="${fn:substring(app.childResiRegiNumber, 0, 6)}-${fn:substring(app.childResiRegiNumber, 6, 7)}" />******</c:if></td>
+							<td colspan="3"><c:if
+									test="${isAdmin and empty app.childResiRegiNumber}">
+									<span class="highlight-warning">미입력</span>
+								</c:if>
+								<c:if test="${!isAdmin or not empty app.childResiRegiNumber}">
+									<c:out
+										value="${fn:substring(app.childResiRegiNumber, 0, 6)}-${fn:substring(app.childResiRegiNumber, 6, 7)}" />******</c:if></td>
 						</tr>
-					</c:otherwise></c:choose>
+					</c:otherwise>
+				</c:choose>
 			</tbody>
 		</table>
 	</div>
@@ -310,16 +422,20 @@ textarea.form-control { resize: vertical; }
 			<tbody>
 				<tr>
 					<th>은행</th>
-					<td><c:if test="${isAdmin and empty app.bankName}"><span class="highlight-warning">미입력</span></c:if><c:if test="${!isAdmin or not empty app.bankName}"><c:out value="${app.bankName}" /></c:if></td>
-					<th>계좌번호</th>
-					<td>
-						<c:if test="${isAdmin and empty app.accountNumber}"><span class="highlight-warning">미입력</span></c:if>
-						<c:if test="${!isAdmin or not empty app.accountNumber}">
-							<c:set var="acc" value="${app.accountNumber}"/>
-							<c:set var="len" value="${fn:length(acc)}"/>
-							****<c:out value="${fn:substring(acc, len - 4, len)}"/>
+					<td><c:if test="${isAdmin and empty app.bankName}">
+							<span class="highlight-warning">미입력</span>
 						</c:if>
-					</td>
+						<c:if test="${!isAdmin or not empty app.bankName}">
+							<c:out value="${app.bankName}" />
+						</c:if></td>
+					<th>계좌번호</th>
+					<td><c:if test="${isAdmin and empty app.accountNumber}">
+							<span class="highlight-warning">미입력</span>
+						</c:if> <c:if test="${!isAdmin or not empty app.accountNumber}">
+							<c:set var="acc" value="${app.accountNumber}" />
+							<c:set var="len" value="${fn:length(acc)}" />
+							****<c:out value="${fn:substring(acc, len - 4, len)}" />
+						</c:if></td>
 				</tr>
 				<tr>
 					<th>예금주 이름</th>
@@ -335,7 +451,9 @@ textarea.form-control { resize: vertical; }
 			<tbody>
 				<tr>
 					<th>관할센터</th>
-					<td>서울 고용 복지 플러스 센터 <a href="https://www.work.go.kr/seoul/main.do" class="detail-btn">자세히 보기</a></td>
+					<td>서울 고용 복지 플러스 센터 <a
+						href="https://www.work.go.kr/seoul/main.do" class="detail-btn">자세히
+							보기</a></td>
 					<th>대표전화</th>
 					<td>02-2004-7301</td>
 				</tr>
@@ -353,7 +471,16 @@ textarea.form-control { resize: vertical; }
 			<tbody>
 				<tr>
 					<th>동의 여부</th>
-					<td colspan="3"><c:choose><c:when test="${app.govInfoAgree == 'Y'}">예</c:when><c:when test="${app.govInfoAgree == 'N'}"><c:if test="${isAdmin}"><span class="highlight-warning">아니요</span></c:if><c:if test="${!isAdmin}">아니요</c:if></c:when><c:otherwise>미선택</c:otherwise></c:choose></td>
+					<td colspan="3"><c:choose>
+							<c:when test="${app.govInfoAgree == 'Y'}">예</c:when>
+							<c:when test="${app.govInfoAgree == 'N'}">
+								<c:if test="${isAdmin}">
+									<span class="highlight-warning">아니요</span>
+								</c:if>
+								<c:if test="${!isAdmin}">아니요</c:if>
+							</c:when>
+							<c:otherwise>미선택</c:otherwise>
+						</c:choose></td>
 				</tr>
 			</tbody>
 		</table>
@@ -365,24 +492,105 @@ textarea.form-control { resize: vertical; }
 			<table class="info-table table-4col">
 				<tbody>
 					<tr>
-						<th>부정수급 <br/>안내 확인</th>
-						<td colspan="3">
-							<span class="success-text">확인 및 동의 완료</span>
+						<th>부정수급 <br />안내 확인
+						</th>
+						<td colspan="3"><span class="success-text">확인 및 동의 완료</span>
 							(<fmt:formatDate value="${app.submittedDt}" pattern="yyyy.MM.dd" />)
 						</td>
 					</tr>
 					<tr>
 						<th>심사 상태</th>
-						<td colspan="3"><c:choose><c:when test="${app.paymentResult == 'Y'}"><span class="success-text">지급결정</span><c:if test="${not empty app.examineDt}">(<fmt:formatDate value="${app.examineDt}" pattern="yyyy.MM.dd" />)</c:if></c:when><c:when test="${app.paymentResult == 'N'}"><span style="color:#dc3545; font-weight:500;">부지급결정</span><c:if test="${not empty app.examineDt}">(<fmt:formatDate value="${app.examineDt}" pattern="yyyy.MM.dd" />)</c:if><c:if test="${not empty app.rejectionReasonCode or not empty app.rejectComment or not empty app.rejectionReasonName}"><br/><span style="display:block; margin-top:10px; padding:12px; border:1px solid #d1d9ff; background:#f0f2ff; border-radius:6px;"><strong>부지급 사유</strong> :<c:choose><c:when test="${not empty app.rejectionReasonName}">${app.rejectionReasonName}</c:when><c:when test="${not empty rejectCodeMap and not empty app.rejectionReasonCode}">${rejectCodeMap[app.rejectionReasonCode]}</c:when><c:otherwise><c:out value="${app.rejectionReasonCode}" /></c:otherwise></c:choose><c:if test="${not empty app.rejectComment}"><br/><strong>상세 사유</strong> :<c:out value="${app.rejectComment}" /></c:if></span></c:if></c:when><c:otherwise>심사중</c:otherwise></c:choose></td>
+						<td colspan="3"><c:choose>
+								<c:when test="${app.paymentResult == 'Y'}">
+									<span class="success-text">지급결정</span>
+									<c:if test="${not empty app.examineDt}">(<fmt:formatDate
+											value="${app.examineDt}" pattern="yyyy.MM.dd" />)</c:if>
+								</c:when>
+								<c:when test="${app.paymentResult == 'N'}">
+									<span style="color: #dc3545; font-weight: 500;">부지급결정</span>
+									<c:if test="${not empty app.examineDt}">(<fmt:formatDate
+											value="${app.examineDt}" pattern="yyyy.MM.dd" />)</c:if>
+									<c:if
+										test="${not empty app.rejectionReasonCode or not empty app.rejectComment or not empty app.rejectionReasonName}">
+										<br />
+										<span
+											style="display: block; margin-top: 10px; padding: 12px; border: 1px solid #d1d9ff; background: #f0f2ff; border-radius: 6px;"><strong>부지급
+												사유</strong> :<c:choose>
+												<c:when test="${not empty app.rejectionReasonName}">${app.rejectionReasonName}</c:when>
+												<c:when
+													test="${not empty rejectCodeMap and not empty app.rejectionReasonCode}">${rejectCodeMap[app.rejectionReasonCode]}</c:when>
+												<c:otherwise>
+													<c:out value="${app.rejectionReasonCode}" />
+												</c:otherwise>
+											</c:choose>
+											<c:if test="${not empty app.rejectComment}">
+												<br />
+												<strong>상세 사유</strong> :<c:out value="${app.rejectComment}" />
+											</c:if></span>
+									</c:if>
+								</c:when>
+								<c:otherwise>심사중</c:otherwise>
+							</c:choose></td>
 					</tr>
 				</tbody>
 			</table>
 		</div>
 	</c:if>
 
-	<div class="button-container"><c:choose><c:when test="${isAdmin}"><button type="button" class="btn bottom-btn btn-primary approve-btn">지급</button><form id="reject-form" action="${pageContext.request.contextPath}/apply/reject" method="post" style="display: inline;"><sec:csrfInput /><input type="hidden" name="appNo" value="${app.applicationNumber}" /><input type="hidden" name="rejectCode" id="hidden-reject-code" /><input type="hidden" name="rejectDetail" id="hidden-reject-detail" /><button type="button" id="reject-btn" class="btn bottom-btn btn-secondary" style="margin-left: 15px;">부지급</button></form></c:when><c:otherwise><a href="${pageContext.request.contextPath}/main" class="btn bottom-btn btn-secondary">목록으로 돌아가기</a><c:if test="${!isSubmitted}"><a href="${pageContext.request.contextPath}/apply/edit?appNo=${app.applicationNumber}" class="btn bottom-btn btn-primary" style="margin-left: 15px;">신청 내용 수정</a><form action="${pageContext.request.contextPath}/apply/submit" method="post" style="display: inline;"><sec:csrfInput /><input type="hidden" name="appNo" value="${app.applicationNumber}" /><button type="submit" class="btn bottom-btn btn-primary" style="margin-left: 15px;">제출하기</button></form><form action="${pageContext.request.contextPath}/apply/delete" method="post" style="display: inline;"><sec:csrfInput /><input type="hidden" name="appNo" value="${app.applicationNumber}" /><button type="submit" class="btn bottom-btn btn-secondary" style="margin-left: 15px;" onclick="return confirm('정말 삭제하시겠습니까?');">삭제</button></form></c:if><c:if test="${isSubmitted and app.paymentResult == 'N'}"><form action="${pageContext.request.contextPath}/apply/review/request" method="post" style="display:inline;"><sec:csrfInput /><input type="hidden" name="appNo" value="${app.applicationNumber}" /><button type="submit" class="btn bottom-btn btn-primary" style="margin-left: 15px;">재심사 요청</button></form></c:if></c:otherwise></c:choose></div>
+	<div class="button-container">
+		<c:choose>
+			<c:when test="${isAdmin}">
+				<button type="button" class="btn bottom-btn btn-primary approve-btn">지급</button>
+				<form id="reject-form"
+					action="${pageContext.request.contextPath}/apply/reject"
+					method="post" style="display: inline;">
+					<sec:csrfInput />
+					<input type="hidden" name="appNo" value="${app.applicationNumber}" /><input
+						type="hidden" name="rejectCode" id="hidden-reject-code" /><input
+						type="hidden" name="rejectDetail" id="hidden-reject-detail" />
+					<button type="button" id="reject-btn"
+						class="btn bottom-btn btn-secondary" style="margin-left: 15px;">부지급</button>
+				</form>
+			</c:when>
+			<c:otherwise>
+				<a href="${pageContext.request.contextPath}/main"
+					class="btn bottom-btn btn-secondary">목록으로 돌아가기</a>
+				<c:if test="${!isSubmitted}">
+					<a
+						href="${pageContext.request.contextPath}/apply/edit?appNo=${app.applicationNumber}"
+						class="btn bottom-btn btn-primary" style="margin-left: 15px;">신청
+						내용 수정</a>
+					<form action="${pageContext.request.contextPath}/apply/submit"
+						method="post" style="display: inline;">
+						<sec:csrfInput />
+						<input type="hidden" name="appNo" value="${app.applicationNumber}" />
+						<button type="submit" class="btn bottom-btn btn-primary"
+							style="margin-left: 15px;">제출하기</button>
+					</form>
+					<form action="${pageContext.request.contextPath}/apply/delete"
+						method="post" style="display: inline;">
+						<sec:csrfInput />
+						<input type="hidden" name="appNo" value="${app.applicationNumber}" />
+						<button type="submit" class="btn bottom-btn btn-secondary"
+							style="margin-left: 15px;"
+							onclick="return confirm('정말 삭제하시겠습니까?');">삭제</button>
+					</form>
+				</c:if>
+				<c:if test="${isSubmitted and app.paymentResult == 'N'}">
+					<form
+						action="${pageContext.request.contextPath}/apply/review/request"
+						method="post" style="display: inline;">
+						<sec:csrfInput />
+						<input type="hidden" name="appNo" value="${app.applicationNumber}" />
+						<button type="submit" class="btn bottom-btn btn-primary"
+							style="margin-left: 15px;">재심사 요청</button>
+					</form>
+				</c:if>
+			</c:otherwise>
+		</c:choose>
+	</div>
 	</main>
-	
+
 	<%-- 부지급 사유 모달 --%>
 	<div id="reject-modal" class="modal-overlay" style="display: none;">
 		<div class="modal-content">
