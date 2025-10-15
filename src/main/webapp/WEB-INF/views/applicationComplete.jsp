@@ -141,7 +141,7 @@ h2.section-title{
 </style>
 </head>
 <body>
-     <%@ include file="header.jsp" %>
+<%@ include file="header.jsp" %>
 
    
 	<main class="main-container">                
