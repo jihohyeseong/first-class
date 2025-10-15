@@ -159,7 +159,7 @@ textarea.form-control { resize: vertical; }
 </style>
 </head>
 <body>
-	<%@ include file="header.jsp" %>
+	<%@ include file="../header.jsp" %>
 
 	<main class="main-container">
 	<h1>육아휴직 급여 신청서 상세 보기</h1>

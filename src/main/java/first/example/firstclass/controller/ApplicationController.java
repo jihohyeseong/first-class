@@ -86,7 +86,7 @@ public class ApplicationController {
         UserDTO userDTO = currentUserOrNull();
         if (userDTO == null) return "redirect:/login";
         model.addAttribute("userDTO", userDTO);
-        return "application";
+        return "apply/application";
     }
 
     @GetMapping("/apply/complete")
@@ -100,7 +100,7 @@ public class ApplicationController {
         if (app == null) return "redirect:/main";
         model.addAttribute("app", app);
         model.addAttribute("userDTO", user);
-        return "applicationComplete";
+        return "apply/applicationComplete";
     }
 
     @GetMapping("/apply/detail")
@@ -151,7 +151,7 @@ public class ApplicationController {
         model.addAttribute("userDTO", user);
         model.addAttribute("isAdmin", isAdmin);
 
-        return "applicationDetail";
+        return "apply/applicationDetail";
     }
     
     private String maskRrn(String rrn) {
@@ -299,7 +299,7 @@ public class ApplicationController {
         model.addAttribute("userDTO", user);
         model.addAttribute("isAdmin", isAdmin);
         model.addAttribute("terms", terms);
-        return "applicationEdit";
+        return "apply/applicationEdit";
     }
 
     @PostMapping("/apply/edit")
@@ -433,10 +433,10 @@ public class ApplicationController {
         return ("y".equalsIgnoreCase(v) || "on".equals(s) || "true".equals(s) || "1".equals(s)) ? "Y" : "N";
     }
 
-    private static String ynRequired(String v) {
+/*    private static String ynRequired(String v) {
         if (v == null) throw new IllegalArgumentException("동의 여부는 필수입니다.");
         return yn(v);
-    }
+    }*/
 
     @GetMapping("/codes/banks")
     @ResponseBody

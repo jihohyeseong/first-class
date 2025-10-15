@@ -154,7 +154,7 @@
 <script src="//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 
-<%@ include file="header.jsp" %>
+<%@ include file="../header.jsp" %>
 
 	<main class="main-container">
 	<h1>육아휴직 급여 신청서 수정</h1>
