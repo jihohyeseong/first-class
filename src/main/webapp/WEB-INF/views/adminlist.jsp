@@ -22,78 +22,64 @@
             --gray-color: #868e96;
             --dark-gray-color: #343a40;
             --border-color: #dee2e6;
-            --success-color: #28a745; /* [추가] 성공 색상 변수 */
-            --danger-color: #dc3545; /* [추가] 위험 색상 변수 */
+            --success-color: #28a745;
+            --danger-color: #dc3545;
             --shadow-sm: 0 1px 3px rgba(0,0,0,0.05);
             --shadow-md: 0 4px 8px rgba(0,0,0,0.07);
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
-   html { height: 100%; }
-   body {
-     display: flex; flex-direction: column; min-height: 100vh;
-     font-family: 'Noto Sans KR', sans-serif;
-     background-color: var(--light-gray-color);
-     color: var(--dark-gray-color);
-   }
-   a { text-decoration: none; color: inherit; }
+        html { height: 100%; }
+        body {
+            display: flex; flex-direction: column; min-height: 100vh;
+            font-family: 'Noto Sans KR', sans-serif;
+            background-color: var(--light-gray-color);
+            color: var(--dark-gray-color);
+        }
+        a { text-decoration: none; color: inherit; }
 	
-   .btn {
-         display: inline-block;
-         padding: 10px 20px;
-         font-size: 15px;
-         font-weight: 500;
-         border-radius: 8px;
-         border: 1px solid var(--border-color);
-         cursor: pointer;
-         transition: all 0.2s ease-in-out;
-         text-align: center;
-       }
-   .btn-primary { background-color: var(--primary-color); color: var(--white-color); border-color: var(--primary-color); }
-   .btn-primary:hover { background-color: #364ab1; box-shadow: var(--shadow-md); transform: translateY(-2px); }
-   .btn-logout { background-color: var(--dark-gray-color); color: var(--white-color); border: none; }
-   .btn-logout:hover { background-color: #555; }
-   .btn-secondary { background-color: var(--white-color); color: var(--gray-color); border-color: var(--border-color); }
-   .btn-secondary:hover { background-color: var(--light-gray-color); color: var(--dark-gray-color); border-color: #ccc; }
-   
-   .header {
-         background-color: var(--white-color);
-         padding: 15px 40px;
-         display: flex;
-         justify-content: space-between;
-         align-items: center;
-         border-bottom: 1px solid var(--border-color);
-         box-shadow: var(--shadow-sm);
-         position: sticky;
-         top: 0;
-         z-index: 10;
-       }
-   .header .logo img { vertical-align: middle; }
-   .header nav { display: flex; align-items: center; gap: 15px; }
-   .header .welcome-msg { font-size: 16px; color: var(--dark-gray-color); }
+        .btn {
+            display: inline-block;
+            padding: 10px 20px;
+            font-size: 15px;
+            font-weight: 500;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            text-align: center;
+        }
+        .btn-primary { background-color: var(--primary-color); color: var(--white-color); border-color: var(--primary-color); }
+        .btn-primary:hover { background-color: #364ab1; box-shadow: var(--shadow-md); transform: translateY(-2px); }
+        .btn-logout { background-color: var(--dark-gray-color); color: var(--white-color); border: none; }
+        .btn-logout:hover { background-color: #555; }
+        .btn-secondary { background-color: var(--white-color); color: var(--gray-color); border-color: var(--border-color); }
+        .btn-secondary:hover { background-color: var(--light-gray-color); color: var(--dark-gray-color); border-color: #ccc; }
+        
+        /* 헤더 관련 CSS는 header.jsp로 이동하여 여기서는 삭제됨 */
 		
-	.header-nav {
-		    position: absolute;
-		    left: 50%;
-		    transform: translateX(-50%);
-		    display: flex;
-		    list-style: none;
-		    margin: 0;
-		    padding: 0;
+		.header-nav {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            list-style: none;
+            margin: 0;
+            padding: 0;
 		}
 	
-	.header-nav .nav-link {
-		    display: block;
-		    padding: 0.5rem 1rem;
-		    border-radius: 0.5rem;
-		    font-weight: 500;
-		    color: #495057;
-		    transition: all 0.3s ease-in-out;
+		.header-nav .nav-link {
+            display: block;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            font-weight: 500;
+            color: #495057;
+            transition: all 0.3s ease-in-out;
 		}
-	.header-nav .nav-link:hover {
-		    color: #3f58d4;
-		    transform: translateY(-3px);
-		    box-shadow: 0 4px 10px rgba(63, 88, 212, 0.3);
+		.header-nav .nav-link:hover {
+            color: #3f58d4;
+            transform: translateY(-3px);
+            box-shadow: 0 4px 10px rgba(63, 88, 212, 0.3);
 		}
         
         /* 레이아웃 */
@@ -109,9 +95,9 @@
 
 		/* 검색바 */
 		.search-box {
-		    position: relative;
-		    width: 400px;
-		    margin-right: 1.5rem;
+            position: relative;
+            width: 400px;
+            margin-right: 1.5rem;
 		}
         .search-box input {
             width: 100%;
@@ -151,12 +137,11 @@
             border-radius: 0.75rem;
             transition: all 0.2s ease-in-out;
         }
-        /* a 태그를 flex item으로 만들기 */
-		.stat-cards-container > a {
-		    flex: 1;
-		    min-width: 0;
-		    text-decoration: none;
-		    color: inherit;
+        .stat-cards-container > a {
+            flex: 1;
+            min-width: 0;
+            text-decoration: none;
+            color: inherit;
 		}
         .stat-card:hover {
             transform: translateY(-5px);
@@ -187,7 +172,7 @@
         }
         .stat-card .bi {
             font-size: 1.8rem;
-            color: #adb5bd; /* [수정됨] 모든 아이콘 색상을 회색으로 통일 */
+            color: #adb5bd;
         }
 
         /* Table Wrapper */
@@ -246,16 +231,16 @@
         }
         /* 달력 버튼&조회 */
         button {
-		  border: none; 
-		  background-color: transparent;
-		  cursor: pointer; 
-		  padding: 0;
-		  vertical-align: middle; /* 아이콘과 텍스트의 세로 정렬 */
+            border: none; 
+            background-color: transparent;
+            cursor: pointer; 
+            padding: 0;
+            vertical-align: middle;
 		}
 
 		button:hover {
-		  opacity: 0.7; 
-		  transform: scale(1.1);
+            opacity: 0.7; 
+            transform: scale(1.1);
 		}
 		
         /* 재사용 컴포넌트 */
@@ -267,7 +252,6 @@
             border-radius: 50rem;
             color: #fff;
         }
-        /* [수정됨] 배지 색상을 상태에 맞게 변경 */
         .badge-wait { background-color: var(--primary-color); }
         .badge-approved { background-color: var(--success-color); }
         .badge-rejected { background-color: var(--gray-color); }
@@ -292,64 +276,47 @@
         }
         /* 페이징 네비게이션 스타일 */
 		.pagination {
-		    display: flex;
-		    justify-content: center;
-		    align-items: center;
-		    margin-top: 2rem;
-		    gap: 0.5rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 2rem;
+            gap: 0.5rem;
 		}
 		.pagination a, .pagination span {
-		    display: flex;
-		    align-items: center;
-		    justify-content: center;
-		    width: 38px;
-		    height: 38px;
-		    border: 1px solid var(--border-color);
-		    border-radius: 8px;
-		    background-color: var(--white-color);
-		    color: var(--dark-gray-color);
-		    font-weight: 500;
-		    transition: all 0.2s ease-in-out;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 38px;
+            height: 38px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background-color: var(--white-color);
+            color: var(--dark-gray-color);
+            font-weight: 500;
+            transition: all 0.2s ease-in-out;
 		}
 		.pagination a:hover {
-		    background-color: var(--primary-light-color);
-		    border-color: var(--primary-color);
-		    color: var(--primary-color);
+            background-color: var(--primary-light-color);
+            border-color: var(--primary-color);
+            color: var(--primary-color);
 		}
 		.pagination .active {
-		    background-color: var(--primary-color);
-		    border-color: var(--primary-color);
-		    color: var(--white-color);
-		    cursor: default;
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+            color: var(--white-color);
+            cursor: default;
 		}
 		.pagination .disabled {
-		    color: #ced4da;
-		    background-color: #f8f9fa;
-		    pointer-events: none;
+            color: #ced4da;
+            background-color: #f8f9fa;
+            pointer-events: none;
 		}
     </style>
 </head>
 <body>
 
     <div class="content-container">
-        <header class="header">
-	        <a href="#" class="logo"><img src="${pageContext.request.contextPath}/resources/images/logo.png" alt="Logo" width="80" height="80"></a>
-	        <nav>
-	        	
-				<sec:authorize access="isAnonymous()">
-                    <a href="${pageContext.request.contextPath}/login" class="btn btn-primary">로그인</a>
-                </sec:authorize>
-                <sec:authorize access="isAuthenticated()">
-                    <span class="welcome-msg">
-                        <sec:authentication property="principal.username"/>님, 환영합니다.
-                    </span>
-                    <form id="logout-form" action="${pageContext.request.contextPath}/logout" method="post" style="display: none;">
-                        <sec:csrfInput/>
-                    </form>
-                    <a href="#" onclick="document.getElementById('logout-form').submit(); return false;" class="btn btn-logout">로그아웃</a>
-                </sec:authorize>
-			</nav>
-		</header>
+    <%@ include file="adminheader.jsp" %>
 
         <main class="main-content">
             <h2 class="page-title">관리자 신청 목록</h2>
@@ -366,8 +333,8 @@
 	                </div>
                 </a>
 
-	            <a href="${pageContext.request.contextPath}/admin/applications?status=PENDING">
-		        	<div class="stat-card ${status == 'PENDING' ? 'active' : ''}">
+                <a href="${pageContext.request.contextPath}/admin/applications?status=PENDING">
+	                <div class="stat-card ${status == 'PENDING' ? 'active' : ''}">
 	                    <div class="stat-card-header">
 	                        <div>
 	                            <h6>대기 중 신청</h6><h1>${counts.pending}</h1><small>현재 검토가 필요한 신청</small>
@@ -536,7 +503,7 @@
 	        e.stopPropagation(); 
 	        fp.open();
 	    });
-	     
+	    
 		document.getElementById('btnReset').addEventListener("click", () => {
 			
 			// 입력 초기화
