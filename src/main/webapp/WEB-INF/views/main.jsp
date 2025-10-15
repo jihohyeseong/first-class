@@ -120,6 +120,45 @@
             text-align: center; padding: 20px 0;
             position: relative; z-index: 1;
         }
+        
+        /* 주의상자 추가 */
+        .notice-box {
+            background-color: var(--white-color);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 20px 25px;
+            margin-bottom: 30px;
+            color: var(--gray-color);
+        }
+        .notice-box .title {
+        	display: flex;
+            align-items: center;
+            font-weight: 700;
+            font-size: 16px;
+            margin-bottom: 15px;
+        }
+        .notice-box .title i {
+            margin-right: 10px;
+        }
+        .notice-box ul {
+            list-style-type: none;
+            padding-left: 28px;
+        }
+        .notice-box li {
+            position: relative;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        .notice-box li::before {
+            content: '•';
+            position: absolute;
+            left: -15px;
+            font-weight: 700;
+        }
+        .notice-box li:last-child {
+            margin-bottom: 0;
+        }
+        
     </style>
 </head>
 <body>
@@ -127,6 +166,19 @@
     <%@ include file="header.jsp" %>
 
     <main class="main-container"> 
+    
+    <div class="notice-box content-wrapper">
+            <div class="title">
+                <i class="fa-solid fa-volume-high"></i>
+                <span>안내</span>
+            </div>
+            <ul>
+                <li><strong>육아휴직급여:</strong> [모의계산하기]버튼을 클릭하면 예상 지급액을 확인할 수 있습니다.</li>
+                <li><strong>신청기간:</strong> 휴직개시일 1개월 이후부터 휴직종료일 이후 1년 이내 신청 가능합니다.</li>
+                <li><strong>승인기간:</strong> 신청서 제출완료 후 심시완료까지는 평균적으로 2-5일 소요됩니다. </li>
+            </ul>
+        </div>
+    
         <div class="content-wrapper">
             <div class="content-header">
                 <h2>
