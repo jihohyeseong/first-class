@@ -424,17 +424,14 @@ textarea.form-control { resize: vertical; }
 					<th>은행</th>
 					<td><c:if test="${isAdmin and empty app.bankName}">
 							<span class="highlight-warning">미입력</span>
-						</c:if>
-						<c:if test="${!isAdmin or not empty app.bankName}">
+						</c:if> <c:if test="${!isAdmin or not empty app.bankName}">
 							<c:out value="${app.bankName}" />
 						</c:if></td>
 					<th>계좌번호</th>
 					<td><c:if test="${isAdmin and empty app.accountNumber}">
 							<span class="highlight-warning">미입력</span>
 						</c:if> <c:if test="${!isAdmin or not empty app.accountNumber}">
-							<c:set var="acc" value="${app.accountNumber}" />
-							<c:set var="len" value="${fn:length(acc)}" />
-							****<c:out value="${fn:substring(acc, len - 4, len)}" />
+							<c:out value="${app.accountNumber}" />
 						</c:if></td>
 				</tr>
 				<tr>
