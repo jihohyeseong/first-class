@@ -115,7 +115,7 @@
 	.notice-icon { font-size: 1.8em; margin-right: 15px; margin-top: -2px; }
 	.notice-box h3 { margin: 0 0 8px 0; }
 
-	#period-input-section { display: block; } /* 수정폼에서는 기본으로 보이도록 변경 */
+	#period-input-section { display: block; }
 	.dynamic-form-container { margin-top: 20px; border-top: 1px solid var(--border-color); padding-top: 20px; }
 	.dynamic-form-row {
 		display: flex; align-items: center; gap: 15px; padding: 10px;
@@ -253,7 +253,6 @@
 					<label class="field-title" for="end-date">② 육아휴직 종료일</label>
 					<div class="input-field"
 						style="display: flex; align-items: center; gap: 10px;">
-						<%-- [UI 수정] style 추가 --%>
 						<input type="date" id="end-date" name="endDate"
 							value="${endDateVal}" style="width: auto; flex-grow: 1;">
 						<button type="button" id="generate-forms-btn"
@@ -492,15 +491,10 @@
 	</footer>
 
 <script>
-	// 수정 폼에서는 submit 시 childResiRegiNumber 필드의 name 속성을 동적으로 관리하기 위해
-	// 서버에서 받은 원본 주민등록번호를 JS 변수로 저장해 둡니다.
 	const ORIGINAL_RRN = "${fn:escapeXml(app.childResiRegiNumber)}";
 
 	document.addEventListener('DOMContentLoaded', function () {
-
-		var FIRST_LOAD = true;
 		
-		// ===== DOM 참조 =====
 		var startDateInput = document.getElementById('start-date');
 		var endDateInput = document.getElementById('end-date');
 		var periodInputSection = document.getElementById('period-input-section');
@@ -509,11 +503,9 @@
 		var noPaymentChk = document.getElementById('no-payment');
 		var noPaymentWrapper = document.getElementById('no-payment-wrapper');
 		
-		// 공통 유틸
 		function withCommas(s){ return String(s).replace(/\B(?=(\d{3})+(?!\d))/g, ','); }
 		function onlyDigits(s){ return (s||'').replace(/[^\d]/g,''); }
 
-		// 자리수 제한 + 콤마 표시 헬퍼
 		function allowDigitsOnlyAndCommasDisplay(el, maxDigits) {
 			function formatWithCaret(el) {
 				const start = el.selectionStart, old = el.value;
@@ -560,7 +552,6 @@
 			}
 		}
 
-		/* ====== 필드 입력 포맷팅 ====== */
 		const wageEl = document.getElementById('regularWage');
 		if (wageEl) allowDigitsOnlyAndCommasDisplay(wageEl, 19);
 
@@ -578,7 +569,7 @@
 				else if (raw.length > 3) pretty = raw.slice(0,3) + '-' + raw.slice(3);
 				this.value = pretty;
 			});
-			brnEl.dispatchEvent(new Event('input')); // 페이지 로드 시 하이픈 적용
+			brnEl.dispatchEvent(new Event('input'));
 		}
 
 		const weeklyEl = document.getElementById('weeklyHours');
@@ -592,9 +583,8 @@
 			if(el) el.addEventListener('input', () => { el.value = onlyDigits(el.value); });
 		});
 
-
 		// ==============================================================================
-		// [수정] 기간 생성 로직 변경
+		// 기간 생성 로직
 		// ==============================================================================
 		function formatDate(date) {
 			var y = date.getFullYear();
@@ -630,6 +620,13 @@
 
 			if (originalStartDate > finalEndDate) {
 				alert('종료일은 시작일보다 빠를 수 없습니다.');
+				return;
+			}
+			
+			// [추가] 최소 1개월 이상이어야 하는 조건 추가
+			const firstPeriodEndDate = getPeriodEndDate(originalStartDate, 1);
+			if (finalEndDate < firstPeriodEndDate) {
+				alert('신청 기간은 최소 1개월 이상이어야 합니다.');
 				return;
 			}
 			
@@ -695,13 +692,10 @@
 		if (noPaymentChk) {
 			noPaymentChk.addEventListener('change', applyNoPaymentState);
 		}
-		applyNoPaymentState(); // 페이지 로드 시 초기 상태 적용
-		// ==============================================================================
-		// [수정 끝]
+		applyNoPaymentState(); 
 		// ==============================================================================
 
 
-		// ===== 자녀정보(출생/예정) UI 및 데이터 동기화 =====
 		const hidden = document.getElementById('childBirthDateHidden');
 		const bornWrap = document.getElementById('born-fields');
 		const expWrap = document.getElementById('expected-fields');
@@ -736,13 +730,12 @@
 				setHiddenFrom(exp);
 			}
 		}
-		updateView(); // 초기 로드
+		updateView();
 		
 		if (birth) birth.addEventListener('change', function(){ if(rBorn && rBorn.checked) setHiddenFrom(birth); });
 		if (exp) exp.addEventListener('change', function(){ if(rBorn && !rBorn.checked) setHiddenFrom(exp); });
 		radios.forEach(r => r.addEventListener('change', updateView));
 
-		// ===== 최종 유효성 검증 및 제출 버튼 활성화 =====
 		function countUnits(startStr, endStr) {
 			if (!startStr || !endStr) return 0;
 			const start = new Date(startStr);
@@ -816,9 +809,8 @@
 		}
 		
 		['input','change'].forEach(evt => document.querySelector('form').addEventListener(evt, refreshSubmitState));
-		refreshSubmitState(); // 초기 검사
+		refreshSubmitState();
 
-		// ===== 제출 전 데이터 정리 =====
 		const form = document.querySelector('form[action$="/apply/edit"]');
 		if (form) {
 			form.addEventListener('submit', function(e) {
@@ -829,7 +821,6 @@
 					return;
 				}
 
-				// 주민번호 히든 필드 처리
 				if (rBorn && rBorn.checked) {
 					const a = onlyDigits(rrnAEl?.value);
 					const b = onlyDigits(rrnBEl?.value);
@@ -837,11 +828,10 @@
 						rrnHidden.value = a + b;
 						rrnHidden.name = 'childResiRegiNumber';
 					} else {
-						rrnHidden.value = ORIGINAL_RRN; // 불완전하면 원본값 유지
+						rrnHidden.value = ORIGINAL_RRN;
 						rrnHidden.name = 'childResiRegiNumber';
 					}
 				} else {
-					// 출산예정일 선택 시, 기존 주민번호 값이 있다면 유지, 없다면 전송 안함
 					if(ORIGINAL_RRN) {
 						rrnHidden.value = ORIGINAL_RRN;
 						rrnHidden.name = 'childResiRegiNumber';
@@ -850,7 +840,6 @@
 					}
 				}
 
-				// 숫자 필드 콤마 제거
 				[wageEl, accEl, brnEl, weeklyEl].forEach(el => {
 					if(el) el.value = onlyDigits(el.value);
 				});
@@ -860,7 +849,6 @@
 		}
 	});
 
-	// ===== 은행 목록 로드 (jQuery) =====
 	$(function () {
 		const $sel = $('#bankCode');
 		const selected = String($sel.data('selected') || '');
@@ -877,7 +865,6 @@
 		});
 	});
 	
-	// ===== 다음 주소 API =====
 	function execDaumPostcode(prefix) {
 		new daum.Postcode({
 			oncomplete: function(data) {
@@ -889,7 +876,6 @@
 		}).open();
 	}
 
-	// ===== Enter 키로 인한 제출 방지 =====
 	document.querySelector('form[action$="/apply/edit"]').addEventListener('keydown', function (e) {
 		if (e.key === 'Enter' && e.target.type !== 'textarea' && e.target.type !== 'submit') {
 			e.preventDefault();

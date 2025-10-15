@@ -159,8 +159,15 @@ textarea.form-control { resize: vertical; }
 </style>
 </head>
 <body>
-	<%@ include file="header.jsp" %>
-
+	<c:choose>
+	    <c:when test="${isAdmin}">
+	        <jsp:include page="adminheader.jsp" />
+	    </c:when>
+	    <c:otherwise>
+	        <jsp:include page="header.jsp" />
+	    </c:otherwise>
+	</c:choose>
+	
 	<main class="main-container">
 	<h1>육아휴직 급여 신청서 상세 보기</h1>
 	<div class="info-table-container">

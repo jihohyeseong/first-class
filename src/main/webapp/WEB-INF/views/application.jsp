@@ -422,148 +422,88 @@
 <script>
 document.addEventListener('DOMContentLoaded', function () {
 	
-	// 공통 유틸
-	  function withCommas(s){ return String(s).replace(/\B(?=(\d{3})+(?!\d))/g, ','); }
-	  function onlyDigits(s){ return (s||'').replace(/[^\d]/g,''); }
+	function withCommas(s){ return String(s).replace(/\B(?=(\d{3})+(?!\d))/g, ','); }
+	function onlyDigits(s){ return (s||'').replace(/[^\d]/g,''); }
 
-	  // 자리수 제한 + 콤마 표시 헬퍼
-	  function allowDigitsOnlyAndCommasDisplay(el, maxDigits) {
-	    function formatWithCaret(el) {
-	      const start = el.selectionStart, old = el.value;
-	      const digitsBefore = onlyDigits(old.slice(0, start)).length;
-	      let raw = onlyDigits(old);
-	      if (maxDigits) raw = raw.slice(0, maxDigits);
-	      el.value = withCommas(raw);
-	      let cur=0, pos=0;
-	      for (let i=0;i<el.value.length;i++){
-	        if (/\d/.test(el.value[i])) cur++;
-	        if (cur>=digitsBefore){ pos=i+1; break; }
-	      }
-	      el.setSelectionRange(pos,pos);
-	    }
-	    el.addEventListener('keydown', e=>{
-	      const k=e.key, ctrl=e.ctrlKey||e.metaKey;
-	      const edit=['Backspace','Delete','ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Home','End','Tab'];
-	      if (ctrl && ['a','c','v','x','z','y'].includes(k.toLowerCase())) return;
-	      if (edit.includes(k)) return;
-	      if (/^\d$/.test(k)) return;
-	      e.preventDefault();
-	    });
-	    el.addEventListener('paste', e=>{
-	      e.preventDefault();
-	      let t=(e.clipboardData||window.clipboardData).getData('text')||'';
-	      let d=onlyDigits(t);
-	      if (maxDigits) d=d.slice(0,maxDigits);
-	      const s=el.selectionStart, en=el.selectionEnd, v=onlyDigits(el.value);
-	      const merged=(v.slice(0,s)+d+v.slice(en)).slice(0, maxDigits||Infinity);
-	      el.value = withCommas(merged);
-	      el.setSelectionRange(el.value.length, el.value.length);
-	    });
-	    el.addEventListener('drop', e=>e.preventDefault());
-	    el.addEventListener('input', e=>{ if(!e.isComposing) formatWithCaret(el); });
-	    el.addEventListener('blur', ()=>{
-	      let raw=onlyDigits(el.value);
-	      if (maxDigits) raw=raw.slice(0,maxDigits);
-	      el.value=withCommas(raw);
-	    });
-	    if (el.value){
-	      let raw=onlyDigits(el.value);
-	      if (maxDigits) raw=raw.slice(0,maxDigits);
-	      el.value=withCommas(raw);
-	    }
-	  }
+	function allowDigitsOnlyAndCommasDisplay(el, maxDigits) {
+		function formatWithCaret(el) {
+			const start = el.selectionStart, old = el.value;
+			const digitsBefore = onlyDigits(old.slice(0, start)).length;
+			let raw = onlyDigits(old);
+			if (maxDigits) raw = raw.slice(0, maxDigits);
+			el.value = withCommas(raw);
+			let cur=0, pos=0;
+			for (let i=0;i<el.value.length;i++){
+				if (/\d/.test(el.value[i])) cur++;
+				if (cur>=digitsBefore){ pos=i+1; break; }
+			}
+			el.setSelectionRange(pos,pos);
+		}
+		el.addEventListener('keydown', e=>{
+			const k=e.key, ctrl=e.ctrlKey||e.metaKey;
+			const edit=['Backspace','Delete','ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Home','End','Tab'];
+			if (ctrl && ['a','c','v','x','z','y'].includes(k.toLowerCase())) return;
+			if (edit.includes(k)) return;
+			if (/^\d$/.test(k)) return;
+			e.preventDefault();
+		});
+		el.addEventListener('paste', e=>{
+			e.preventDefault();
+			let t=(e.clipboardData||window.clipboardData).getData('text')||'';
+			let d=onlyDigits(t);
+			if (maxDigits) d=d.slice(0,maxDigits);
+			const s=el.selectionStart, en=el.selectionEnd, v=onlyDigits(el.value);
+			const merged=(v.slice(0,s)+d+v.slice(en)).slice(0, maxDigits||Infinity);
+			el.value = withCommas(merged);
+			el.setSelectionRange(el.value.length, el.value.length);
+		});
+		el.addEventListener('drop', e=>e.preventDefault());
+		el.addEventListener('input', e=>{ if(!e.isComposing) formatWithCaret(el); });
+		el.addEventListener('blur', ()=>{
+			let raw=onlyDigits(el.value);
+			if (maxDigits) raw=raw.slice(0,maxDigits);
+			el.value=withCommas(raw);
+		});
+		if (el.value){
+			let raw=onlyDigits(el.value);
+			if (maxDigits) raw=raw.slice(0,maxDigits);
+			el.value=withCommas(raw);
+		}
+	}
 
-	  /* ====== 여기부터 필드 바인딩 ====== */
+	const wageEl = document.getElementById('regularWage');
+	if (wageEl) allowDigitsOnlyAndCommasDisplay(wageEl, 19);
 
-	  // 통상임금: 숫자 + 최대 19자리 + 콤마
-	  const wageEl = document.getElementById('regularWage');
-	  if (wageEl) allowDigitsOnlyAndCommasDisplay(wageEl, 19);
+	const accEl = document.getElementById('accountNumber');
+	if (accEl) {
+		accEl.addEventListener('input', function(){ this.value = onlyDigits(this.value).slice(0, 14); });
+	}
 
-	  // 계좌번호: 숫자만 최대 14자리
-	  const accEl = document.getElementById('accountNumber');
-	  if (accEl) {
-	    accEl.addEventListener('input', function(){
-	      this.value = onlyDigits(this.value).slice(0, 14);
-	    });
-	  }
+	const brnEl = document.getElementById('businessRegiNumber');
+	if (brnEl) {
+		brnEl.addEventListener('input', function(){
+			const raw = onlyDigits(this.value).slice(0, 10);
+			let pretty = raw;
+			if (raw.length > 5)     pretty = raw.slice(0,3) + '-' + raw.slice(3,5) + '-' + raw.slice(5);
+			else if (raw.length > 3) pretty = raw.slice(0,3) + '-' + raw.slice(3);
+			this.value = pretty;
+		});
+	}
 
-	  // 사업자등록번호: 숫자만 최대 10자리 + 즉시 하이픈(3-2-5)
-	  const brnEl = document.getElementById('businessRegiNumber');
-	  if (brnEl) {
-	    brnEl.addEventListener('input', function(){
-	      const raw = onlyDigits(this.value).slice(0, 10);
-	      let pretty = raw;
-	      if (raw.length > 5)      pretty = raw.slice(0,3) + '-' + raw.slice(3,5) + '-' + raw.slice(5);
-	      else if (raw.length > 3) pretty = raw.slice(0,3) + '-' + raw.slice(3);
-	      this.value = pretty;
-	    });
-	  }
+	const weeklyEl = document.getElementById('weeklyHours');
+	if (weeklyEl) {
+		weeklyEl.addEventListener('input', function(){ this.value = onlyDigits(this.value).slice(0, 5); });
+	}
 
-	  // 주당 소정근로시간: 숫자만 최대 5자리
-	  const weeklyEl = document.getElementById('weeklyHours');
-	  if (weeklyEl) {
-	    weeklyEl.addEventListener('input', function(){
-	      this.value = onlyDigits(this.value).slice(0, 5);
-	    });
-	  }
+	const rrnAEl = document.getElementById('child-rrn-a');
+	const rrnBEl = document.getElementById('child-rrn-b');
+	[rrnAEl, rrnBEl].forEach(el => {
+		if(el) el.addEventListener('input', () => { el.value = onlyDigits(el.value); });
+	});
 
-	  /* ====== 제출 직전 정리 ====== */
-	  const form = document.querySelector('form[action$="/apply"], form[action$="/apply/edit"]');
-	  if (form) {
-	    form.addEventListener('submit', function(){
-	      if (brnEl) brnEl.value = onlyDigits(brnEl.value).slice(0,10);
-	      if (accEl) accEl.value = onlyDigits(accEl.value).slice(0,14);
-	      if (wageEl) wageEl.value = onlyDigits(wageEl.value).slice(0,19);
-	      if (weeklyEl) weeklyEl.value = onlyDigits(weeklyEl.value).slice(0,5);
-	    });
-	  }
-	  
-	// ===== 자녀 주민등록번호: 숫자만 입력 =====
-	  const rrnAEl = document.getElementById('child-rrn-a'); // 앞 6자리 (maxlength로 길이 제한 이미 있음)
-	  const rrnBEl = document.getElementById('child-rrn-b'); // 뒤 7자리 (maxlength로 길이 제한 이미 있음)
-
-	  function bindDigitsOnly(el){
-	    if (!el) return;
-
-	    // 키 입력: 숫자/편집키만 허용
-	    el.addEventListener('keydown', (e) => {
-	      const k = e.key;
-	      const ctrl = e.ctrlKey || e.metaKey;
-	      const edit = ['Backspace','Delete','ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Home','End','Tab'];
-	      if (ctrl && ['a','c','v','x','z','y'].includes(k.toLowerCase())) return;
-	      if (edit.includes(k)) return;
-	      if (/^\d$/.test(k)) return;
-	      e.preventDefault();
-	    });
-
-	    // 붙여넣기: 숫자만 유지
-	    el.addEventListener('paste', (e) => {
-	      e.preventDefault();
-	      const t = (e.clipboardData || window.clipboardData).getData('text') || '';
-	      const digits = (t || '').replace(/[^\d]/g, '');
-	      const s = el.selectionStart, tEnd = el.selectionEnd;
-	      const cur = el.value || '';
-	      el.value = cur.slice(0, s) + digits + cur.slice(tEnd);
-	    });
-
-	    // 드래그드롭 방지
-	    el.addEventListener('drop', (e) => e.preventDefault());
-
-	    // input 시에도 혹시 모를 비숫자 제거
-	    el.addEventListener('input', () => {
-	      el.value = (el.value || '').replace(/[^\d]/g, '');
-	    });
-	  }
-
-	  bindDigitsOnly(rrnAEl);
-	  bindDigitsOnly(rrnBEl);
-
-
-    // ==============================================================================
-    // [수정 영역 시작] 기간 생성 로직 변경
-    // ==============================================================================
-
-	// ===== DOM 참조 =====
+	// ==============================================================================
+	// 기간 생성 로직
+	// ==============================================================================
 	var startDateInput = document.getElementById('start-date');
 	var endDateInput = document.getElementById('end-date');
 	var periodInputSection = document.getElementById('period-input-section');
@@ -572,7 +512,6 @@ document.addEventListener('DOMContentLoaded', function () {
 	var noPaymentChk = document.getElementById('no-payment');
 	var noPaymentWrapper = document.getElementById('no-payment-wrapper');
 
-	// ===== 유틸/헬퍼 =====
 	function formatDate(date) {
 		var y = date.getFullYear();
 		var m = String(date.getMonth() + 1).padStart(2, '0');
@@ -580,58 +519,22 @@ document.addEventListener('DOMContentLoaded', function () {
 		return y + '.' + m + '.' + d;
 	}
 
-    function getPeriodEndDate(originalStart, periodNumber) {
-        let nextPeriodStart = new Date(
-            originalStart.getFullYear(),
-            originalStart.getMonth() + periodNumber,
-            originalStart.getDate()
-        );
-        if (nextPeriodStart.getDate() !== originalStart.getDate()) {
-            nextPeriodStart = new Date(
-                originalStart.getFullYear(),
-                originalStart.getMonth() + periodNumber + 1,
-                1
-            );
-        }
-        nextPeriodStart.setDate(nextPeriodStart.getDate() - 1);
-        return nextPeriodStart;
-    }
-
-	function getPaymentInputs() {
-		return formsContainer.querySelectorAll('input[name^="monthly_payment_"]');
-	}
-
-	function applyNoPaymentState() {
-		var inputs = getPaymentInputs();
-		inputs.forEach(function(inp){
-			if (noPaymentChk && noPaymentChk.checked) {
-				inp.value = 0;
-				inp.readOnly = true;
-				inp.classList.add('readonly-like');
-			} else {
-				inp.readOnly = false;
-				inp.classList.remove('readonly-like');
-				if (inp.value === '0') inp.value = '';
-			}
-		});
-	}
-
-	// ===== 날짜 입력 보이기/초기화 =====
-	startDateInput.addEventListener('change', function() {
-		if (startDateInput.value) {
-			periodInputSection.style.display = 'block';
-			endDateInput.min = startDateInput.value;
-			formsContainer.innerHTML = '';
-			if (noPaymentWrapper) noPaymentWrapper.style.display = 'none';
-		} else {
-			periodInputSection.style.display = 'none';
+	function getPeriodEndDate(originalStart, periodNumber) {
+		let nextPeriodStart = new Date(
+			originalStart.getFullYear(),
+			originalStart.getMonth() + periodNumber,
+			originalStart.getDate()
+		);
+		if (nextPeriodStart.getDate() !== originalStart.getDate()) {
+			nextPeriodStart = new Date(
+				originalStart.getFullYear(),
+				originalStart.getMonth() + periodNumber + 1,
+				1
+			);
 		}
-	});
-	endDateInput.addEventListener('change', function () {
-		formsContainer.innerHTML = '';
-		if (noPaymentWrapper) noPaymentWrapper.style.display = 'none';
-	});
-	if (noPaymentChk) noPaymentChk.addEventListener('change', applyNoPaymentState);
+		nextPeriodStart.setDate(nextPeriodStart.getDate() - 1);
+		return nextPeriodStart;
+	}
 
 	generateBtn.addEventListener('click', function() {
 		if (!startDateInput.value || !endDateInput.value) {
@@ -644,6 +547,13 @@ document.addEventListener('DOMContentLoaded', function () {
 
 		if (originalStartDate > finalEndDate) {
 			alert('종료일은 시작일보다 빠를 수 없습니다.');
+			return;
+		}
+
+		// [추가] 최소 1개월 이상이어야 하는 조건 추가
+		const firstPeriodEndDate = getPeriodEndDate(originalStartDate, 1);
+		if (finalEndDate < firstPeriodEndDate) {
+			alert('신청 기간은 최소 1개월 이상이어야 합니다.');
 			return;
 		}
 
@@ -666,18 +576,14 @@ document.addEventListener('DOMContentLoaded', function () {
 
 		while (currentPeriodStart <= finalEndDate && monthIdx <= 12) {
 			const theoreticalEndDate = getPeriodEndDate(originalStartDate, monthIdx);
-
 			let actualPeriodEnd = new Date(theoreticalEndDate);
 			if (actualPeriodEnd > finalEndDate) {
 				actualPeriodEnd = new Date(finalEndDate);
 			}
 			
-			if (currentPeriodStart > actualPeriodEnd) {
-				break;
-			}
+			if (currentPeriodStart > actualPeriodEnd) break;
 
 			const rangeText = formatDate(currentPeriodStart) + ' ~ ' + formatDate(actualPeriodEnd);
-
 			var row = document.createElement('div');
 			row.className = 'dynamic-form-row';
 			row.innerHTML =
@@ -698,12 +604,39 @@ document.addEventListener('DOMContentLoaded', function () {
 			applyNoPaymentState();
 		}
 	});
+	
+	function applyNoPaymentState() {
+		const inputs = formsContainer.querySelectorAll('input[name^="monthly_payment_"]');
+		inputs.forEach(function(inp){
+			if (noPaymentChk && noPaymentChk.checked) {
+				inp.value = 0;
+				inp.readOnly = true;
+				inp.classList.add('readonly-like');
+			} else {
+				inp.readOnly = false;
+				inp.classList.remove('readonly-like');
+				if (inp.value === '0') inp.value = '';
+			}
+		});
+	}
 
-    // ==============================================================================
-    // [수정 영역 끝]
-    // ==============================================================================
+	startDateInput.addEventListener('change', function() {
+		if (startDateInput.value) {
+			periodInputSection.style.display = 'block';
+			endDateInput.min = startDateInput.value;
+			formsContainer.innerHTML = '';
+			if (noPaymentWrapper) noPaymentWrapper.style.display = 'none';
+		} else {
+			periodInputSection.style.display = 'none';
+		}
+	});
+	endDateInput.addEventListener('change', function () {
+		formsContainer.innerHTML = '';
+		if (noPaymentWrapper) noPaymentWrapper.style.display = 'none';
+	});
+	if (noPaymentChk) noPaymentChk.addEventListener('change', applyNoPaymentState);
+	// ==============================================================================
 
-	// ===== 자녀정보(출생/예정) hidden 동기화 =====
 	const hidden = document.getElementById('childBirthDateHidden');
 	const bornWrap = document.getElementById('born-fields');
 	const expWrap = document.getElementById('expected-fields');
@@ -712,7 +645,6 @@ document.addEventListener('DOMContentLoaded', function () {
 	const radios = document.querySelectorAll('input[name="birthType"]');
 	const rBorn = document.getElementById('bt-born');
 	const rExp = document.getElementById('bt-expected');
-
 	const rrnA = document.getElementById('child-rrn-a');
 	const rrnB = document.getElementById('child-rrn-b');
 	const rrnHidden = document.getElementById('child-rrn-hidden');
@@ -726,98 +658,163 @@ document.addEventListener('DOMContentLoaded', function () {
 	}
 	function setHiddenFrom(el) { if (hidden && el) hidden.value = el.value || ''; }
 
-	function fillRrnFromBirth() {
-		if (!birth || !rrnA) return;
-		if (!rBorn || !rBorn.checked) return;
-		if (!birth.value) { return; }
-
-		if ((rrnA.value && rrnA.value.trim() !== '') || (rrnB && rrnB.value && rrnB.value.trim() !== '')) {
-			setHiddenFrom(birth);
-			return;
-		}
-
-		var parts = birth.value.split('-');
-		if (parts.length !== 3) return;
-		rrnA.value = (parts[0].slice(-2) + parts[1] + parts[2]).slice(0,6);
-		if (rrnA.value.length === 6 && rrnB) rrnB.focus();
-		setHiddenFrom(birth);
-	}
-	
-	function setBornRequired(on) {}
-	function setExpectedRequired(on) {}
-	function clearBorn() {}
-	function clearExpected() {}
-
 	function updateView() {
 		const checked = document.querySelector('input[name="birthType"]:checked');
 		if (!checked) {
-			bornWrap.style.display = 'none';
-			expWrap.style.display = 'none';
-			setBornRequired(false);
-			setExpectedRequired(false);
-			if (hidden) hidden.value = '';
+			bornWrap.style.display = 'none'; expWrap.style.display = 'none';
 			return;
 		}
 		if (checked.value === 'born') {
-			bornWrap.style.display = '';
-			expWrap.style.display = 'none';
-			setBornRequired(true);
-			setExpectedRequired(false);
-			clearExpected();
+			bornWrap.style.display = ''; expWrap.style.display = 'none';
 			setHiddenFrom(birth);
-			fillRrnFromBirth();
 		} else {
-			bornWrap.style.display = 'none';
-			expWrap.style.display = '';
-			setBornRequired(false);
-			setExpectedRequired(true);
-			clearBorn();
+			bornWrap.style.display = 'none'; expWrap.style.display = '';
 			setHiddenFrom(exp);
 		}
 	}
-
 	updateView();
 
-	if (birth) birth.addEventListener('change', fillRrnFromBirth);
+	if (birth) birth.addEventListener('change', function(){ if (rBorn && rBorn.checked) setHiddenFrom(birth); });
 	if (exp) exp.addEventListener('change', function(){ if (rExp && rExp.checked) setHiddenFrom(exp); });
 	radios.forEach(r => r.addEventListener('change', updateView));
 });
 
-//===== 제출 버튼 활성화 조건: 필수칸 모두 입력 && 안내 체크박스 체크 =====
-(function() {
-    const form = document.querySelector('form[action$="/apply"]');
-    if (!form) return;
-    const submitBtn = document.querySelector('button[name="action"][value="submit"]');
-    const agreeChk = document.getElementById('agree-notice');
+function countUnits(startStr, endStr) {
+	if (!startStr || !endStr) return 0;
+	const start = new Date(startStr);
+	const end = new Date(endStr);
+	if (isNaN(start) || isNaN(end) || start > end) return 0;
 
-    if (submitBtn) submitBtn.disabled = true;
+	function getPeriodEndDate(originalStart, periodNumber) {
+		let nextPeriodStart = new Date(
+			originalStart.getFullYear(),
+			originalStart.getMonth() + periodNumber,
+			originalStart.getDate()
+		);
+		if (nextPeriodStart.getDate() !== originalStart.getDate()) {
+			nextPeriodStart = new Date(
+				originalStart.getFullYear(),
+				originalStart.getMonth() + periodNumber + 1,
+				1
+			);
+		}
+		nextPeriodStart.setDate(nextPeriodStart.getDate() - 1);
+		return nextPeriodStart;
+	}
 
-    function toggleSubmitEnabled() {
-        if (!submitBtn || !agreeChk) return;
-        const valid = isAllFilled(); 
-        submitBtn.disabled = !(agreeChk.checked && valid);
-    }
+	let cnt = 0, cur = new Date(start), monthIdx = 1;
+	while (cur <= end) {
+		const e = getPeriodEndDate(start, monthIdx);
+		let actualEnd = e > end ? new Date(end) : new Date(e);
+		if(cur > actualEnd) break;
+		cnt++;
+		cur = new Date(actualEnd); cur.setDate(cur.getDate()+1);
+		monthIdx++;
+		if (cnt > 13) break;
+	}
+	return cnt;
+}
 
-    form.addEventListener('input', toggleSubmitEnabled);
-    form.addEventListener('change', toggleSubmitEnabled);
-    if (agreeChk) {
-        agreeChk.addEventListener('change', toggleSubmitEnabled);
-    }
-    toggleSubmitEnabled();
+function isAllFilled() {
+	const form = document.querySelector('form[action$="/apply"]');
+	if (!form) return false;
+	
+	const fields = [
+		'start-date', 'end-date', 'businessName', 'businessRegiNumber',
+		'biz-postcode', 'biz-base', 'biz-detail', 'regularWage',
+		'weeklyHours', 'bankCode', 'accountNumber'
+	];
+	for (const id of fields) {
+		const el = form.querySelector(`[name="${id}"], #${id}`);
+		if (!el || !el.value?.trim()) return false;
+	}
+	
+	const radios = ['businessAgree', 'govInfoAgree', 'birthType'];
+	for(const name of radios) {
+		if(!form.querySelector(`input[name="${name}"]:checked`)) return false;
+	}
+	
+	if (onlyDigits(document.getElementById('businessRegiNumber').value).length !== 10) return false;
+	if (onlyDigits(document.getElementById('accountNumber').value).length < 10) return false;
+	if (Number(onlyDigits(document.getElementById('regularWage').value)) <= 0) return false;
+	
+	const birthType = form.querySelector('input[name="birthType"]:checked').value;
+	if(birthType === 'born') {
+		if(!document.getElementById('birth-date').value) return false;
+	} else {
+		if(!document.getElementById('expected-date').value) return false;
+	}
+	
+	const unitCount = countUnits(document.getElementById('start-date').value, document.getElementById('end-date').value);
+	const payInputs = Array.from(document.querySelectorAll('input[name^="monthly_payment_"]'));
+	if (unitCount === 0 || payInputs.length !== unitCount) return false;
+	
+	if (!document.getElementById('no-payment').checked) {
+		for (const inp of payInputs) {
+			if (!onlyDigits(inp.value)) return false;
+		}
+	}
+	return true;
+}
+
+(function wireSubmitControl(){
+	const form = document.querySelector('form[action$="/apply"]');
+	if (!form) return;
+	const agreeChk = document.getElementById('agree-notice');
+	const submitBtn = document.querySelector('button[name="action"][value="submit"]');
+
+	function refreshSubmitState() {
+		const ok = isAllFilled();
+		const agree = !!(agreeChk && agreeChk.checked);
+		if (submitBtn) submitBtn.disabled = !(ok && agree);
+	}
+	['input','change'].forEach(evt=> form.addEventListener(evt, refreshSubmitState));
+	if (agreeChk) agreeChk.addEventListener('change', refreshSubmitState);
+	refreshSubmitState();
+
+	form.addEventListener('submit', function(e) {
+		const action = e.submitter?.value;
+		if (action === 'submit' && submitBtn.disabled) {
+			e.preventDefault();
+			alert('모든 필수 항목을 입력하고 안내사항에 동의해야 합니다.');
+			return;
+		}
+
+		const rrnA = document.getElementById('child-rrn-a');
+		const rrnB = document.getElementById('child-rrn-b');
+		const rrnHidden = document.getElementById('child-rrn-hidden');
+		const rBorn = document.getElementById('bt-born');
+		if (rrnHidden) {
+			if (rBorn && rBorn.checked) {
+				const a = onlyDigits(rrnA?.value);
+				const b = onlyDigits(rrnB?.value);
+				if (a.length === 6 && b.length === 7) {
+					rrnHidden.value = a + b;
+					rrnHidden.name = 'childResiRegiNumber';
+				} else {
+					rrnHidden.removeAttribute('name');
+				}
+			} else {
+				rrnHidden.removeAttribute('name');
+			}
+		}
+		
+		['regularWage', 'accountNumber', 'businessRegiNumber', 'weeklyHours'].forEach(id => {
+			const el = document.getElementById(id);
+			if (el) el.value = onlyDigits(el.value);
+		});
+		const payInputs = form.querySelectorAll('input[name^="monthly_payment_"]');
+		payInputs.forEach(inp => { inp.value = onlyDigits(inp.value); });
+	});
 })();
 
-
-// ===== 다음 주소 API =====
 function execDaumPostcode(prefix) {
 	new daum.Postcode({
 		oncomplete: function(data) {
 			var addr = (data.userSelectedType === 'R') ? data.roadAddress : data.jibunAddress;
-			var $zip = document.getElementById(prefix + '-postcode');
-			var $base = document.getElementById(prefix + '-base');
-			var $detail = document.getElementById(prefix + '-detail');
-			if ($zip) $zip.value = data.zonecode;
-			if ($base) $base.value = addr;
-			if ($detail) $detail.focus();
+			document.getElementById(prefix + '-postcode').value = data.zonecode;
+			document.getElementById(prefix + '-base').value = addr;
+			document.getElementById(prefix + '-detail').focus();
 		}
 	}).open();
 }
@@ -832,219 +829,12 @@ $(function () {
 		if (selected) $sel.val(String(selected));
 	});
 });
-	
-//===== 숫자 전용 + 실시간 콤마 표시 공통 유틸 =====
-function onlyDigits(str) { return (str || '').replace(/[^\d]/g, ''); }
-function withCommas(numStr) {
-	if (!numStr) return '';
-	numStr = numStr.replace(/^0+(?=\d)/, '');
-	return numStr.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-}
 
-function formatWithCaret(el) {
-	const start = el.selectionStart;
-	const old = el.value;
-	const digitsBefore = onlyDigits(old.slice(0, start)).length;
-	const raw = onlyDigits(old);
-	const pretty = withCommas(raw);
-	el.value = pretty;
-
-	let curDigits = 0, newPos = 0;
-	for (let i = 0; i < el.value.length; i++) {
-		if (/\d/.test(el.value[i])) curDigits++;
-		if (curDigits >= digitsBefore) { newPos = i + 1; break; }
+document.querySelector('form[action$="/apply"]').addEventListener('keydown', function (e) {
+	if (e.key === 'Enter' && e.target.type !== 'textarea' && e.target.type !== 'submit') {
+		e.preventDefault();
 	}
-	el.setSelectionRange(newPos, newPos);
-}
-
-// ===== 제출 직전: 콤마 제거해서 숫자만 서버로 전송 =====
-(function attachStripOnSubmit(){
-	const form = document.querySelector('form[action$="/apply"]');
-	if (!form) return;
-	form.addEventListener('submit', function () {
-        const wageEl = document.getElementById('regularWage');
-		if (wageEl) wageEl.value = onlyDigits(wageEl.value);
-		const payInputs = form.querySelectorAll('input[name^="monthly_payment_"]');
-		payInputs.forEach(inp => { inp.value = onlyDigits(inp.value); });
-	});
-})();
-	
-//====== 커스텀 검증: 모두 입력되었는지 ======
-function countUnits(startStr, endStr) {
-	if (!startStr || !endStr) return 0;
-	const start = new Date(startStr + 'T00:00:00');
-	const end = new Date(endStr + 'T00:00:00');
-	if (isNaN(start) || isNaN(end) || start > end) return 0;
-
-	function getPeriodEndDate(originalStart, periodNumber) {
-        let nextPeriodStart = new Date(
-            originalStart.getFullYear(),
-            originalStart.getMonth() + periodNumber,
-            originalStart.getDate()
-        );
-        if (nextPeriodStart.getDate() !== originalStart.getDate()) {
-            nextPeriodStart = new Date(
-                originalStart.getFullYear(),
-                originalStart.getMonth() + periodNumber + 1,
-                1
-            );
-        }
-        nextPeriodStart.setDate(nextPeriodStart.getDate() - 1);
-        return nextPeriodStart;
-    }
-
-	let cnt = 0;
-	let cur = start;
-	while (cur <= end) {
-		let e = getPeriodEndDate(start, cnt + 1);
-		if (e > end) e = end;
-		cnt++;
-		cur = new Date(e.getTime()); cur.setDate(cur.getDate()+1);
-		if (cnt > 13) break;
-	}
-	return cnt;
-}
-
-function isAllFilled() {
-	const form = document.querySelector('form[action$="/apply"]');
-	if (!form) return false;
-
-	const startDate = document.getElementById('start-date')?.value?.trim();
-	const endDate = document.getElementById('end-date')?.value?.trim();
-
-	const businessAgree = form.querySelector('input[name="businessAgree"]:checked')?.value;
-	const businessName = form.querySelector('input[name="businessName"]')?.value?.trim();
-	const businessRegi = form.querySelector('input[name="businessRegiNumber"]')?.value?.trim();
-	const bizZip = document.getElementById('biz-postcode')?.value?.trim();
-	const bizBase = document.getElementById('biz-base')?.value?.trim();
-	const bizDetail = document.getElementById('biz-detail')?.value?.trim();
-
-	const regularWage = onlyDigits(document.getElementById('regularWage')?.value || '');
-	const weeklyHours = form.querySelector('input[name="weeklyHours"]')?.value?.trim();
-
-	const bankCode = document.getElementById('bankCode')?.value;
-	const accountNumber = form.querySelector('input[name="accountNumber"]')?.value?.trim();
-
-	const govAgree = form.querySelector('input[name="govInfoAgree"]:checked')?.value;
-
-	const birthType = form.querySelector('input[name="birthType"]:checked')?.value;
-	const birthDate = document.getElementById('birth-date')?.value?.trim();
-	const expectedDate = document.getElementById('expected-date')?.value?.trim();
-
-	const noPayment = document.getElementById('no-payment')?.checked;
-	const unitCount = countUnits(startDate, endDate);
-	const payInputs = Array.from(document.querySelectorAll('input[name^="monthly_payment_"]'));
-
-	if (!startDate || !endDate || new Date(startDate) > new Date(endDate)) return false;
-	
-	let monthCount = 0;
-	if (startDate && endDate) {
-		let mc = new Date(new Date(startDate).getFullYear(), new Date(startDate).getMonth(), 1);
-		const endMonth = new Date(new Date(endDate).getFullYear(), new Date(endDate).getMonth(), 1);
-		while (mc <= endMonth) { monthCount++; mc.setMonth(mc.getMonth()+1); }
-		if (monthCount > 12) return false;
-	}
-
-	if (!businessAgree || !businessName || !businessRegi || !bizZip || !bizBase || !bizDetail) return false;
-	if (!regularWage || Number(regularWage) <= 0 || !weeklyHours || Number(weeklyHours) <= 0) return false;
-
-	if (!birthType) return false;
-	if (birthType === 'born') {
-		if (!birthDate) return false;
-	} else {
-		if (!expectedDate) return false;
-	}
-
-	if (!bankCode || !accountNumber || !govAgree) return false;
-
-	if (unitCount === 0) return false;
-	if (!noPayment) {
-		if (payInputs.length !== unitCount) return false;
-		for (const inp of payInputs) {
-			const v = onlyDigits(inp.value || '');
-			if (!v || Number(v) < 0) return false;
-		}
-	}
-
-	return true;
-}
-
-//===== 제출 버튼 활성화/토글 =====
-(function wireSubmitControl(){
-	const form = document.querySelector('form[action$="/apply"]');
-	if (!form) return;
-	const agreeChk = document.getElementById('agree-notice');
-	const submitBtn = document.querySelector('button[name="action"][value="submit"]');
-	const draftBtn = document.querySelector('button[name="action"][value="register"]');
-
-	if (draftBtn) draftBtn.disabled = false;
-	if (submitBtn) submitBtn.disabled = true;
-
-	function refreshSubmitState() {
-		const ok = isAllFilled();
-		const agree = !!(agreeChk && agreeChk.checked);
-		if (submitBtn) submitBtn.disabled = !(ok && agree);
-	}
-	['input','change'].forEach(evt=> form.addEventListener(evt, refreshSubmitState));
-	if (agreeChk) agreeChk.addEventListener('change', refreshSubmitState);
-	refreshSubmitState();
-
-	form.addEventListener('submit', function(e) {
-		const action = (e.submitter && e.submitter.name === 'action') ? e.submitter.value : null;
-		
-		const rrnA = document.getElementById('child-rrn-a');
-		const rrnB = document.getElementById('child-rrn-b');
-		const rrnHidden = document.getElementById('child-rrn-hidden');
-		const rBorn = document.getElementById('bt-born');
-		const onlyDigits = s => (s||'').replace(/[^\d]/g,'');
-
-		if (rrnHidden) {
-			if (rBorn && rBorn.checked) {
-			const a = onlyDigits(rrnA ? rrnA.value : '');
-			const b = onlyDigits(rrnB ? rrnB.value : '');
-			if (a.length === 6 && b.length === 7) {
-				rrnHidden.value = a + b;
-				rrnHidden.name = 'childResiRegiNumber';
-			} else {
-				rrnHidden.removeAttribute('name');
-			}
-			} else {
-				rrnHidden.removeAttribute('name');
-			}
-		}
-		
-		if (action !== 'register') {
-			if (!isAllFilled()) { e.preventDefault(); alert('모든 값을 입력해야 제출할 수 있습니다.'); return; }
-			if (!(agreeChk && agreeChk.checked)) { e.preventDefault(); alert('안내사항에 동의해야 제출할 수 있습니다.'); return; }
-		}
-		const wageEl = document.getElementById('regularWage');
-		if (wageEl) wageEl.value = (wageEl.value || '').replace(/[^\d]/g,'');
-		const payInputs = form.querySelectorAll('input[name^="monthly_payment_"]');
-		payInputs.forEach(inp => { inp.value = (inp.value || '').replace(/[^\d]/g,''); });
-	});
-})();
-</script>
-<script>
-(function preventEnterSubmit() {
-	const form = document.querySelector('form[action$="/apply"]');
-	if (!form) return;
-
-	form.addEventListener('keydown', function (e) {
-		if (e.key !== 'Enter') return;
-
-		const el = e.target;
-		const tag = el.tagName.toLowerCase();
-		const type = (el.type || '').toLowerCase();
-
-		const isTextArea = tag === 'textarea';
-		const isButton = tag === 'button' || (tag === 'input' && (type === 'submit' || type === 'button'));
-		const allowAttr = el.closest('[data-allow-enter="true"]');
-
-		if (!isTextArea && !isButton && !allowAttr) {
-			e.preventDefault();
-		}
-	});
-})();
+});
 </script>
 </body>
 </html>
